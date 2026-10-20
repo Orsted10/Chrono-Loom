@@ -120,3 +120,5 @@ npx gh-pages -d dist
 | **Pull Workspace Closer** | Poke HUD or press Key <kbd>C</kbd> | Press <kbd>C</kbd> or click "Pull Closer [C]" |
 | **Toggle A11y Suite** | Poke HUD or press Key <kbd>A</kbd> | Press <kbd>A</kbd> or click "A11y Suite: ON" |
 | **Toggle Demo Telemetry** | View on-screen panel | Press <kbd>H</kbd> or click HIDE [H] |
+
+<!-- Log 2: feat(setup): configure Three.js and WebXR types in tsconfig.json -->
