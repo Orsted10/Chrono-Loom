@@ -122,3 +122,5 @@ npx gh-pages -d dist
 | **Toggle Demo Telemetry** | View on-screen panel | Press <kbd>H</kbd> or click HIDE [H] |
 
 <!-- Log 2: feat(setup): configure Three.js and WebXR types in tsconfig.json -->
+
+<!-- Log 5: feat(deploy): add vercel.json for zero-config HTTPS edge deployment -->
