@@ -1,0 +1,11 @@
+.rocketride/
+.env
+node_modules/
+dist/
+*.local
+.claude/
+AGENTS.md
+build_history.py
+.chrono_loom_seq
+
+
