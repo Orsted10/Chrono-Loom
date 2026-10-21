@@ -187,5 +187,43 @@ export class SceneManager {
     this.scene.add(this.rimLight);
 
     // Under-desk soft bioluminescent point light
+    this.deskGlow = new THREE.PointLight(0x00f0ff, 1.5, 2.5);
+    this.deskGlow.position.set(0, 0.9, -0.45);
+    this.scene.add(this.deskGlow);
+  }
 
-// [Chrono-Loom Milestone 5/20] feat(scene): configure directional key light and ambient celestial fill
+  /**
+   * Phase 12: Smoothly shifts global chromatic lighting palette to match selected Scale Preset
+   */
+  public setChromaticPalette(palette: {
+    primaryColor: THREE.Color;
+    accentColor: THREE.Color;
+    cymaticColor: THREE.Color;
+    ambientColor: THREE.Color;
+  }): void {
+    if (this.ambientLight) this.ambientLight.color.copy(palette.ambientColor);
+    if (this.keyLight) this.keyLight.color.copy(palette.primaryColor);
+    if (this.rimLight) this.rimLight.color.copy(palette.accentColor);
+    if (this.deskGlow) this.deskGlow.color.copy(palette.primaryColor);
+    if (this.arcGlowEdge) (this.arcGlowEdge.material as THREE.LineBasicMaterial).color.copy(palette.primaryColor);
+    if (this.pulseRing) (this.pulseRing.material as THREE.MeshBasicMaterial).color.copy(palette.cymaticColor);
+  }
+
+  /**
+   * Builds procedural glowing cyber-zen floor grid at y = 0
+   */
+  private createFloorGrid(): THREE.MeshBasicMaterial {
+    // Canvas-generated radial fading grid texture
+    const size = 1024;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+
+    // Black background
+    ctx.fillStyle = '#030712';
+    ctx.fillRect(0, 0, size, size);
+
+    // Radial vignette mask
+
+// [Chrono-Loom Milestone 6/20] feat(scene): implement procedural starfield particle cloud
