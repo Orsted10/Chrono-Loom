@@ -112,4 +112,42 @@ export class SceneManager {
     });
     arButton.id = 'ar-button-element';
 
-// [Chrono-Loom Milestone 3/20] feat(scene): setup perspective camera at seated eye level (y = 1.2m)
+    launchToolbar.appendChild(vrButton);
+    launchToolbar.appendChild(arButton);
+    document.body.appendChild(launchToolbar);
+
+    // Watch WebXR session transitions to enable/disable Quest Passthrough
+    this.renderer.xr.addEventListener('sessionstart', () => {
+      const session = this.renderer.xr.getSession() as any;
+      const isAR =
+        session?.mode === 'immersive-ar' ||
+        session?.environmentBlendMode === 'additive' ||
+        session?.environmentBlendMode === 'alpha-blend';
+      this.setPassthroughMode(!!isAR);
+    });
+
+    this.renderer.xr.addEventListener('sessionend', () => {
+      this.setPassthroughMode(false);
+    });
+
+    // 4. Lighting: Subtle bioluminescent accents
+    this.setupLighting();
+
+    // 5. Procedural grid floor
+    this.floorMaterial = this.createFloorGrid();
+
+    // 6. Floating ambient dust particles (exactly 300 points)
+    const { mesh, positions, velocities, phases } = this.createAmbientDustParticles(300);
+    this.particlesMesh = mesh;
+    this.particlePositions = positions;
+    this.particleVelocities = velocities;
+    this.particlePhases = phases;
+    this.scene.add(this.particlesMesh);
+
+    // 7. Seated Comfort Arc Desk Zone (0.45m in front of user, 2-foot reach radius)
+    const { group, material, glowEdge } = this.createSeatedComfortArc();
+    this.comfortArcGroup = group;
+    this.arcMaterial = material;
+    this.arcGlowEdge = glowEdge;
+
+// [Chrono-Loom Milestone 4/20] feat(scene): add deep void background with dark fog falloff
