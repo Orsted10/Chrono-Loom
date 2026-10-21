@@ -155,5 +155,163 @@ class ChronoLoomApp {
     // 6.10. Initialize Phase 13: Agent Aria v2 Call-and-Response & Voice Director
     this.agentAria.setEuclideanEngine(this.euclideanEngine);
     this.loomEngine.addStringPluckedListener((stringId, pos, vel, freq) => {
+      this.agentAria.recordUserPluck(stringId, pos, vel, freq);
+    });
 
-// [Chrono-Loom Milestone 1/6] feat(core): setup main application lifecycle and animation loop in main.ts
+    // Check if URL contains shareable Loom hash
+    if (window.location.hash.startsWith('#loom=')) {
+      this.loomEngine.loadFromUrlHash(window.location.hash);
+    }
+    window.addEventListener('hashchange', () => {
+      if (window.location.hash.startsWith('#loom=')) {
+        this.loomEngine.loadFromUrlHash(window.location.hash);
+      }
+    });
+
+    // 7. Setup Temporal Thread Weave container (Phase 1 trails)
+    this.threadsGroup = new THREE.Group();
+    this.threadsGroup.name = 'ChronoThreads';
+    this.sceneManager.scene.add(this.threadsGroup);
+
+    // 7. Setup Pinch Sparks Particle System
+    const { mesh, positions, velocities, lives } = this.createPinchSparksSystem();
+    this.pinchSparks = mesh;
+    this.sparkPositions = positions;
+    this.sparkVelocities = velocities;
+    this.sparkLives = lives;
+    this.sceneManager.scene.add(this.pinchSparks);
+
+    // 8. Connect Pinch & Gesture Listeners for Phase 1 Threads
+    this.setupGestureInteractions();
+
+    // 9. Connect HTML HUD telemetry readouts
+    this.setupHUD();
+
+    // 10. Start WebXR animation loop
+    this.sceneManager.renderer.setAnimationLoop(this.animate.bind(this));
+
+    console.log('[ChronoLoomApp] Phase 4 (Agent Aria & Constellation Mode) Initialized.');
+  }
+
+  /**
+   * Builds the particle system for temporal pinch sparks
+   */
+  private createPinchSparksSystem(): {
+    mesh: THREE.Points;
+    positions: Float32Array;
+    velocities: Float32Array;
+    lives: Float32Array;
+  } {
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(this.MAX_SPARKS * 3);
+    const velocities = new Float32Array(this.MAX_SPARKS * 3);
+    const lives = new Float32Array(this.MAX_SPARKS);
+
+    // Initially hide all offscreen
+    for (let i = 0; i < this.MAX_SPARKS; i++) {
+      positions[i * 3 + 1] = -999;
+      lives[i] = 0;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d')!;
+    const grad = ctx.createRadialGradient(16, 16, 1, 16, 16, 15);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.3, '#00ff88');
+    grad.addColorStop(0.7, '#00f0ff');
+    grad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 32, 32);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.PointsMaterial({
+      size: 0.022,
+      map: texture,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const mesh = new THREE.Points(geometry, material);
+    return { mesh, positions, velocities, lives };
+  }
+
+  /**
+   * Spawns radiant sparks at the pinch midpoint
+   */
+  private spawnSparksAt(pos: THREE.Vector3, count: number = 6): void {
+    let spawned = 0;
+    for (let i = 0; i < this.MAX_SPARKS && spawned < count; i++) {
+      if (this.sparkLives[i] <= 0) {
+        const i3 = i * 3;
+        this.sparkPositions[i3] = pos.x + (Math.random() - 0.5) * 0.005;
+        this.sparkPositions[i3 + 1] = pos.y + (Math.random() - 0.5) * 0.005;
+        this.sparkPositions[i3 + 2] = pos.z + (Math.random() - 0.5) * 0.005;
+
+        const speed = 0.03 + Math.random() * 0.06;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = (Math.random() - 0.5) * Math.PI;
+
+        this.sparkVelocities[i3] = Math.cos(theta) * Math.cos(phi) * speed;
+        this.sparkVelocities[i3 + 1] = Math.sin(phi) * speed + 0.02;
+        this.sparkVelocities[i3 + 2] = Math.sin(theta) * Math.cos(phi) * speed;
+
+        this.sparkLives[i] = 0.5 + Math.random() * 0.4;
+        spawned++;
+      }
+    }
+  }
+
+  /**
+   * Wires up pinch and open-palm callbacks
+   */
+  private setupGestureInteractions(): void {
+    // 1. Pinch Start
+    this.handInputManager.onPinchStart((hand, midpoint, distance) => {
+      this.spawnSparksAt(midpoint, 8);
+
+      const points = [midpoint.clone(), midpoint.clone()];
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+
+      const color = hand === 'left' ? 0xa855f7 : 0x00f0ff;
+      const lineMat = new THREE.LineBasicMaterial({
+        color,
+        linewidth: 2,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending
+      });
+
+      const line = new THREE.Line(lineGeo, lineMat);
+      this.threadsGroup.add(line);
+
+      this.activeThreads.set(hand, {
+        points,
+        line,
+        handedness: hand,
+        birthTime: this.clock.getElapsedTime(),
+        maxLife: 6.0
+      });
+    });
+
+    // 2. Pinch Move
+    this.handInputManager.onPinchMove((hand, midpoint, distance) => {
+      const thread = this.activeThreads.get(hand);
+      if (thread) {
+        const lastPoint = thread.points[thread.points.length - 1];
+        if (lastPoint.distanceTo(midpoint) > 0.005) {
+          thread.points.push(midpoint.clone());
+          thread.line.geometry.dispose();
+          thread.line.geometry = new THREE.BufferGeometry().setFromPoints(thread.points);
+
+          if (Math.random() < 0.2) {
+            this.spawnSparksAt(midpoint, 1);
+          }
+        }
+
+// [Chrono-Loom Milestone 2/6] test(scene): verify 90fps seated viewport rendering in headless simulator
