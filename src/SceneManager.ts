@@ -149,5 +149,43 @@ export class SceneManager {
     this.comfortArcGroup = group;
     this.arcMaterial = material;
     this.arcGlowEdge = glowEdge;
+    this.scene.add(this.comfortArcGroup);
 
-// [Chrono-Loom Milestone 4/20] feat(scene): add deep void background with dark fog falloff
+    // 8. Concentric floor pulse & Cymatic Sonar Wave Pool
+    this.pulseRing = this.createFloorPulseRing();
+    this.scene.add(this.pulseRing);
+
+    this.cymaticContainer = new THREE.Group();
+    this.cymaticContainer.name = 'CymaticWaves';
+    this.scene.add(this.cymaticContainer);
+    this.initCymaticWavePool(8);
+
+    // 9. Floating 3D Title Header high above workspace (y = 1.75m, z = -1.2m)
+    this.titleHeaderGroup = this.createFloatingTitleHeader();
+    this.scene.add(this.titleHeaderGroup);
+
+    // 10. Resize and interactions
+    window.addEventListener('resize', this.onWindowResize.bind(this));
+  }
+
+  /**
+   * Sets up subtle cyberpunk bioluminescent lighting
+   */
+  private setupLighting(): void {
+    // Ambient soft indigo/teal glow
+    this.ambientLight = new THREE.AmbientLight(0x0a192f, 0.9);
+    this.scene.add(this.ambientLight);
+
+    // Main overhead key light (soft cyan bioluminescence)
+    this.keyLight = new THREE.DirectionalLight(0x00f0ff, 1.4);
+    this.keyLight.position.set(1.5, 3.5, 0.5);
+    this.scene.add(this.keyLight);
+
+    // Fill rim light (neon magenta / deep purple)
+    this.rimLight = new THREE.DirectionalLight(0xa855f7, 0.8);
+    this.rimLight.position.set(-2, 1.5, -2);
+    this.scene.add(this.rimLight);
+
+    // Under-desk soft bioluminescent point light
+
+// [Chrono-Loom Milestone 5/20] feat(scene): configure directional key light and ambient celestial fill
