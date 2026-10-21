@@ -73,5 +73,43 @@ export class SceneManager {
       70,
       window.innerWidth / window.innerHeight,
       0.05,
+      80
+    );
+    this.camera.position.set(0, 0, 0);
+    this.cameraRig.add(this.camera);
 
-// [Chrono-Loom Milestone 2/20] feat(xr): implement WebXR session request manager for immersive-vr
+    // 3. Renderer with WebXR enabled
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance'
+    });
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.2;
+    this.renderer.xr.enabled = true;
+    this.container.appendChild(this.renderer.domElement);
+
+    // Unified WebXR Launch Toolbar (VR Void + Mixed Reality AR Passthrough)
+    const launchToolbar = document.createElement('div');
+    launchToolbar.id = 'webxr-launch-toolbar';
+    launchToolbar.className = 'webxr-toolbar-container';
+
+    const vrButton = VRButton.createButton(this.renderer, {
+      optionalFeatures: ['hand-tracking', 'local-floor', 'bounded-floor', 'layers']
+    });
+    vrButton.id = 'vr-button-element';
+
+    const arButton = ARButton.createButton(this.renderer, {
+      optionalFeatures: [
+        'hand-tracking',
+        'local-floor',
+        'hit-test',
+        'plane-detection',
+        'mesh-detection'
+      ]
+    });
+    arButton.id = 'ar-button-element';
+
+// [Chrono-Loom Milestone 3/20] feat(scene): setup perspective camera at seated eye level (y = 1.2m)
