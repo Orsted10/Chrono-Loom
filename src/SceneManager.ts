@@ -35,5 +35,43 @@ export class SceneManager {
   private particlePhases: Float32Array;
   private floorMaterial: THREE.MeshBasicMaterial;
   private arcMaterial: THREE.MeshPhysicalMaterial;
+  private arcGlowEdge: THREE.LineSegments;
+  private pulseRing: THREE.Mesh;
 
-// [Chrono-Loom Milestone 1/20] feat(scene): initialize WebGLRenderer with antialias and logarithmic depth buffer
+  // Phase 12: Chromatic Lighting References
+  public ambientLight!: THREE.AmbientLight;
+  public keyLight!: THREE.DirectionalLight;
+  public rimLight!: THREE.DirectionalLight;
+  public deskGlow!: THREE.PointLight;
+
+  // Audio-Reactive Cymatic Sonar Wave Pool
+  private cymaticPool: CymaticWave[] = [];
+  private cymaticContainer: THREE.Group;
+
+  private isUserInteracting = false;
+  private targetDeskHighlight = 0;
+  private currentDeskHighlight = 0;
+
+  constructor(options: SceneManagerOptions = {}) {
+    this.container = options.container || document.body;
+    this.clock = new THREE.Clock();
+
+    // 1. Scene setup with cyber-zen bioluminescent void fog
+    this.scene = new THREE.Scene();
+    const voidColor = new THREE.Color(0x030712);
+    this.scene.background = voidColor;
+    this.scene.fog = new THREE.FogExp2(0x030712, 0.12);
+
+    // 2. Camera rig: Seated VR eye level (y = 1.2m, z = 0)
+    this.cameraRig = new THREE.Group();
+    this.cameraRig.name = 'CameraRig';
+    this.cameraRig.position.set(0, 1.2, 0);
+    this.scene.add(this.cameraRig);
+
+    // Camera attached to rig
+    this.camera = new THREE.PerspectiveCamera(
+      70,
+      window.innerWidth / window.innerHeight,
+      0.05,
+
+// [Chrono-Loom Milestone 2/20] feat(xr): implement WebXR session request manager for immersive-vr
