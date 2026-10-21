@@ -263,5 +263,43 @@ export class SceneManager {
     for (let x = 0; x <= size; x += gridSpacing) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
+      ctx.lineTo(x, size);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= size; y += gridSpacing) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(size, y);
+      ctx.stroke();
+    }
 
-// [Chrono-Loom Milestone 7/20] feat(scene): add perspective grid floor at ground plane (y = 0.0m)
+    const gridTexture = new THREE.CanvasTexture(canvas);
+    gridTexture.wrapS = THREE.ClampToEdgeWrapping;
+    gridTexture.wrapT = THREE.ClampToEdgeWrapping;
+
+    const floorGeo = new THREE.PlaneGeometry(16, 16);
+    const floorMat = new THREE.MeshBasicMaterial({
+      map: gridTexture,
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false
+    });
+
+    this.floorMesh = new THREE.Mesh(floorGeo, floorMat);
+    this.floorMesh.rotation.x = -Math.PI / 2;
+    this.floorMesh.position.y = 0.001;
+    this.scene.add(this.floorMesh);
+
+    return floorMat;
+  }
+
+  /**
+   * Concentric expanding energy wave on the floor
+   */
+  private createFloorPulseRing(): THREE.Mesh {
+    const ringGeo = new THREE.RingGeometry(0.1, 0.15, 64);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+
+// [Chrono-Loom Milestone 8/20] refactor(scene): optimize render loop with WebXR animation frame callback
