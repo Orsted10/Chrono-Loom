@@ -225,5 +225,43 @@ export class SceneManager {
     ctx.fillRect(0, 0, size, size);
 
     // Radial vignette mask
+    const center = size / 2;
+    const gradient = ctx.createRadialGradient(center, center, 20, center, center, center);
+    gradient.addColorStop(0, 'rgba(0, 240, 255, 0.25)');
+    gradient.addColorStop(0.3, 'rgba(0, 240, 255, 0.12)');
+    gradient.addColorStop(0.7, 'rgba(14, 165, 233, 0.04)');
+    gradient.addColorStop(1, 'rgba(3, 7, 18, 0)');
 
-// [Chrono-Loom Milestone 6/20] feat(scene): implement procedural starfield particle cloud
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+
+    // Concentric rings
+    ctx.lineWidth = 1.5;
+    const rings = [60, 120, 180, 260, 340, 420];
+    rings.forEach((r, idx) => {
+      ctx.strokeStyle = idx % 2 === 0 ? 'rgba(0, 240, 255, 0.28)' : 'rgba(56, 189, 248, 0.12)';
+      ctx.beginPath();
+      ctx.arc(center, center, r, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+
+    // Radial spokes
+    const numSpokes = 24;
+    for (let i = 0; i < numSpokes; i++) {
+      const angle = (i * Math.PI * 2) / numSpokes;
+      ctx.strokeStyle = i % 4 === 0 ? 'rgba(0, 240, 255, 0.2)' : 'rgba(14, 165, 233, 0.07)';
+      ctx.beginPath();
+      ctx.moveTo(center + Math.cos(angle) * 40, center + Math.sin(angle) * 40);
+      ctx.lineTo(center + Math.cos(angle) * 480, center + Math.sin(angle) * 480);
+      ctx.stroke();
+    }
+
+    // Grid lines pattern overlay
+    const gridSpacing = 32;
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.04)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= size; x += gridSpacing) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+
+// [Chrono-Loom Milestone 7/20] feat(scene): add perspective grid floor at ground plane (y = 0.0m)
