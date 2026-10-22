@@ -452,5 +452,43 @@ export class SceneManager {
       color: 0x38bdf8,
       transparent: true,
       opacity: 0.6
+    });
 
-// [Chrono-Loom Milestone 12/20] feat(comfort): position comfort console at ergonomic reach z = -0.45m
+    const numTicks = 25;
+    for (let i = 0; i <= numTicks; i++) {
+      const t = i / numTicks;
+      const angle = thetaStart + t * thetaLength;
+      const r1 = outerRadius - 0.025;
+      const r2 = outerRadius + 0.005;
+
+      const p1 = new THREE.Vector3(Math.cos(angle) * r1, Math.sin(angle) * r1, 0);
+      const p2 = new THREE.Vector3(Math.cos(angle) * r2, Math.sin(angle) * r2, 0);
+
+      const tickLineGeo = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+      const tickLine = new THREE.Line(tickLineGeo, tickMat);
+      tickGroup.add(tickLine);
+    }
+    tickGroup.rotation.copy(arcMesh.rotation);
+    tickGroup.position.copy(arcMesh.position);
+    tickGroup.position.y += 0.002;
+    deskGroup.add(tickGroup);
+
+    // Decorative holographic comfort-zone HUD reticle at center of arc (0, 0.98, -0.46)
+    const reticleGeo = new THREE.RingGeometry(0.015, 0.022, 32);
+    const reticleMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.65,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending
+    });
+    const reticleMesh = new THREE.Mesh(reticleGeo, reticleMat);
+    reticleMesh.rotation.x = Math.PI / 2;
+    reticleMesh.position.set(0, 1.0, -0.45);
+    deskGroup.add(reticleMesh);
+
+    return { group: deskGroup, material: arcMaterial, glowEdge };
+  }
+
+
+// [Chrono-Loom Milestone 13/20] feat(camera): add head collision and boundary checking for seated envelope
