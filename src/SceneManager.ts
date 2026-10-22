@@ -340,4 +340,42 @@ export class SceneManager {
 
     const particleTexture = new THREE.CanvasTexture(pCanvas);
 
-// [Chrono-Loom Milestone 9/20] feat(comfort): design Seated Comfort Arc geometry within 0.55m radius
+    // Distribute particles within a cylinder/hemisphere around seated user
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3;
+      const radius = 0.25 + Math.random() * 2.2;
+      const angle = Math.random() * Math.PI * 2;
+      const height = 0.4 + Math.random() * 2.0;
+
+      positions[i3] = Math.cos(angle) * radius;
+      positions[i3 + 1] = height;
+      positions[i3 + 2] = Math.sin(angle) * radius;
+
+      // Gentle floating drift velocities
+      velocities[i3] = (Math.random() - 0.5) * 0.015;
+      velocities[i3 + 1] = 0.008 + Math.random() * 0.018;
+      velocities[i3 + 2] = (Math.random() - 0.5) * 0.015;
+
+      phases[i] = Math.random() * Math.PI * 2;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const material = new THREE.PointsMaterial({
+      size: 0.035,
+      map: particleTexture,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const mesh = new THREE.Points(geometry, material);
+    mesh.name = 'AmbientDustParticles';
+    return { mesh, positions, velocities, phases };
+  }
+
+  /**
+   * Curved semi-transparent "Seated Comfort Arc" desk zone 0.45m in front of the user
+
+// [Chrono-Loom Milestone 10/20] feat(comfort): add curved frosted glass console mesh in front of user
