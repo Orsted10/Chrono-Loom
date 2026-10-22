@@ -301,5 +301,43 @@ export class SceneManager {
     const ringMat = new THREE.MeshBasicMaterial({
       color: 0x00f0ff,
       transparent: true,
+      opacity: 0.4,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.rotation.x = -Math.PI / 2;
+    ringMesh.position.y = 0.003;
+    return ringMesh;
+  }
 
-// [Chrono-Loom Milestone 8/20] refactor(scene): optimize render loop with WebXR animation frame callback
+  /**
+   * Creates exactly 300 floating ambient bioluminescent dust particles
+   */
+  private createAmbientDustParticles(count: number = 300): {
+    mesh: THREE.Points;
+    positions: Float32Array;
+    velocities: Float32Array;
+    phases: Float32Array;
+  } {
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const velocities = new Float32Array(count * 3);
+    const phases = new Float32Array(count);
+
+    // Generate circular soft glow particle texture
+    const pCanvas = document.createElement('canvas');
+    pCanvas.width = 64;
+    pCanvas.height = 64;
+    const pCtx = pCanvas.getContext('2d')!;
+    const pGrad = pCtx.createRadialGradient(32, 32, 2, 32, 32, 30);
+    pGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    pGrad.addColorStop(0.2, 'rgba(0, 240, 255, 0.9)');
+    pGrad.addColorStop(0.6, 'rgba(56, 189, 248, 0.3)');
+    pGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+    pCtx.fillStyle = pGrad;
+    pCtx.fillRect(0, 0, 64, 64);
+
+    const particleTexture = new THREE.CanvasTexture(pCanvas);
+
+// [Chrono-Loom Milestone 9/20] feat(comfort): design Seated Comfort Arc geometry within 0.55m radius
