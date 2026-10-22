@@ -490,5 +490,43 @@ export class SceneManager {
     return { group: deskGroup, material: arcMaterial, glowEdge };
   }
 
+  /**
+   * Triggers visual interactive feedback on the comfort arc desk
+   */
+  public setDeskHighlight(amount: number): void {
+    this.targetDeskHighlight = THREE.MathUtils.clamp(amount, 0, 1);
+  }
 
-// [Chrono-Loom Milestone 13/20] feat(camera): add head collision and boundary checking for seated envelope
+  /**
+   * Updates animations per frame
+   */
+  public update(deltaTime: number): void {
+    const elapsedTime = this.clock.getElapsedTime();
+
+    // 1. Update floating ambient dust particles (gentle sinusoidal drift & wrap)
+    const posAttr = this.particlesMesh.geometry.attributes.position as THREE.BufferAttribute;
+    const count = this.particlePhases.length;
+
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3;
+      const phase = this.particlePhases[i];
+
+      // Vertical oscillation
+      this.particlePositions[i3 + 1] += this.particleVelocities[i3 + 1] * deltaTime;
+      this.particlePositions[i3] += Math.sin(elapsedTime * 0.8 + phase) * 0.0006;
+      this.particlePositions[i3 + 2] += Math.cos(elapsedTime * 0.8 + phase) * 0.0006;
+
+      // Wrap particles if they float above 2.4m or drift too far
+      if (this.particlePositions[i3 + 1] > 2.4) {
+        this.particlePositions[i3 + 1] = 0.4;
+      }
+      const distSq =
+        this.particlePositions[i3] * this.particlePositions[i3] +
+        this.particlePositions[i3 + 2] * this.particlePositions[i3 + 2];
+      if (distSq > 6.0) {
+        this.particlePositions[i3] *= 0.7;
+        this.particlePositions[i3 + 2] *= 0.7;
+      }
+    }
+
+// [Chrono-Loom Milestone 14/20] perf(comfort): optimize geometry segments for Quest 3 mobile GPU
