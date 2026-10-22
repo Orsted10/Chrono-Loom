@@ -414,5 +414,43 @@ export class SceneManager {
       emissive: 0x003d5c,
       emissiveIntensity: 0.3,
       roughness: 0.15,
+      metalness: 0.1,
+      transmission: 0.7,
+      ior: 1.45,
+      transparent: true,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
 
-// [Chrono-Loom Milestone 11/20] style(comfort): create custom translucent shader with cyan rim glow
+    const arcMesh = new THREE.Mesh(arcGeo, arcMaterial);
+    arcMesh.name = 'DeskSurface';
+
+    // Position arc at comfortable lap/desk height (y = 0.98m), rotated horizontally with a slight 8-deg incline towards user
+    arcMesh.rotation.x = Math.PI / 2 + 0.14; // slight tilt upward towards eyes
+    arcMesh.position.set(0, 0.96, 0); // centered at user X,Z = 0, arcs into Z < 0
+    deskGroup.add(arcMesh);
+
+    // Glowing neon bioluminescent borders
+    const edgesGeo = new THREE.EdgesGeometry(arcGeo, 20);
+    const glowLineMat = new THREE.LineBasicMaterial({
+      color: 0x00f0ff,
+      linewidth: 2,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending
+    });
+    const glowEdge = new THREE.LineSegments(edgesGeo, glowLineMat);
+    glowEdge.rotation.copy(arcMesh.rotation);
+    glowEdge.position.copy(arcMesh.position);
+    glowEdge.position.y += 0.001;
+    deskGroup.add(glowEdge);
+
+    // Holographic chronoloom weaver ticks along the outer rim
+    const tickGroup = new THREE.Group();
+    const tickMat = new THREE.LineBasicMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.6
+
+// [Chrono-Loom Milestone 12/20] feat(comfort): position comfort console at ergonomic reach z = -0.45m
