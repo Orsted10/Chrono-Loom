@@ -528,5 +528,43 @@ export class SceneManager {
         this.particlePositions[i3 + 2] *= 0.7;
       }
     }
+    posAttr.needsUpdate = true;
 
-// [Chrono-Loom Milestone 14/20] perf(comfort): optimize geometry segments for Quest 3 mobile GPU
+    // Subtle breathing glow on particles
+    const pMat = this.particlesMesh.material as THREE.PointsMaterial;
+    pMat.opacity = 0.65 + Math.sin(elapsedTime * 1.5) * 0.15;
+
+    // 2. Expand floor pulse ring
+    const pulseScale = (elapsedTime * 0.6) % 1.0;
+    const ringRadius = 0.3 + pulseScale * 5.0;
+    this.pulseRing.scale.set(ringRadius, ringRadius, 1);
+    const pulseMat = this.pulseRing.material as THREE.MeshBasicMaterial;
+    pulseMat.opacity = Math.max(0, (1 - pulseScale) * 0.35);
+
+    // 3. Smooth comfort desk highlight interpolation
+    this.currentDeskHighlight = THREE.MathUtils.lerp(
+      this.currentDeskHighlight,
+      this.targetDeskHighlight,
+      0.1
+    );
+    this.arcMaterial.emissiveIntensity = 0.25 + this.currentDeskHighlight * 0.7;
+    (this.arcGlowEdge.material as THREE.LineBasicMaterial).opacity =
+      0.75 + this.currentDeskHighlight * 0.25;
+
+    // Gentle desk floating micro-bob
+    this.comfortArcGroup.position.y = Math.sin(elapsedTime * 1.2) * 0.002;
+
+    // Gentle 3D title header floating bob
+    if (this.titleHeaderGroup) {
+      this.titleHeaderGroup.position.y = 1.75 + Math.sin(elapsedTime * 1.4) * 0.008;
+    }
+
+    // 4. Animate Audio-Reactive Cymatic Sonar Waves
+    for (const wave of this.cymaticPool) {
+      if (wave.active) {
+        wave.progress += deltaTime * wave.speed;
+        const radius = 0.08 + wave.progress * wave.maxRadius;
+        wave.mesh.scale.set(radius, radius, 1);
+        const opacity = Math.max(0, (1 - wave.progress) * 0.85);
+
+// [Chrono-Loom Milestone 15/20] refactor(scene): modularize comfort arc creation into helper methods
