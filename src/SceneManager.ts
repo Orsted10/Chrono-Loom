@@ -377,5 +377,42 @@ export class SceneManager {
 
   /**
    * Curved semi-transparent "Seated Comfort Arc" desk zone 0.45m in front of the user
+   * (Within a 2-foot / ~0.6m airplane-seat radius envelope)
+   */
+  private createSeatedComfortArc(): {
+    group: THREE.Group;
+    material: THREE.MeshPhysicalMaterial;
+    glowEdge: THREE.LineSegments;
+  } {
+    const deskGroup = new THREE.Group();
+    deskGroup.name = 'SeatedComfortArc';
 
-// [Chrono-Loom Milestone 10/20] feat(comfort): add curved frosted glass console mesh in front of user
+    // Seated comfort geometry:
+    // Center of arc is at the user (0, 0).
+    // Radius spans from 0.38m (inner edge) to 0.56m (outer edge) -> comfortably 0.45m in front of user!
+    // Angular span: centered along -Z axis (angle ~ -pi/2), spanning 70 degrees (Math.PI * 0.39)
+    const innerRadius = 0.36;
+    const outerRadius = 0.56;
+    const thetaSegments = 48;
+    const phiSegments = 8;
+    const thetaStart = Math.PI * 0.5 - 0.65; // facing negative Z
+    const thetaLength = 1.30; // ~74.5 degrees wide arc
+
+    // Create curved surface
+    const arcGeo = new THREE.RingGeometry(
+      innerRadius,
+      outerRadius,
+      thetaSegments,
+      phiSegments,
+      thetaStart,
+      thetaLength
+    );
+
+    // High-tech frosted glass / holographic physical material
+    const arcMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x071b2d,
+      emissive: 0x003d5c,
+      emissiveIntensity: 0.3,
+      roughness: 0.15,
+
+// [Chrono-Loom Milestone 11/20] style(comfort): create custom translucent shader with cyan rim glow
