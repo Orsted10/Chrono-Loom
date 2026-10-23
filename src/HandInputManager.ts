@@ -307,4 +307,48 @@ export class HandInputManager {
     pinchLine.visible = false;
     parentGroup.add(pinchLine);
 
-// [Chrono-Loom Milestone 7/33] perf(hands): optimize joint matrix updates with zero-allocation buffers
+    return {
+      handGroup: parentGroup,
+      handedness: defaultHandedness,
+      isConnected: false,
+      isPinching: false,
+      isOpenPalm: false,
+      currentPinchDist: 0.06,
+      jointSpheres,
+      pinchLine,
+      indexTipPos: new THREE.Vector3(),
+      thumbTipPos: new THREE.Vector3(),
+      middleTipPos: new THREE.Vector3(),
+      pinkyTipPos: new THREE.Vector3(),
+      wristPos: new THREE.Vector3(),
+      prevWristPos: new THREE.Vector3(),
+      wristVelocity: new THREE.Vector3(),
+      prevScissorDist: 0.04,
+      fingertipDistances: [0.07, 0.07, 0.07, 0.07, 0.07]
+    };
+  }
+
+  /**
+   * Sets up WebXR hand connected/disconnected listeners
+   */
+  private setupHandEvents(handGroup: THREE.XRHandSpace, index: number): void {
+    handGroup.addEventListener('connected', (event) => {
+      const xrInputSource = event.data;
+      const handedness: Handedness =
+        xrInputSource && xrInputSource.handedness === 'left' ? 'left' : 'right';
+
+      const state = handedness === 'left' ? this.leftHandState : this.rightHandState;
+      state.isConnected = true;
+      state.handedness = handedness;
+
+      // Reveal joints
+      state.jointSpheres.forEach((sphere) => (sphere.visible = true));
+      state.pinchLine.visible = true;
+      console.log(`[HandInputManager] WebXR hand #${index} connected as ${handedness}`);
+    });
+
+    handGroup.addEventListener('disconnected', (event) => {
+      const xrInputSource = event.data;
+      const handedness: Handedness =
+
+// [Chrono-Loom Milestone 8/33] feat(hands): implement Euclidean pinch distance calculation between thumb and index
