@@ -130,5 +130,49 @@ export class HandInputManager {
   private tempoRibbonLine!: THREE.Line;
   private tempoRibbonSprite!: THREE.Sprite;
   private tempoRibbonCanvas!: HTMLCanvasElement;
+  private tempoRibbonTexture!: THREE.CanvasTexture;
 
-// [Chrono-Loom Milestone 3/33] feat(hands): create glowing low-poly joint indicator spheres
+  // 3D "Gesture Cheat-Sheet" Holo-Card
+  public holoCardGroup!: THREE.Group;
+  private holoCardMesh!: THREE.Mesh;
+  private holoCardCanvas!: HTMLCanvasElement;
+  private holoCardTexture!: THREE.CanvasTexture;
+  public isHoloCardVisible = false;
+
+  // Simulator Conductor Toggle
+  public simConductorActive = false;
+
+  // Desktop Simulator Fallback
+  public isSimulatorActive = true;
+  private mouseNDC = new THREE.Vector2(0, 0);
+  private raycaster = new THREE.Raycaster();
+  private deskTargetPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0.45); // z = -0.45m plane
+  private simTargetPos = new THREE.Vector3(0, 1.05, -0.45);
+  private simLeftPinchHeld = false;
+  private simRightPinchHeld = false;
+  private simOpenPalmActive = false;
+  private simActiveHand: Handedness = 'right';
+
+  // Auto-Director Demo Mode Override
+  public isDemoModeActive = false;
+  public onUserInput: (() => void) | null = null;
+
+  // Desktop Visual Hand Rigs
+  public simLeftHandRig: THREE.Group;
+  public simRightHandRig: THREE.Group;
+  public simCursorReticle: THREE.Mesh;
+
+  // Hysteresis constants (in meters)
+  public static readonly PINCH_START_THRESHOLD = 0.025; // 25mm
+  public static readonly PINCH_END_THRESHOLD = 0.035;   // 35mm
+  public static readonly OPEN_PALM_THRESHOLD = 0.090;   // 90mm from wrist for all 5 fingertips
+
+  constructor(sceneManager: SceneManager) {
+    this.sceneManager = sceneManager;
+    this.renderer = sceneManager.renderer;
+    this.camera = sceneManager.camera;
+    this.cameraRig = sceneManager.cameraRig;
+
+    // 1. Initialize WebXR hand models factory
+
+// [Chrono-Loom Milestone 4/33] feat(hands): add hand joint position cache and velocity tracking
