@@ -87,4 +87,48 @@ interface HandInternalState {
   fingertipDistances: number[];
 }
 
-// [Chrono-Loom Milestone 2/33] feat(hands): integrate XRHandModelFactory for 25-joint skeleton rendering
+export class HandInputManager {
+  private sceneManager: SceneManager;
+  private renderer: THREE.WebGLRenderer;
+  private camera: THREE.PerspectiveCamera;
+  private cameraRig: THREE.Group;
+
+  // WebXR Hands
+  public hand0: THREE.XRHandSpace;
+  public hand1: THREE.XRHandSpace;
+  private handModelFactory: XRHandModelFactory;
+
+  // Internal tracked hand states
+  private leftHandState: HandInternalState;
+  private rightHandState: HandInternalState;
+
+  // Event callbacks
+  private pinchStartListeners: PinchCallback[] = [];
+  private pinchMoveListeners: PinchCallback[] = [];
+  private pinchEndListeners: PinchCallback[] = [];
+  private openPalmStartListeners: GestureCallback[] = [];
+  private openPalmMoveListeners: GestureCallback[] = [];
+  private openPalmEndListeners: GestureCallback[] = [];
+
+  // Phase 10: Neural Gesture Vocabulary & Time-Dilation Sculpting
+  public isConductorActive = false;
+  public currentConductorBPM = 90;
+  public gestureConfidences: GestureConfidences = {
+    conductorFrame: 0,
+    chordBloom: 0,
+    acousticScissors: 0,
+    pinchWeave: 0,
+    openPalmFreeze: 0
+  };
+
+  private conductorTempoListeners: ConductorTempoCallback[] = [];
+  private chordBloomListeners: ChordBloomCallback[] = [];
+  private acousticScissorsListeners: AcousticScissorsCallback[] = [];
+
+  // Holographic Tempo Ribbon
+  public tempoRibbonGroup!: THREE.Group;
+  private tempoRibbonLine!: THREE.Line;
+  private tempoRibbonSprite!: THREE.Sprite;
+  private tempoRibbonCanvas!: HTMLCanvasElement;
+
+// [Chrono-Loom Milestone 3/33] feat(hands): create glowing low-poly joint indicator spheres
