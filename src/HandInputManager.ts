@@ -174,5 +174,49 @@ export class HandInputManager {
     this.cameraRig = sceneManager.cameraRig;
 
     // 1. Initialize WebXR hand models factory
+    this.handModelFactory = new XRHandModelFactory();
 
-// [Chrono-Loom Milestone 4/33] feat(hands): add hand joint position cache and velocity tracking
+    // 2. Track both WebXR hands (0 and 1)
+    this.hand0 = this.renderer.xr.getHand(0);
+    this.hand1 = this.renderer.xr.getHand(1);
+
+    this.cameraRig.add(this.hand0);
+    this.cameraRig.add(this.hand1);
+
+    // Attach factory models (creates sphere primitives dynamically when connected)
+    this.hand0.add(this.handModelFactory.createHandModel(this.hand0, 'spheres'));
+    this.hand1.add(this.handModelFactory.createHandModel(this.hand1, 'spheres'));
+
+    // 3. Create joint visual overlays & telemetry state containers
+    this.leftHandState = this.createHandInternalState('left', this.hand0);
+    this.rightHandState = this.createHandInternalState('right', this.hand1);
+
+    // Bind WebXR hand connection events
+    this.setupHandEvents(this.hand0, 0);
+    this.setupHandEvents(this.hand1, 1);
+
+    // 4. Build Desktop Mouse/Keyboard Simulator Visuals & Handlers
+    const { leftRig, rightRig, reticle } = this.createDesktopSimulatorVisuals();
+    this.simLeftHandRig = leftRig;
+    this.simRightHandRig = rightRig;
+    this.simCursorReticle = reticle;
+
+    this.sceneManager.scene.add(this.simLeftHandRig);
+    this.sceneManager.scene.add(this.simRightHandRig);
+    this.sceneManager.scene.add(this.simCursorReticle);
+
+    this.setupDesktopControls();
+
+    // 5. Initialize Phase 10: Tempo Ribbon & 3D Gesture Holo-Card
+    this.createTempoRibbonVisuals();
+    this.createGestureHoloCard();
+
+    // Listen to XR Session lifecycle to toggle simulator
+    this.renderer.xr.addEventListener('sessionstart', () => {
+      this.isSimulatorActive = false;
+      this.simLeftHandRig.visible = false;
+      this.simRightHandRig.visible = false;
+      this.simCursorReticle.visible = false;
+    });
+
+// [Chrono-Loom Milestone 5/33] feat(hands): implement wrist orientation and palm forward vector extraction
