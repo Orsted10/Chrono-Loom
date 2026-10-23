@@ -42,5 +42,49 @@ export const XR_HAND_JOINTS = [
   'thumb-metacarpal',
   'thumb-phalanx-proximal',
   'thumb-phalanx-distal',
+  'thumb-tip',
+  'index-finger-metacarpal',
+  'index-finger-phalanx-proximal',
+  'index-finger-phalanx-intermediate',
+  'index-finger-phalanx-distal',
+  'index-finger-tip',
+  'middle-finger-metacarpal',
+  'middle-finger-phalanx-proximal',
+  'middle-finger-phalanx-intermediate',
+  'middle-finger-phalanx-distal',
+  'middle-finger-tip',
+  'ring-finger-metacarpal',
+  'ring-finger-phalanx-proximal',
+  'ring-finger-phalanx-intermediate',
+  'ring-finger-phalanx-distal',
+  'ring-finger-tip',
+  'pinky-finger-metacarpal',
+  'pinky-finger-phalanx-proximal',
+  'pinky-finger-phalanx-intermediate',
+  'pinky-finger-phalanx-distal',
+  'pinky-finger-tip'
+] as const;
 
-// [Chrono-Loom Milestone 1/33] feat(hands): initialize WebXR hand tracking input sources (getHand 0 & 1)
+export type XRHandJointName = typeof XR_HAND_JOINTS[number];
+
+interface HandInternalState {
+  handGroup: THREE.XRHandSpace;
+  handedness: Handedness;
+  isConnected: boolean;
+  isPinching: boolean;
+  isOpenPalm: boolean;
+  currentPinchDist: number;
+  jointSpheres: Map<XRHandJointName, THREE.Mesh>;
+  pinchLine: THREE.Line;
+  indexTipPos: THREE.Vector3;
+  thumbTipPos: THREE.Vector3;
+  middleTipPos: THREE.Vector3;
+  pinkyTipPos: THREE.Vector3;
+  wristPos: THREE.Vector3;
+  prevWristPos: THREE.Vector3;
+  wristVelocity: THREE.Vector3;
+  prevScissorDist: number;
+  fingertipDistances: number[];
+}
+
+// [Chrono-Loom Milestone 2/33] feat(hands): integrate XRHandModelFactory for 25-joint skeleton rendering
