@@ -350,5 +350,50 @@ export class HandInputManager {
     handGroup.addEventListener('disconnected', (event) => {
       const xrInputSource = event.data;
       const handedness: Handedness =
+        xrInputSource && xrInputSource.handedness === 'left' ? 'left' : 'right';
 
-// [Chrono-Loom Milestone 8/33] feat(hands): implement Euclidean pinch distance calculation between thumb and index
+      const state = handedness === 'left' ? this.leftHandState : this.rightHandState;
+      state.isConnected = false;
+      state.jointSpheres.forEach((sphere) => (sphere.visible = false));
+      state.pinchLine.visible = false;
+      console.log(`[HandInputManager] WebXR hand #${index} disconnected (${handedness})`);
+    });
+  }
+
+  /**
+   * Creates 3D visual representations for Desktop Simulator
+   */
+  private createDesktopSimulatorVisuals(): {
+    leftRig: THREE.Group;
+    rightRig: THREE.Group;
+    reticle: THREE.Mesh;
+  } {
+    const leftRig = this.createSimHandRig('left');
+    const rightRig = this.createSimHandRig('right');
+
+    leftRig.position.set(-0.16, 1.05, -0.45);
+    rightRig.position.set(0.16, 1.05, -0.45);
+
+    // Projected target cursor reticle on the desk plane
+    const reticleGeo = new THREE.RingGeometry(0.018, 0.024, 32);
+    const reticleMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.8,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending
+    });
+    const reticle = new THREE.Mesh(reticleGeo, reticleMat);
+    reticle.position.set(0, 1.05, -0.449);
+
+    return { leftRig, rightRig, reticle };
+  }
+
+  /**
+   * Helper to construct a bioluminescent virtual hand skeleton for desktop testing
+   */
+  private createSimHandRig(handedness: Handedness): THREE.Group {
+    const group = new THREE.Group();
+    group.name = `SimHandRig_${handedness}`;
+
+// [Chrono-Loom Milestone 9/33] feat(hands): design pinch hysteresis state machine (25mm start, 35mm end)
