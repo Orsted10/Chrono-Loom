@@ -396,4 +396,48 @@ export class HandInputManager {
     const group = new THREE.Group();
     group.name = `SimHandRig_${handedness}`;
 
-// [Chrono-Loom Milestone 9/33] feat(hands): design pinch hysteresis state machine (25mm start, 35mm end)
+    const jointMat = new THREE.MeshBasicMaterial({
+      color: handedness === 'left' ? 0xa855f7 : 0x00f0ff,
+      transparent: true,
+      opacity: 0.85
+    });
+
+    const tipMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.95
+    });
+
+    const boneMat = new THREE.LineBasicMaterial({
+      color: handedness === 'left' ? 0xc084fc : 0x38bdf8,
+      transparent: true,
+      opacity: 0.5
+    });
+
+    // Node definitions relative to wrist (0, 0, 0)
+    const sign = handedness === 'left' ? -1 : 1;
+    const jointPositions: Record<string, THREE.Vector3> = {
+      wrist: new THREE.Vector3(0, 0, 0),
+      palm: new THREE.Vector3(0, 0.035, -0.015),
+      thumb_base: new THREE.Vector3(sign * -0.02, 0.02, -0.005),
+      thumb_mid: new THREE.Vector3(sign * -0.035, 0.04, -0.01),
+      thumb_tip: new THREE.Vector3(sign * -0.03, 0.055, -0.01),
+      index_base: new THREE.Vector3(sign * -0.015, 0.05, -0.02),
+      index_mid: new THREE.Vector3(sign * -0.015, 0.07, -0.025),
+      index_tip: new THREE.Vector3(sign * -0.01, 0.088, -0.025),
+      middle_base: new THREE.Vector3(0, 0.052, -0.02),
+      middle_mid: new THREE.Vector3(0, 0.074, -0.025),
+      middle_tip: new THREE.Vector3(0, 0.095, -0.025),
+      ring_base: new THREE.Vector3(sign * 0.015, 0.048, -0.018),
+      ring_mid: new THREE.Vector3(sign * 0.015, 0.068, -0.022),
+      ring_tip: new THREE.Vector3(sign * 0.015, 0.086, -0.022),
+      pinky_base: new THREE.Vector3(sign * 0.028, 0.042, -0.015),
+      pinky_mid: new THREE.Vector3(sign * 0.03, 0.058, -0.018),
+      pinky_tip: new THREE.Vector3(sign * 0.032, 0.074, -0.018)
+    };
+
+    // Store joint meshes on userData
+    group.userData.nodes = {};
+    for (const [name, pos] of Object.entries(jointPositions)) {
+
+// [Chrono-Loom Milestone 10/33] test(hands): calibrate pinch detection thresholds with hand tracking telemetry
