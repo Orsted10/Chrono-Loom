@@ -262,5 +262,49 @@ export class HandInputManager {
     const wristMat = new THREE.MeshBasicMaterial({
       color: 0x818cf8,
       transparent: true,
+      opacity: 0.85,
+      depthWrite: false
+    });
 
-// [Chrono-Loom Milestone 6/33] feat(hands): add color-coded hand glow (cyan for left, magenta for right)
+    // Populate joint indicators
+    for (const jointName of XR_HAND_JOINTS) {
+      let geo = standardJointGeo;
+      let mat = standardJointMat;
+
+      if (jointName === 'index-finger-tip') {
+        geo = keyJointGeo;
+        mat = indexTipMat;
+      } else if (jointName === 'thumb-tip') {
+        geo = keyJointGeo;
+        mat = thumbTipMat;
+      } else if (jointName === 'wrist') {
+        geo = keyJointGeo;
+        mat = wristMat;
+      } else if (jointName === 'middle-finger-metacarpal') {
+        geo = standardJointGeo;
+      }
+
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.name = `Joint_${jointName}`;
+      mesh.visible = false;
+      parentGroup.add(mesh);
+      jointSpheres.set(jointName, mesh);
+    }
+
+    // Dynamic pinch laser line between index-tip and thumb-tip
+    const lineGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 0, 0)
+    ]);
+    const lineMat = new THREE.LineBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.7,
+      linewidth: 2,
+      blending: THREE.AdditiveBlending
+    });
+    const pinchLine = new THREE.Line(lineGeo, lineMat);
+    pinchLine.visible = false;
+    parentGroup.add(pinchLine);
+
+// [Chrono-Loom Milestone 7/33] perf(hands): optimize joint matrix updates with zero-allocation buffers
