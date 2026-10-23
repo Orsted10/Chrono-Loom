@@ -219,4 +219,48 @@ export class HandInputManager {
       this.simCursorReticle.visible = false;
     });
 
-// [Chrono-Loom Milestone 5/33] feat(hands): implement wrist orientation and palm forward vector extraction
+    this.renderer.xr.addEventListener('sessionend', () => {
+      this.isSimulatorActive = true;
+      this.simLeftHandRig.visible = true;
+      this.simRightHandRig.visible = true;
+      this.simCursorReticle.visible = true;
+    });
+  }
+
+  /**
+   * Builds joint visual indicators and internal tracking state
+   */
+  private createHandInternalState(defaultHandedness: Handedness, parentGroup: THREE.XRHandSpace): HandInternalState {
+    const jointSpheres = new Map<XRHandJointName, THREE.Mesh>();
+
+    // Glowing low-poly joint geometry
+    const standardJointGeo = new THREE.SphereGeometry(0.007, 8, 8);
+    const keyJointGeo = new THREE.SphereGeometry(0.010, 10, 10);
+
+    // Shared glowing materials
+    const standardJointMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.75,
+      depthWrite: false
+    });
+
+    const indexTipMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.95,
+      depthWrite: false
+    });
+
+    const thumbTipMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.95,
+      depthWrite: false
+    });
+
+    const wristMat = new THREE.MeshBasicMaterial({
+      color: 0x818cf8,
+      transparent: true,
+
+// [Chrono-Loom Milestone 6/33] feat(hands): add color-coded hand glow (cyan for left, magenta for right)
