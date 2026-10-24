@@ -571,5 +571,49 @@ export class HandInputManager {
       if (this.isDemoModeActive && e.key !== 'd' && e.key !== 'D') {
         this.onUserInput?.();
       }
+      if (!this.isSimulatorActive) return;
 
-// [Chrono-Loom Milestone 13/33] feat(simulator): map right-click and spacebar to virtual right hand pinch
+      if (e.code === 'Space') {
+        this.simRightPinchHeld = true;
+        this.simActiveHand = 'right';
+      } else if (e.key === 'o' || e.key === 'O') {
+        this.simOpenPalmActive = !this.simOpenPalmActive;
+        console.log(`[HandInputManager] Simulator Open Palm state: ${this.simOpenPalmActive}`);
+      } else if (e.key === 'g' || e.key === 'G') {
+        this.toggleGestureHoloCard();
+      } else if (e.key === 't' || e.key === 'T') {
+        this.toggleSimulatorConductor();
+      } else if (e.key === 'b' || e.key === 'B') {
+        this.emitChordBloom(this.simActiveHand, this.simTargetPos.clone());
+      } else if (e.key === 'x' || e.key === 'X') {
+        this.emitAcousticScissors(this.simActiveHand, this.simTargetPos.clone());
+      }
+    });
+
+    window.addEventListener('keyup', (e: KeyboardEvent) => {
+      if (!this.isSimulatorActive) return;
+
+      if (e.code === 'Space') {
+        this.simRightPinchHeld = false;
+      }
+    });
+  }
+
+  /**
+   * Main per-frame update loop called from animation loop
+   */
+  public update(deltaTime: number): void {
+    const isXRPresenting = this.renderer.xr.isPresenting;
+    this.isSimulatorActive = !isXRPresenting;
+
+    if (isXRPresenting) {
+      // 1. Process Native WebXR Hand Tracking
+      this.simLeftHandRig.visible = false;
+      this.simRightHandRig.visible = false;
+      this.simCursorReticle.visible = false;
+
+      this.updateWebXRHand(this.leftHandState);
+      this.updateWebXRHand(this.rightHandState);
+    } else {
+
+// [Chrono-Loom Milestone 14/33] feat(simulator): add cursor projection onto z = -0.45m comfort plane
