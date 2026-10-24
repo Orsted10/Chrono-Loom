@@ -439,5 +439,49 @@ export class HandInputManager {
     // Store joint meshes on userData
     group.userData.nodes = {};
     for (const [name, pos] of Object.entries(jointPositions)) {
+      const isTip = name.endsWith('_tip');
+      const isWrist = name === 'wrist';
+      const radius = isWrist ? 0.012 : isTip ? 0.009 : 0.006;
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, 8, 8),
+        isTip ? tipMat.clone() : jointMat
+      );
+      sphere.position.copy(pos);
+      sphere.name = name;
+      group.add(sphere);
+      group.userData.nodes[name] = sphere;
+    }
 
-// [Chrono-Loom Milestone 10/33] test(hands): calibrate pinch detection thresholds with hand tracking telemetry
+    // Connective bones
+    const bones = [
+      ['wrist', 'palm'],
+      ['wrist', 'thumb_base'],
+      ['thumb_base', 'thumb_mid'],
+      ['thumb_mid', 'thumb_tip'],
+      ['palm', 'index_base'],
+      ['index_base', 'index_mid'],
+      ['index_mid', 'index_tip'],
+      ['palm', 'middle_base'],
+      ['middle_base', 'middle_mid'],
+      ['middle_mid', 'middle_tip'],
+      ['palm', 'ring_base'],
+      ['ring_base', 'ring_mid'],
+      ['ring_mid', 'ring_tip'],
+      ['palm', 'pinky_base'],
+      ['pinky_base', 'pinky_mid'],
+      ['pinky_mid', 'pinky_tip']
+    ];
+
+    group.userData.boneLines = [];
+    for (const [a, b] of bones) {
+      const pA = jointPositions[a];
+      const pB = jointPositions[b];
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([pA, pB]);
+      const line = new THREE.Line(lineGeo, boneMat);
+      group.add(line);
+      group.userData.boneLines.push({ line, nameA: a, nameB: b });
+    }
+
+    // Pinch line between thumb and index tips
+
+// [Chrono-Loom Milestone 11/33] feat(simulator): build desktop 3D mouse raycaster for headless testing
