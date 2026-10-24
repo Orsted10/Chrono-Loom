@@ -527,5 +527,49 @@ export class HandInputManager {
       if (hit) {
         // Clamp to comfortable seated desk envelope (radius ~0.45m)
         intersection.x = THREE.MathUtils.clamp(intersection.x, -0.45, 0.45);
+        intersection.y = THREE.MathUtils.clamp(intersection.y, 0.80, 1.35);
+        this.simTargetPos.copy(intersection);
 
-// [Chrono-Loom Milestone 12/33] feat(simulator): map left-click hold to virtual left hand pinch gesture
+        // Dynamically assign active hand based on mouse horizontal side
+        if (!this.simLeftPinchHeld && !this.simRightPinchHeld) {
+          this.simActiveHand = intersection.x < 0 ? 'left' : 'right';
+        }
+      }
+    });
+
+    // Pointer down: Left Click = Left Pinch, Right Click = Right Pinch
+    dom.addEventListener('pointerdown', (e: MouseEvent) => {
+      if (this.isDemoModeActive) {
+        this.onUserInput?.();
+      }
+      if (!this.isSimulatorActive) return;
+
+      if (e.button === 0) {
+        // Left Click -> Left Pinch
+        this.simLeftPinchHeld = true;
+        this.simActiveHand = 'left';
+      } else if (e.button === 2) {
+        // Right Click -> Right Pinch
+        this.simRightPinchHeld = true;
+        this.simActiveHand = 'right';
+      }
+    });
+
+    // Pointer up
+    dom.addEventListener('pointerup', (e: MouseEvent) => {
+      if (!this.isSimulatorActive) return;
+
+      if (e.button === 0) {
+        this.simLeftPinchHeld = false;
+      } else if (e.button === 2) {
+        this.simRightPinchHeld = false;
+      }
+    });
+
+    // Keyboard controls: Spacebar = Right Hand Pinch, 'O' = Toggle Open Palm, '1'/'2' = Hand Select
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (this.isDemoModeActive && e.key !== 'd' && e.key !== 'D') {
+        this.onUserInput?.();
+      }
+
+// [Chrono-Loom Milestone 13/33] feat(simulator): map right-click and spacebar to virtual right hand pinch
