@@ -483,5 +483,49 @@ export class HandInputManager {
     }
 
     // Pinch line between thumb and index tips
+    const pinchLineGeo = new THREE.BufferGeometry().setFromPoints([
+      jointPositions.thumb_tip,
+      jointPositions.index_tip
+    ]);
+    const pinchLineMat = new THREE.LineBasicMaterial({
+      color: 0x00f0ff,
+      linewidth: 2,
+      transparent: true,
+      opacity: 0.85
+    });
+    const pinchLine = new THREE.Line(pinchLineGeo, pinchLineMat);
+    group.add(pinchLine);
+    group.userData.pinchLine = pinchLine;
 
-// [Chrono-Loom Milestone 11/33] feat(simulator): build desktop 3D mouse raycaster for headless testing
+    // Slight ergonomic rest tilt
+    group.rotation.x = -Math.PI * 0.15;
+    return group;
+  }
+
+  /**
+   * Sets up Desktop Mouse and Keyboard controls
+   */
+  private setupDesktopControls(): void {
+    const dom = this.renderer.domElement;
+
+    // Prevent context menu on right click to allow smooth Right-Click Drag
+    dom.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Mouse movement: project onto the z = -0.45m desk zone plane
+    dom.addEventListener('pointermove', (e: MouseEvent) => {
+      if (this.isDemoModeActive && (Math.abs(e.movementX) > 4 || Math.abs(e.movementY) > 4)) {
+        this.onUserInput?.();
+      }
+
+      this.mouseNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
+      this.mouseNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      this.raycaster.setFromCamera(this.mouseNDC, this.camera);
+      const intersection = new THREE.Vector3();
+      const hit = this.raycaster.ray.intersectPlane(this.deskTargetPlane, intersection);
+
+      if (hit) {
+        // Clamp to comfortable seated desk envelope (radius ~0.45m)
+        intersection.x = THREE.MathUtils.clamp(intersection.x, -0.45, 0.45);
+
+// [Chrono-Loom Milestone 12/33] feat(simulator): map left-click hold to virtual left hand pinch gesture
