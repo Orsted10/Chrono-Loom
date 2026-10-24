@@ -748,5 +748,49 @@ export class HandInputManager {
    */
   public setSimHandPose(hand: Handedness, position: THREE.Vector3, isPinching: boolean): void {
     if (hand === 'left') {
+      this.simLeftHandRig.position.copy(position);
+      this.simLeftPinchHeld = isPinching;
+    } else {
+      this.simRightHandRig.position.copy(position);
+      this.simRightPinchHeld = isPinching;
+    }
+  }
 
-// [Chrono-Loom Milestone 17/33] feat(hands): implement open-palm stop gesture detection (>90mm spread)
+  /**
+   * Sets the pinch state of a simulated hand rig for DemoDirector
+   */
+  public setSimPinch(hand: Handedness, isPinching: boolean): void {
+    if (hand === 'left') {
+      this.simLeftPinchHeld = isPinching;
+    } else {
+      this.simRightPinchHeld = isPinching;
+    }
+  }
+
+  /**
+   * Updates Desktop Simulator: animates simulated hands, pinch and gesture states
+   */
+  private updateDesktopSimulator(deltaTime: number): void {
+    if (this.isDemoModeActive) {
+      // In Demo Mode, DemoDirector drives simLeftHandRig and simRightHandRig positions & pinches
+      this.simCursorReticle.visible = false;
+      this.animateSimRig('left', this.simLeftHandRig, this.simLeftPinchHeld, this.leftHandState);
+      this.animateSimRig('right', this.simRightHandRig, this.simRightPinchHeld, this.rightHandState);
+      return;
+    }
+    this.simCursorReticle.visible = true;
+
+    // Smooth cursor reticle motion
+    this.simCursorReticle.position.lerp(this.simTargetPos, 0.25);
+
+    // Active hand moves to target position
+    const activeRig = this.simActiveHand === 'left' ? this.simLeftHandRig : this.simRightHandRig;
+    const idleRig = this.simActiveHand === 'left' ? this.simRightHandRig : this.simLeftHandRig;
+
+    // Follow mouse cursor
+    activeRig.position.lerp(this.simTargetPos, 0.22);
+
+    // Idle hand returns to gentle resting zone on comfort arc
+    const idleTarget =
+
+// [Chrono-Loom Milestone 18/33] feat(hands): add palm-muting state flags on left and right hands
