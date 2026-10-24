@@ -703,5 +703,50 @@ export class HandInputManager {
     }
 
     // 3. Open Palm / Stop Gesture Detection: all 5 fingertips > 0.09m from wrist
+    const fingertips: XRHandJointName[] = [
+      'thumb-tip',
+      'index-finger-tip',
+      'middle-finger-tip',
+      'ring-finger-tip',
+      'pinky-finger-tip'
+    ];
 
-// [Chrono-Loom Milestone 16/33] feat(simulator): add keyboard shortcuts for open palm and HUD controls
+    let allExtended = true;
+    state.fingertipDistances = [];
+
+    for (let i = 0; i < fingertips.length; i++) {
+      const tipMesh = state.jointSpheres.get(fingertips[i]);
+      if (tipMesh && tipMesh.visible) {
+        const tipWorld = new THREE.Vector3();
+        tipMesh.getWorldPosition(tipWorld);
+        const dist = state.wristPos.distanceTo(tipWorld);
+        state.fingertipDistances.push(dist);
+
+        if (dist <= HandInputManager.OPEN_PALM_THRESHOLD) {
+          allExtended = false;
+        }
+      } else {
+        allExtended = false;
+      }
+    }
+
+    if (allExtended && !state.isOpenPalm) {
+      state.isOpenPalm = true;
+      this.emitOpenPalmStart(state.handedness);
+    } else if (state.isOpenPalm) {
+      if (allExtended) {
+        this.emitOpenPalmMove(state.handedness);
+      } else {
+        state.isOpenPalm = false;
+        this.emitOpenPalmEnd(state.handedness);
+      }
+    }
+  }
+
+  /**
+   * Programmatically positions and pinches a simulated hand rig for DemoDirector
+   */
+  public setSimHandPose(hand: Handedness, position: THREE.Vector3, isPinching: boolean): void {
+    if (hand === 'left') {
+
+// [Chrono-Loom Milestone 17/33] feat(hands): implement open-palm stop gesture detection (>90mm spread)
