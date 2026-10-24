@@ -836,5 +836,49 @@ export class HandInputManager {
       thumbTip.position.lerp(restThumbPos, 0.2);
     }
 
+    // Open Palm gesture simulation: fingertips flare outward
+    const tips = ['thumb_tip', 'index_tip', 'middle_tip', 'ring_tip', 'pinky_tip'];
+    if (this.simOpenPalmActive) {
+      // Flare fingers away from palm
+      nodes['thumb_tip'].position.y = 0.07;
+      nodes['index_tip'].position.y = 0.105;
+      nodes['middle_tip'].position.y = 0.112;
+      nodes['ring_tip'].position.y = 0.103;
+      nodes['pinky_tip'].position.y = 0.092;
+    }
 
-// [Chrono-Loom Milestone 19/33] style(hands): tint joint spheres to icy blue when palm-muting is active
+    // Update connective bone lines
+    const boneLines = rig.userData.boneLines;
+    if (boneLines) {
+      for (const { line, nameA, nameB } of boneLines) {
+        const nodeA = nodes[nameA];
+        const nodeB = nodes[nameB];
+        if (nodeA && nodeB) {
+          const attr = line.geometry.attributes.position as THREE.BufferAttribute;
+          attr.setXYZ(0, nodeA.position.x, nodeA.position.y, nodeA.position.z);
+          attr.setXYZ(1, nodeB.position.x, nodeB.position.y, nodeB.position.z);
+          attr.needsUpdate = true;
+        }
+      }
+    }
+
+    // Update pinch line on sim hand
+    const pinchLine = rig.userData.pinchLine as THREE.Line;
+    if (pinchLine) {
+      const pAttr = pinchLine.geometry.attributes.position as THREE.BufferAttribute;
+      pAttr.setXYZ(0, indexTip.position.x, indexTip.position.y, indexTip.position.z);
+      pAttr.setXYZ(1, thumbTip.position.x, thumbTip.position.y, thumbTip.position.z);
+      pAttr.needsUpdate = true;
+    }
+
+    // 2. Measure world Euclidean distances
+    const indexWorld = new THREE.Vector3();
+    const thumbWorld = new THREE.Vector3();
+    const middleWorld = new THREE.Vector3();
+    const pinkyWorld = new THREE.Vector3();
+    const wristWorld = new THREE.Vector3();
+
+    indexTip.getWorldPosition(indexWorld);
+    thumbTip.getWorldPosition(thumbWorld);
+
+// [Chrono-Loom Milestone 20/33] refactor(hands): encapsulate gesture recognition into HandInputManager.ts
