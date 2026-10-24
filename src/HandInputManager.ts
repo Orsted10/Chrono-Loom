@@ -615,5 +615,49 @@ export class HandInputManager {
       this.updateWebXRHand(this.leftHandState);
       this.updateWebXRHand(this.rightHandState);
     } else {
+      // 2. Process Desktop Simulator Fallback
+      this.simLeftHandRig.visible = true;
+      this.simRightHandRig.visible = true;
+      this.simCursorReticle.visible = true;
 
-// [Chrono-Loom Milestone 14/33] feat(simulator): add cursor projection onto z = -0.45m comfort plane
+      this.updateDesktopSimulator(deltaTime);
+    }
+
+    // Highlight desk zone if any hand is pinching or hovering
+    const anyPinching = this.leftHandState.isPinching || this.rightHandState.isPinching;
+    this.sceneManager.setDeskHighlight(anyPinching ? 1.0 : 0.2);
+
+    // 3. Process Neural Gesture Vocabulary (Conductor Frame, Chord Bloom, Acoustic Scissors)
+    this.updateNeuralGestures(deltaTime);
+  }
+
+  /**
+   * Native WebXR Hand calculations (Euclidean Pinch & Open Palm)
+   */
+  private updateWebXRHand(state: HandInternalState): void {
+    const handGroup = state.handGroup as any;
+    if (!state.isConnected || !handGroup.joints) {
+      return;
+    }
+
+    const joints = handGroup.joints;
+
+    // 1. Update visual joint positions & collect key joint coordinates
+    for (const jointName of XR_HAND_JOINTS) {
+      const xrJoint = joints[jointName];
+      const sphereMesh = state.jointSpheres.get(jointName);
+
+      if (xrJoint && sphereMesh) {
+        if (xrJoint.visible) {
+          sphereMesh.visible = true;
+          sphereMesh.position.copy(xrJoint.position);
+          sphereMesh.quaternion.copy(xrJoint.quaternion);
+
+          if (jointName === 'index-finger-tip') {
+            xrJoint.getWorldPosition(state.indexTipPos);
+          } else if (jointName === 'thumb-tip') {
+            xrJoint.getWorldPosition(state.thumbTipPos);
+          } else if (jointName === 'middle-finger-tip') {
+            xrJoint.getWorldPosition(state.middleTipPos);
+
+// [Chrono-Loom Milestone 15/33] feat(simulator): render virtual hand pointer reticles in desktop mode
