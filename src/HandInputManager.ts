@@ -792,5 +792,49 @@ export class HandInputManager {
 
     // Idle hand returns to gentle resting zone on comfort arc
     const idleTarget =
+      this.simActiveHand === 'left'
+        ? new THREE.Vector3(0.18, 1.03, -0.44)
+        : new THREE.Vector3(-0.18, 1.03, -0.44);
+    idleRig.position.lerp(idleTarget, 0.08);
 
-// [Chrono-Loom Milestone 18/33] feat(hands): add palm-muting state flags on left and right hands
+    // Animate Left Hand simulation
+    this.animateSimRig('left', this.simLeftHandRig, this.simLeftPinchHeld, this.leftHandState);
+
+    // Animate Right Hand simulation
+    this.animateSimRig('right', this.simRightHandRig, this.simRightPinchHeld, this.rightHandState);
+  }
+
+  /**
+   * Animates procedural bones and evaluates gestures for the simulated hand rig
+   */
+  private animateSimRig(
+    hand: Handedness,
+    rig: THREE.Group,
+    isPinchCommanded: boolean,
+    state: HandInternalState
+  ): void {
+    const nodes = rig.userData.nodes;
+    if (!nodes) return;
+
+    const indexTip = nodes['index_tip'] as THREE.Mesh;
+    const thumbTip = nodes['thumb_tip'] as THREE.Mesh;
+    const wrist = nodes['wrist'] as THREE.Mesh;
+
+    // 1. Pinch animation: index tip moves towards thumb tip
+    const sign = hand === 'left' ? -1 : 1;
+    const restIndexPos = new THREE.Vector3(sign * -0.01, 0.088, -0.025);
+    const restThumbPos = new THREE.Vector3(sign * -0.03, 0.055, -0.01);
+
+    // Pinched target position (fingertips touching at midpoint)
+    const pinchTouchPos = new THREE.Vector3(sign * -0.022, 0.068, -0.015);
+
+    if (isPinchCommanded) {
+      indexTip.position.lerp(pinchTouchPos, 0.35);
+      thumbTip.position.lerp(pinchTouchPos, 0.35);
+    } else {
+      indexTip.position.lerp(restIndexPos, 0.2);
+      thumbTip.position.lerp(restThumbPos, 0.2);
+    }
+
+
+// [Chrono-Loom Milestone 19/33] style(hands): tint joint spheres to icy blue when palm-muting is active
