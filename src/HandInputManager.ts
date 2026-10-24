@@ -659,5 +659,49 @@ export class HandInputManager {
             xrJoint.getWorldPosition(state.thumbTipPos);
           } else if (jointName === 'middle-finger-tip') {
             xrJoint.getWorldPosition(state.middleTipPos);
+          } else if (jointName === 'pinky-finger-tip') {
+            xrJoint.getWorldPosition(state.pinkyTipPos);
+          } else if (jointName === 'wrist') {
+            xrJoint.getWorldPosition(state.wristPos);
+          }
+        } else {
+          sphereMesh.visible = false;
+        }
+      }
+    }
 
-// [Chrono-Loom Milestone 15/33] feat(simulator): render virtual hand pointer reticles in desktop mode
+    // 2. Reliable Euclidean Pinch Detector
+    const pinchDist = state.indexTipPos.distanceTo(state.thumbTipPos);
+    state.currentPinchDist = pinchDist;
+    const midpoint = new THREE.Vector3()
+      .addVectors(state.indexTipPos, state.thumbTipPos)
+      .multiplyScalar(0.5);
+
+    // Update dynamic pinch line
+    const localIndexTip = state.jointSpheres.get('index-finger-tip')?.position;
+    const localThumbTip = state.jointSpheres.get('thumb-tip')?.position;
+    if (localIndexTip && localThumbTip) {
+      const linePosAttr = state.pinchLine.geometry.attributes.position as THREE.BufferAttribute;
+      linePosAttr.setXYZ(0, localIndexTip.x, localIndexTip.y, localIndexTip.z);
+      linePosAttr.setXYZ(1, localThumbTip.x, localThumbTip.y, localThumbTip.z);
+      linePosAttr.needsUpdate = true;
+    }
+
+    // Hysteresis threshold logic
+    if (!state.isPinching && pinchDist < HandInputManager.PINCH_START_THRESHOLD) {
+      state.isPinching = true;
+      this.highlightJointsOnPinch(state, true);
+      this.emitPinchStart(state.handedness, midpoint, pinchDist);
+    } else if (state.isPinching) {
+      this.emitPinchMove(state.handedness, midpoint, pinchDist);
+
+      if (pinchDist > HandInputManager.PINCH_END_THRESHOLD) {
+        state.isPinching = false;
+        this.highlightJointsOnPinch(state, false);
+        this.emitPinchEnd(state.handedness, midpoint, pinchDist);
+      }
+    }
+
+    // 3. Open Palm / Stop Gesture Detection: all 5 fingertips > 0.09m from wrist
+
+// [Chrono-Loom Milestone 16/33] feat(simulator): add keyboard shortcuts for open palm and HUD controls
