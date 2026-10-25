@@ -880,5 +880,49 @@ export class HandInputManager {
 
     indexTip.getWorldPosition(indexWorld);
     thumbTip.getWorldPosition(thumbWorld);
+    wrist.getWorldPosition(wristWorld);
 
-// [Chrono-Loom Milestone 20/33] refactor(hands): encapsulate gesture recognition into HandInputManager.ts
+    const middleTip = nodes['middle_tip'] as THREE.Mesh;
+    const pinkyTip = nodes['pinky_tip'] as THREE.Mesh;
+    if (middleTip) {
+      middleTip.getWorldPosition(middleWorld);
+      state.middleTipPos.copy(middleWorld);
+    }
+    if (pinkyTip) {
+      pinkyTip.getWorldPosition(pinkyWorld);
+      state.pinkyTipPos.copy(pinkyWorld);
+    }
+
+    state.indexTipPos.copy(indexWorld);
+    state.thumbTipPos.copy(thumbWorld);
+    state.wristPos.copy(wristWorld);
+
+    const dist = indexWorld.distanceTo(thumbWorld);
+    state.currentPinchDist = dist;
+    const midpoint = new THREE.Vector3().addVectors(indexWorld, thumbWorld).multiplyScalar(0.5);
+
+    // Color feedback on tips and pinch line
+    const isPinching = isPinchCommanded || dist < HandInputManager.PINCH_START_THRESHOLD;
+    (indexTip.material as THREE.MeshBasicMaterial).color.setHex(isPinching ? 0x00ff88 : 0x00f0ff);
+    (thumbTip.material as THREE.MeshBasicMaterial).color.setHex(isPinching ? 0xffd700 : 0x38bdf8);
+
+    // 3. Trigger Pinch Events with Hysteresis
+    if (!state.isPinching && dist < HandInputManager.PINCH_START_THRESHOLD) {
+      state.isPinching = true;
+      this.emitPinchStart(hand, midpoint, dist);
+    } else if (state.isPinching) {
+      this.emitPinchMove(hand, midpoint, dist);
+
+      if (dist > HandInputManager.PINCH_END_THRESHOLD) {
+        state.isPinching = false;
+        this.emitPinchEnd(hand, midpoint, dist);
+      }
+    }
+
+    // 4. Trigger Open Palm Gesture
+    state.fingertipDistances = [];
+    let allExtended = true;
+    for (const tipName of tips) {
+      const tipMesh = nodes[tipName] as THREE.Mesh;
+
+// [Chrono-Loom Milestone 21/33] perf(hands): throttle gesture classifier calculations to 60Hz
