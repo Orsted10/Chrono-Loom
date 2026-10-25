@@ -470,5 +470,163 @@ class ChronoLoomApp {
       if (compactBtn) {
         const on = this.accessibilityManager.isWorkspaceCompact;
         compactBtn.textContent = on ? 'Restore Dist [C]' : 'Pull Closer [C]';
+        compactBtn.classList.toggle('active', on);
+      }
+    };
+    if (compactBtn) {
+      compactBtn.addEventListener('click', () => {
+        this.accessibilityManager.toggleWorkspaceCompact();
+        updateCompactBtnText();
+      });
+      updateCompactBtnText();
+    }
 
-// [Chrono-Loom Milestone 3/6] feat(ui): add keyboard toggle [H] to hide/show telemetry overlay
+    // Button for Auto-Director Cinematic Showcase
+    const demoBtn = document.getElementById('demo-showcase-btn');
+    if (demoBtn) {
+      demoBtn.addEventListener('click', () => {
+        this.demoDirector.toggleDemo();
+      });
+    }
+
+    // Button to Share Loom Link via URL hash
+    const shareBtn = document.getElementById('share-loom-btn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        this.loomEngine.copyShareLinkToClipboard(this.agentAria.mode);
+      });
+    }
+
+    // Button to toggle MR Room Scan (Plane Detection & Wall-Bounce Acoustics)
+    const scanBtn = document.getElementById('room-scan-toggle-btn');
+    const updateScanBtnText = () => {
+      if (scanBtn) {
+        const on = this.mrSurfaceManager.isRoomScanEnabled;
+        scanBtn.textContent = on ? 'MR Room Scan: ON [R]' : 'MR Room Scan: OFF [R]';
+        scanBtn.classList.toggle('active', on);
+      }
+    };
+    if (scanBtn) {
+      scanBtn.addEventListener('click', () => {
+        this.mrSurfaceManager.toggleRoomScan();
+        updateScanBtnText();
+      });
+      updateScanBtnText();
+    }
+
+    // Button to toggle 3D Gesture Holo-Card Cheat-Sheet
+    const gestureGuideBtn = document.getElementById('gesture-guide-btn');
+    if (gestureGuideBtn) {
+      gestureGuideBtn.addEventListener('click', () => {
+        this.handInputManager.toggleGestureHoloCard();
+        gestureGuideBtn.classList.toggle('active', this.handInputManager.isHoloCardVisible);
+      });
+    }
+
+    // Button to toggle Simulator Conductor Frame (Time-Dilation)
+    const conductorBtn = document.getElementById('conductor-mode-btn');
+    if (conductorBtn) {
+      conductorBtn.addEventListener('click', () => {
+        this.handInputManager.toggleSimulatorConductor();
+        conductorBtn.classList.toggle('active', this.handInputManager.simConductorActive);
+      });
+    }
+
+    // Phase 13: Push-to-Talk Speech Recognition & Natural Intent Director
+    const talkAriaBtn = document.getElementById('talk-aria-btn');
+    const ariaVoiceBadge = document.getElementById('aria-voice-badge');
+    const ariaChipsToggleBtn = document.getElementById('aria-chips-toggle-btn');
+    const ariaChipsDrawer = document.getElementById('aria-intent-chips-drawer');
+
+    if (talkAriaBtn) {
+      talkAriaBtn.addEventListener('click', () => {
+        this.agentAria.toggleSpeechListening();
+      });
+    }
+
+    this.agentAria.onListeningStateChanged = (isListening) => {
+      if (talkAriaBtn) {
+        talkAriaBtn.classList.toggle('active', isListening);
+        talkAriaBtn.textContent = isListening ? '🔴 Listening... [V]' : '🎤 Talk to Aria [V]';
+      }
+      if (ariaVoiceBadge) {
+        ariaVoiceBadge.style.display = isListening ? 'inline-flex' : 'none';
+      }
+    };
+
+    if (ariaChipsToggleBtn && ariaChipsDrawer) {
+      ariaChipsToggleBtn.addEventListener('click', () => {
+        const isHidden = ariaChipsDrawer.style.display === 'none';
+        ariaChipsDrawer.style.display = isHidden ? 'flex' : 'none';
+        ariaChipsToggleBtn.textContent = isHidden ? 'Voice Intents ▾' : 'Voice Intents ▴';
+      });
+    }
+
+    document.querySelectorAll('.chip-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const intent = btn.getAttribute('data-intent');
+        if (intent) {
+          this.agentAria.executeNaturalIntent(intent);
+        }
+      });
+    });
+
+    // Keyboard shortcuts: C for Compact Workspace, A for Accessibility Suite, D for Auto-Demo, R for Room Scan, G for Gesture Guide, T for Conductor, V for Voice Director, J for Jam Room
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'c' || e.key === 'C') {
+        this.accessibilityManager.toggleWorkspaceCompact();
+        updateCompactBtnText();
+      } else if (e.key === 'a' || e.key === 'A') {
+        this.accessibilityManager.toggleAccessibilitySuite();
+        updateA11yBtnText();
+      } else if (e.key === 'd' || e.key === 'D') {
+        this.demoDirector.toggleDemo();
+      } else if (e.key === 'r' || e.key === 'R') {
+        this.mrSurfaceManager.toggleRoomScan();
+        updateScanBtnText();
+      } else if (e.key === 'g' || e.key === 'G') {
+        this.handInputManager.toggleGestureHoloCard();
+        if (gestureGuideBtn) gestureGuideBtn.classList.toggle('active', this.handInputManager.isHoloCardVisible);
+      } else if (e.key === 't' || e.key === 'T') {
+        this.handInputManager.toggleSimulatorConductor();
+        if (conductorBtn) conductorBtn.classList.toggle('active', this.handInputManager.simConductorActive);
+      } else if (e.key === 'v' || e.key === 'V') {
+        this.agentAria.toggleSpeechListening();
+      } else if (e.key === 'j' || e.key === 'J') {
+        this.multiplayerSync.toggleModal();
+      }
+    });
+  }
+
+  /**
+   * Cleans up all drawn temporal threads
+   */
+  private clearAllThreads(): void {
+    for (const thread of this.completedThreads) {
+      this.threadsGroup.remove(thread.line);
+      thread.line.geometry.dispose();
+      (thread.line.material as THREE.Material).dispose();
+    }
+    this.completedThreads = [];
+
+    this.activeThreads.forEach((thread) => {
+      this.threadsGroup.remove(thread.line);
+      thread.line.geometry.dispose();
+      (thread.line.material as THREE.Material).dispose();
+    });
+    this.activeThreads.clear();
+  }
+
+  /**
+   * Per-frame updates for thread shimmers and spark particles
+   */
+  private updateTemporalEffects(deltaTime: number, currentTime: number): void {
+    for (const thread of this.completedThreads) {
+      const mat = thread.line.material as THREE.LineBasicMaterial;
+      const age = currentTime - thread.birthTime;
+      mat.opacity = Math.max(0.15, 0.85 - (age / thread.maxLife) * 0.7);
+    }
+
+    let anyAlive = false;
+
+// [Chrono-Loom Milestone 4/6] refactor(main): wire HandInputManager lifecycle hooks into main.ts render loop
