@@ -968,5 +968,49 @@ export class HandInputManager {
     }
   }
 
+  // ----------------------------------------------------
+  // Public Event Subscription API
+  // ----------------------------------------------------
 
-// [Chrono-Loom Milestone 22/33] fix(hands): resolve pinch flicker during rapid finger movement
+  public onPinchStart(cb: PinchCallback): void {
+    this.pinchStartListeners.push(cb);
+  }
+
+  public onPinchMove(cb: PinchCallback): void {
+    this.pinchMoveListeners.push(cb);
+  }
+
+  public onPinchEnd(cb: PinchCallback): void {
+    this.pinchEndListeners.push(cb);
+  }
+
+  public onOpenPalmStart(cb: GestureCallback): void {
+    this.openPalmStartListeners.push(cb);
+  }
+
+  public onOpenPalmMove(cb: GestureCallback): void {
+    this.openPalmMoveListeners.push(cb);
+  }
+
+  public onOpenPalmEnd(cb: GestureCallback): void {
+    this.openPalmEndListeners.push(cb);
+  }
+
+  private emitPinchStart(hand: Handedness, midpoint: THREE.Vector3, dist: number): void {
+    for (const cb of this.pinchStartListeners) cb(hand, midpoint, dist);
+  }
+
+  private emitPinchMove(hand: Handedness, midpoint: THREE.Vector3, dist: number): void {
+    for (const cb of this.pinchMoveListeners) cb(hand, midpoint, dist);
+  }
+
+  private emitPinchEnd(hand: Handedness, midpoint: THREE.Vector3, dist: number): void {
+    for (const cb of this.pinchEndListeners) cb(hand, midpoint, dist);
+  }
+
+  private emitOpenPalmStart(hand: Handedness): void {
+    for (const cb of this.openPalmStartListeners) cb(hand);
+  }
+
+
+// [Chrono-Loom Milestone 23/33] feat(hands): add fingertip velocity smoothing with moving average filter
