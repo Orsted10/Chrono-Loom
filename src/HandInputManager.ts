@@ -924,5 +924,49 @@ export class HandInputManager {
     let allExtended = true;
     for (const tipName of tips) {
       const tipMesh = nodes[tipName] as THREE.Mesh;
+      const tipW = new THREE.Vector3();
+      tipMesh.getWorldPosition(tipW);
+      const d = wristWorld.distanceTo(tipW);
+      state.fingertipDistances.push(d);
+      if (d <= HandInputManager.OPEN_PALM_THRESHOLD) {
+        allExtended = false;
+      }
+    }
 
-// [Chrono-Loom Milestone 21/33] perf(hands): throttle gesture classifier calculations to 60Hz
+    if (allExtended && !state.isOpenPalm) {
+      state.isOpenPalm = true;
+      this.emitOpenPalmStart(hand);
+    } else if (state.isOpenPalm) {
+      if (allExtended) {
+        this.emitOpenPalmMove(hand);
+      } else {
+        state.isOpenPalm = false;
+        this.emitOpenPalmEnd(hand);
+      }
+    }
+  }
+
+  /**
+   * Visual glowing response on joint spheres during pinch
+   */
+  private highlightJointsOnPinch(state: HandInternalState, isPinching: boolean): void {
+    const indexMesh = state.jointSpheres.get('index-finger-tip');
+    const thumbMesh = state.jointSpheres.get('thumb-tip');
+
+    if (indexMesh) {
+      (indexMesh.material as THREE.MeshBasicMaterial).color.setHex(
+        isPinching ? 0x00ff88 : 0x00f0ff
+      );
+      indexMesh.scale.setScalar(isPinching ? 1.4 : 1.0);
+    }
+
+    if (thumbMesh) {
+      (thumbMesh.material as THREE.MeshBasicMaterial).color.setHex(
+        isPinching ? 0xffd700 : 0x38bdf8
+      );
+      thumbMesh.scale.setScalar(isPinching ? 1.4 : 1.0);
+    }
+  }
+
+
+// [Chrono-Loom Milestone 22/33] fix(hands): resolve pinch flicker during rapid finger movement
