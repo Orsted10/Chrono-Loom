@@ -1012,5 +1012,49 @@ export class HandInputManager {
     for (const cb of this.openPalmStartListeners) cb(hand);
   }
 
+  private emitOpenPalmMove(hand: Handedness): void {
+    for (const cb of this.openPalmMoveListeners) cb(hand);
+  }
 
-// [Chrono-Loom Milestone 23/33] feat(hands): add fingertip velocity smoothing with moving average filter
+  private emitOpenPalmEnd(hand: Handedness): void {
+    for (const cb of this.openPalmEndListeners) cb(hand);
+  }
+
+  /**
+   * Retrieves live telemetry data for UI HUD display
+   */
+  public getTelemetry(handedness: Handedness): HandTelemetry {
+    const state = handedness === 'left' ? this.leftHandState : this.rightHandState;
+    return {
+      handedness,
+      isTracked: this.isSimulatorActive || state.isConnected,
+      pinchDistance: state.currentPinchDist,
+      isPinching: state.isPinching,
+      isOpenPalm: state.isOpenPalm,
+      wristToFingerDistances: state.fingertipDistances,
+      indexTipPosition: state.indexTipPos.clone(),
+      thumbTipPosition: state.thumbTipPos.clone(),
+      wristPosition: state.wristPos.clone(),
+      middleTipPosition: state.middleTipPos.clone(),
+      pinkyTipPosition: state.pinkyTipPos.clone()
+    };
+  }
+
+  /**
+   * Toggle simulator open palm for UI button
+   */
+  public toggleSimulatorOpenPalm(): boolean {
+    this.simOpenPalmActive = !this.simOpenPalmActive;
+    return this.simOpenPalmActive;
+  }
+
+  // ----------------------------------------------------
+  // Phase 10: Neural Gesture Vocabulary & Time-Dilation Sculpting
+  // ----------------------------------------------------
+
+  public onConductorTempo(cb: ConductorTempoCallback): void {
+    this.conductorTempoListeners.push(cb);
+  }
+
+
+// [Chrono-Loom Milestone 24/33] docs(hands): document Euclidean pinch hysteresis formula in code comments
