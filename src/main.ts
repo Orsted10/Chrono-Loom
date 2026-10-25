@@ -313,5 +313,162 @@ class ChronoLoomApp {
             this.spawnSparksAt(midpoint, 1);
           }
         }
+      }
+    });
 
-// [Chrono-Loom Milestone 2/6] test(scene): verify 90fps seated viewport rendering in headless simulator
+    // 3. Pinch End
+    this.handInputManager.onPinchEnd((hand, midpoint, distance) => {
+      this.spawnSparksAt(midpoint, 6);
+
+      const thread = this.activeThreads.get(hand);
+      if (thread) {
+        this.completedThreads.push(thread);
+        this.activeThreads.delete(hand);
+
+        if (this.completedThreads.length > 6) {
+          const old = this.completedThreads.shift()!;
+          this.threadsGroup.remove(old.line);
+          old.line.geometry.dispose();
+          (old.line.material as THREE.Material).dispose();
+        }
+      }
+    });
+
+    // 4. Open Palm / Stop Gesture: Temporal shockwave
+    this.handInputManager.onOpenPalmStart((hand) => {
+      this.sceneManager.setDeskHighlight(1.0);
+    });
+  }
+
+  /**
+   * Hooks into HTML DOM elements for telemetry display & button clicks
+   */
+  private setupHUD(): void {
+    this.hudLeftDistEl = document.getElementById('left-dist') || document.createElement('span');
+    this.hudLeftStatusEl = document.getElementById('left-status') || document.createElement('span');
+    this.hudRightDistEl = document.getElementById('right-dist') || document.createElement('span');
+    this.hudRightStatusEl =
+      document.getElementById('right-status') || document.createElement('span');
+    this.hudModeEl = document.getElementById('session-mode') || document.createElement('span');
+    this.hudPalmBadgeEl =
+      document.getElementById('palm-status-badge') || document.createElement('span');
+
+    this.hudLoomStateEl =
+      document.getElementById('loom-state-badge') || document.createElement('span');
+    this.hudNodesCountEl =
+      document.getElementById('nodes-count') || document.createElement('span');
+    this.hudStringsCountEl =
+      document.getElementById('strings-count') || document.createElement('span');
+    this.hudPulsesCountEl =
+      document.getElementById('pulses-count') || document.createElement('span');
+    this.hudAriaBadgeEl =
+      document.getElementById('aria-mode-badge') || document.createElement('span');
+    this.hudConstellationEl =
+      document.getElementById('constellation-progress') || document.createElement('span');
+    this.hudA11yBadgeEl =
+      document.getElementById('a11y-suite-badge') || document.createElement('span');
+
+    // On-screen Demo Recording Telemetry Elements
+    this.demoPanelEl = document.getElementById('demo-telemetry-panel') || document.createElement('div');
+    this.demoToggleBtn = document.getElementById('toggle-telemetry-btn') || document.createElement('button');
+    this.demoHandTrackingEl = document.getElementById('demo-hand-tracking') || document.createElement('span');
+    this.demoSeatedRadiusEl = document.getElementById('demo-seated-radius') || document.createElement('span');
+    this.demoAriaStateEl = document.getElementById('demo-aria-state') || document.createElement('span');
+    this.demoA11yStatusEl = document.getElementById('demo-a11y-status') || document.createElement('span');
+    this.demoMultiplayerEl = document.getElementById('demo-multiplayer-status');
+    this.demoScaleStatusEl = document.getElementById('demo-scale-status');
+    this.demoAriaIntentEl = document.getElementById('demo-aria-intent');
+    this.demoGpuShadersEl = document.getElementById('demo-gpu-shaders');
+    this.demoPolyrhythmEl = document.getElementById('demo-polyrhythm-bpm') || document.createElement('span');
+
+    // Toggle demo telemetry panel via button or 'H' hotkey
+    const toggleDemoPanel = () => {
+      this.isDemoTelemetryVisible = !this.isDemoTelemetryVisible;
+      this.demoPanelEl.classList.toggle('minimized', !this.isDemoTelemetryVisible);
+      this.demoToggleBtn.textContent = this.isDemoTelemetryVisible ? 'HIDE [H]' : 'SHOW [H]';
+    };
+
+    this.demoToggleBtn.addEventListener('click', toggleDemoPanel);
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'h' || e.key === 'H') {
+        toggleDemoPanel();
+      }
+    });
+
+    // Button to clear threads
+    const clearBtn = document.getElementById('clear-threads-btn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        this.clearAllThreads();
+      });
+    }
+
+    // Button to reset spatial loom
+    const resetLoomBtn = document.getElementById('reset-loom-btn');
+    if (resetLoomBtn) {
+      resetLoomBtn.addEventListener('click', () => {
+        this.loomEngine.resetLoom();
+        this.agentAria.reset();
+        this.constellationMode.initDailyPuzzle322();
+        this.clearAllThreads();
+      });
+    }
+
+    // Button to cycle Aria AI mode from HUD
+    const ariaCycleBtn = document.getElementById('aria-cycle-btn');
+    if (ariaCycleBtn) {
+      ariaCycleBtn.addEventListener('click', () => {
+        this.agentAria.cycleAIMode();
+      });
+    }
+
+    // Button to toggle constellation mode from HUD
+    const puzzleToggleBtn = document.getElementById('puzzle-toggle-btn');
+    if (puzzleToggleBtn) {
+      puzzleToggleBtn.addEventListener('click', () => {
+        if (this.constellationMode.currentMode === 'DAILY_CONSTELLATION') {
+          this.constellationMode.currentMode = 'FREEFORM';
+          this.constellationMode.initDailyPuzzle322();
+          puzzleToggleBtn.textContent = 'Mode: Freeform';
+        } else {
+          this.constellationMode.currentMode = 'DAILY_CONSTELLATION';
+          this.constellationMode.initDailyPuzzle322();
+          puzzleToggleBtn.textContent = 'Mode: Constellation #322';
+        }
+      });
+    }
+
+    // Button to toggle open palm simulation
+    const palmSimBtn = document.getElementById('sim-openpalm-btn');
+    if (palmSimBtn) {
+      palmSimBtn.addEventListener('click', () => {
+        const active = this.handInputManager.toggleSimulatorOpenPalm();
+        palmSimBtn.classList.toggle('active', active);
+      });
+    }
+
+    // Button to toggle Accessibility Suite
+    const a11yBtn = document.getElementById('a11y-toggle-btn');
+    const updateA11yBtnText = () => {
+      if (a11yBtn) {
+        const on = this.accessibilityManager.isAccessibilitySuiteEnabled;
+        a11yBtn.textContent = on ? 'A11y Suite: ON' : 'A11y Suite: OFF';
+        a11yBtn.classList.toggle('active', on);
+      }
+    };
+    if (a11yBtn) {
+      a11yBtn.addEventListener('click', () => {
+        this.accessibilityManager.toggleAccessibilitySuite();
+        updateA11yBtnText();
+      });
+      updateA11yBtnText();
+    }
+
+    // Button to toggle Compact Seated Workspace (Pull Closer)
+    const compactBtn = document.getElementById('compact-toggle-btn');
+    const updateCompactBtnText = () => {
+      if (compactBtn) {
+        const on = this.accessibilityManager.isWorkspaceCompact;
+        compactBtn.textContent = on ? 'Restore Dist [C]' : 'Pull Closer [C]';
+
+// [Chrono-Loom Milestone 3/6] feat(ui): add keyboard toggle [H] to hide/show telemetry overlay
