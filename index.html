@@ -284,5 +284,101 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 1.5px;
+        color: var(--cyan-neon);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
 
-<!-- [Chrono-Loom Milestone 3/8] feat(ui): add seated posture recommendation prompt on session start -->
+      .cheatsheet-list {
+        list-style: none;
+        font-size: 11px;
+        line-height: 1.55;
+        color: var(--text-secondary);
+      }
+
+      .cheatsheet-list strong {
+        color: var(--text-primary);
+      }
+
+      .cheatsheet-list kbd {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-family: 'JetBrains Mono', monospace;
+        color: var(--text-primary);
+        font-size: 10px;
+      }
+
+      .hud-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .action-btn {
+        background: rgba(0, 240, 255, 0.12);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        color: var(--cyan-neon);
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        padding: 8px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .action-btn:hover {
+        background: rgba(0, 240, 255, 0.25);
+        box-shadow: 0 0 12px var(--cyan-glow);
+        transform: translateY(-1px);
+      }
+
+      .action-btn-gold {
+        background: rgba(245, 158, 11, 0.15);
+        border-color: rgba(245, 158, 11, 0.4);
+        color: #fbbf24;
+      }
+
+      .action-btn-gold:hover {
+        background: rgba(245, 158, 11, 0.3);
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+      }
+
+      .action-btn-purple {
+        background: rgba(168, 85, 247, 0.18);
+        border-color: rgba(168, 85, 247, 0.45);
+        color: #c084fc;
+      }
+
+      .action-btn-purple:hover {
+        background: rgba(168, 85, 247, 0.35);
+        box-shadow: 0 0 14px rgba(168, 85, 247, 0.5);
+      }
+
+      .action-btn-purple.active {
+        background: rgba(16, 185, 129, 0.35);
+        border-color: var(--emerald-neon);
+        color: #34d399;
+        box-shadow: 0 0 16px rgba(16, 185, 129, 0.6);
+        animation: recPulse 1.2s infinite ease-in-out;
+      }
+
+      .aria-chips-drawer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+        padding: 8px 12px;
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(168, 85, 247, 0.3);
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+      }
+
+<!-- [Chrono-Loom Milestone 4/8] feat(ui): add floating telemetry readout bar for pinch distances and hand poses -->
