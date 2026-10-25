@@ -1056,5 +1056,50 @@ export class HandInputManager {
     this.conductorTempoListeners.push(cb);
   }
 
+  public onChordBloom(cb: ChordBloomCallback): void {
+    this.chordBloomListeners.push(cb);
+  }
 
-// [Chrono-Loom Milestone 24/33] docs(hands): document Euclidean pinch hysteresis formula in code comments
+  public onAcousticScissors(cb: AcousticScissorsCallback): void {
+    this.acousticScissorsListeners.push(cb);
+  }
+
+  private emitConductorTempo(bpm: number): void {
+    for (const cb of this.conductorTempoListeners) cb(bpm);
+  }
+
+  public emitChordBloom(hand: Handedness, position: THREE.Vector3): void {
+    for (const cb of this.chordBloomListeners) cb(hand, position);
+  }
+
+  public emitAcousticScissors(hand: Handedness, cutPoint: THREE.Vector3): void {
+    for (const cb of this.acousticScissorsListeners) cb(hand, cutPoint);
+  }
+
+  /**
+   * Toggles the 3D Gesture Holo-Card tucked behind the left wrist
+   */
+  public toggleGestureHoloCard(): boolean {
+    this.isHoloCardVisible = !this.isHoloCardVisible;
+    this.holoCardGroup.visible = this.isHoloCardVisible;
+    console.log(`[HandInputManager] 3D Gesture Holo-Card: ${this.isHoloCardVisible ? 'VISIBLE' : 'HIDDEN'}`);
+    return this.isHoloCardVisible;
+  }
+
+  /**
+   * Toggles Simulator Conductor Frame Mode
+   */
+  public toggleSimulatorConductor(): boolean {
+    this.simConductorActive = !this.simConductorActive;
+    console.log(`[HandInputManager] Simulator Conductor Frame: ${this.simConductorActive ? 'ON' : 'OFF'}`);
+    return this.simConductorActive;
+  }
+
+  /**
+   * Builds the Holographic Tempo Ribbon connecting both palms during Conductor Frame
+   */
+  private createTempoRibbonVisuals(): void {
+    this.tempoRibbonGroup = new THREE.Group();
+    this.tempoRibbonGroup.name = 'TempoRibbonGroup';
+
+// [Chrono-Loom Milestone 25/33] test(hands): verify desktop simulator parity with WebXR hand tracking
