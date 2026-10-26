@@ -61,5 +61,37 @@ export class SpatialSynth {
   // Phase 15: Master Dynamics Limiter (threshold: -10dB, ratio: 6:1, knee: 12)
   public masterLimiter: DynamicsCompressorNode | null = null;
 
+  // Phase 15: Procedural Stereo Convolution Reverb (Exponential-decay velvet noise)
+  public convolverNode: ConvolverNode | null = null;
+  public convolverGain: GainNode | null = null;
 
-// [Chrono-Loom Milestone 2/25] feat(audio): implement auto-resume listeners for pointerdown, touch, and VRButton
+  // Phase 15: Living Harmonic Drone Bed (Velocity-coupled 3-oscillator ambient pad)
+  private droneOscRoot: OscillatorNode | null = null;
+  private droneOscFifth: OscillatorNode | null = null;
+  private droneOscSub: OscillatorNode | null = null;
+  private droneFilter: BiquadFilterNode | null = null;
+  private droneGain: GainNode | null = null;
+  private droneDuckingGain: GainNode | null = null;
+  private isDroneActive = false;
+  private currentDroneRoot = 130.81; // C3
+
+  private isInitialized = false;
+
+  constructor() {
+    this.setupAutoResumeListeners();
+  }
+
+  /**
+   * Configures automatic AudioContext initialization on first user interaction
+   * (VRButton click, pointerdown, pinch, or keydown)
+   */
+  private setupAutoResumeListeners(): void {
+    const resumeHandler = () => {
+      this.ensureContext();
+      window.removeEventListener('pointerdown', resumeHandler);
+      window.removeEventListener('keydown', resumeHandler);
+      window.removeEventListener('touchstart', resumeHandler);
+    };
+
+
+// [Chrono-Loom Milestone 3/25] feat(audio): handle suspended AudioContext lifecycle on Quest browser
