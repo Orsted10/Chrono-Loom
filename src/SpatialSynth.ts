@@ -221,5 +221,37 @@ export class SpatialSynth {
             left[i] = 0;
             right[i] = 0;
           }
+        } else {
+          // Diffuse velvet noise tail with air absorption damping
+          const hfDamping = Math.exp(-t * 2.2);
+          const noiseL = (Math.random() * 2.0 - 1.0) * env * (0.35 + 0.65 * hfDamping);
+          const noiseR = (Math.random() * 2.0 - 1.0) * env * (0.35 + 0.65 * hfDamping);
 
-// [Chrono-Loom Milestone 7/25] feat(audio): define Lydian/pentatonic scale frequencies across 3 octaves (C3 to E5)
+          // Lowpass filter smoothing to soften noise into a warm cathedral bloom
+          left[i] = i > 0 ? (noiseL + left[i - 1] * 0.35) * 0.74 : noiseL;
+          right[i] = i > 0 ? (noiseR + right[i - 1] * 0.35) * 0.74 : noiseR;
+        }
+      }
+
+      this.convolverNode = this.audioCtx.createConvolver();
+      this.convolverNode.buffer = buffer;
+
+      this.convolverGain = this.audioCtx.createGain();
+      this.convolverGain.gain.setValueAtTime(0.38, 0); // Infinite bloom level
+
+      this.convolverNode.connect(this.convolverGain);
+      this.convolverGain.connect(this.masterLimiter);
+
+      console.log('[SpatialSynth] Procedural Velvet Stereo Convolution Reverb ready.');
+    } catch (e) {
+      console.warn('[SpatialSynth] Failed to setup procedural convolution reverb:', e);
+    }
+  }
+
+  /**
+   * Phase 15: Living Harmonic Drone Bed
+   * A velocity-coupled, low-CPU 3-oscillator warm pad that tracks the root and fifth
+   * of the active Loom nodes, swelling gently as more strings are connected and ducking
+   * cleanly during fast arpeggios.
+
+// [Chrono-Loom Milestone 8/25] perf(audio): implement voice pooling to prevent Web Audio node garbage collection
