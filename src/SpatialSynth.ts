@@ -30,4 +30,36 @@ export interface NoteVoiceOptions {
   filterCutoff?: number;
 }
 
-// [Chrono-Loom Milestone 1/25] feat(audio): initialize SpatialSynth.ts with Web Audio API context
+export type VocalChirpType =
+  | 'AFFIRMATIVE'
+  | 'CURIOUS'
+  | 'TRIUMPHANT'
+  | 'CELEBRATING'
+  | 'CALL_RESPONSE'
+  | 'RESET';
+
+export class SpatialSynth {
+  public audioCtx: AudioContext | null = null;
+  private listener: AudioListener | null = null;
+
+  // Active scale frequencies (defaults to Celestial Lydian)
+  public activeScaleFrequencies: number[] = [...HARMONIC_SCALE_FREQUENCIES];
+
+  public setActiveScaleFrequencies(freqs: number[]): void {
+    if (freqs && freqs.length > 0) {
+      this.activeScaleFrequencies = [...freqs];
+    }
+  }
+
+  // Master Spatial Cathedral Reverb / Delay Bus
+  private delayNode: DelayNode | null = null;
+  private feedbackGain: GainNode | null = null;
+  private delayFilter: BiquadFilterNode | null = null;
+  private wetGain: GainNode | null = null;
+  private dryGain: GainNode | null = null;
+
+  // Phase 15: Master Dynamics Limiter (threshold: -10dB, ratio: 6:1, knee: 12)
+  public masterLimiter: DynamicsCompressorNode | null = null;
+
+
+// [Chrono-Loom Milestone 2/25] feat(audio): implement auto-resume listeners for pointerdown, touch, and VRButton
