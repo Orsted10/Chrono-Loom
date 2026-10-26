@@ -93,5 +93,37 @@ export class SpatialSynth {
       window.removeEventListener('touchstart', resumeHandler);
     };
 
+    window.addEventListener('pointerdown', resumeHandler, { once: true });
+    window.addEventListener('keydown', resumeHandler, { once: true });
+    window.addEventListener('touchstart', resumeHandler, { once: true });
 
-// [Chrono-Loom Milestone 3/25] feat(audio): handle suspended AudioContext lifecycle on Quest browser
+    // Also watch VR Button click
+    const vrBtn = document.getElementById('vr-button-element');
+    if (vrBtn) {
+      vrBtn.addEventListener('click', () => this.ensureContext());
+    }
+  }
+
+  /**
+   * Ensures AudioContext and the Cathedral Delay/Reverb Bus are created
+   */
+  public ensureContext(): AudioContext | null {
+    if (!this.audioCtx) {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        this.audioCtx = new AudioContextClass();
+        this.listener = this.audioCtx.listener;
+        this.setupCathedralDelayBus();
+        this.isInitialized = true;
+        console.log('[SpatialSynth] Procedural HRTF Web Audio Synthesizer & Cathedral Bus initialized.');
+      }
+    }
+
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
+
+    if (this.audioCtx && !this.isDroneActive) {
+      this.initHarmonicDroneBed();
+
+// [Chrono-Loom Milestone 4/25] feat(audio): design dual-oscillator voice architecture (sine + triangle)
