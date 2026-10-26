@@ -125,5 +125,37 @@ export class SpatialSynth {
 
     if (this.audioCtx && !this.isDroneActive) {
       this.initHarmonicDroneBed();
+    }
 
-// [Chrono-Loom Milestone 4/25] feat(audio): design dual-oscillator voice architecture (sine + triangle)
+    return this.audioCtx;
+  }
+
+  /**
+   * Procedural Stereo Delay/Reverb Cathedral Feedback Bus & Phase 15 Convolution Reverb & Master Limiter
+   */
+  private setupCathedralDelayBus(): void {
+    if (!this.audioCtx) return;
+
+    // 1. Master Dynamics Limiter (Tuned threshold -10dB, ratio 6:1 to prevent digital clipping on Quest 3)
+    this.masterLimiter = this.audioCtx.createDynamicsCompressor();
+    this.masterLimiter.threshold.setValueAtTime(-10.0, 0); // -10 dB
+    this.masterLimiter.knee.setValueAtTime(12.0, 0);       // 12 dB soft knee
+    this.masterLimiter.ratio.setValueAtTime(6.0, 0);       // 6:1 ratio
+    this.masterLimiter.attack.setValueAtTime(0.003, 0);     // 3ms fast transparent attack
+    this.masterLimiter.release.setValueAtTime(0.15, 0);    // 150ms release
+    this.masterLimiter.connect(this.audioCtx.destination);
+
+    // 2. Master Dry Output
+    this.dryGain = this.audioCtx.createGain();
+    this.dryGain.gain.setValueAtTime(0.85, 0);
+    this.dryGain.connect(this.masterLimiter);
+
+    // 3. Cathedral Delay Node (280ms acoustic room bounce)
+    this.delayNode = this.audioCtx.createDelay(1.5);
+    this.delayNode.delayTime.setValueAtTime(0.28, 0);
+
+    // 4. Air-absorption Lowpass Filter for natural reflections
+    this.delayFilter = this.audioCtx.createBiquadFilter();
+    this.delayFilter.type = 'lowpass';
+
+// [Chrono-Loom Milestone 5/25] feat(audio): add biquad lowpass filter sweep with resonant peak
