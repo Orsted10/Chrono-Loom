@@ -190,4 +190,36 @@ export class SpatialSynth {
   private setupProceduralConvolutionReverb(): void {
     if (!this.audioCtx || !this.masterLimiter) return;
 
-// [Chrono-Loom Milestone 6/25] feat(audio): implement fast attack (10ms) and exponential decay ADSR envelope
+    try {
+      const durationSec = 2.8;
+      const decayRate = 3.2;
+      const sampleRate = this.audioCtx.sampleRate;
+      const numSamples = Math.floor(sampleRate * durationSec);
+      const buffer = this.audioCtx.createBuffer(2, numSamples, sampleRate);
+      const left = buffer.getChannelData(0);
+      const right = buffer.getChannelData(1);
+
+      // Synthesize velvet stereo impulse response
+      const earlySamples = Math.floor(sampleRate * 0.035);
+
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        const env = Math.exp(-decayRate * t);
+
+        if (i < earlySamples) {
+          // Specular early reflections at golden ratio time taps
+          const isTap =
+            i % Math.floor(sampleRate * 0.0053) === 0 ||
+            i % Math.floor(sampleRate * 0.0089) === 0 ||
+            i % Math.floor(sampleRate * 0.0143) === 0;
+          if (isTap) {
+            const signL = (Math.random() > 0.5 ? 1 : -1) * (0.8 + Math.random() * 0.2);
+            const signR = (Math.random() > 0.5 ? 1 : -1) * (0.8 + Math.random() * 0.2);
+            left[i] = signL * env * 0.9;
+            right[i] = signR * env * 0.9;
+          } else {
+            left[i] = 0;
+            right[i] = 0;
+          }
+
+// [Chrono-Loom Milestone 7/25] feat(audio): define Lydian/pentatonic scale frequencies across 3 octaves (C3 to E5)
