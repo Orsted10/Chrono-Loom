@@ -157,5 +157,37 @@ export class SpatialSynth {
     // 4. Air-absorption Lowpass Filter for natural reflections
     this.delayFilter = this.audioCtx.createBiquadFilter();
     this.delayFilter.type = 'lowpass';
+    this.delayFilter.frequency.setValueAtTime(2200, 0);
 
-// [Chrono-Loom Milestone 5/25] feat(audio): add biquad lowpass filter sweep with resonant peak
+    // 5. Cathedral Feedback Gain (0.35 feedback ratio)
+    this.feedbackGain = this.audioCtx.createGain();
+    this.feedbackGain.gain.setValueAtTime(0.35, 0);
+
+    // Wire delay feedback loop: Delay -> Filter -> FeedbackGain -> Delay
+    this.delayNode.connect(this.delayFilter);
+    this.delayFilter.connect(this.feedbackGain);
+    this.feedbackGain.connect(this.delayNode);
+
+    // 6. Wet Cathedral Delay Gain out to Master Limiter
+    this.wetGain = this.audioCtx.createGain();
+    this.wetGain.gain.setValueAtTime(0.35, 0);
+    this.delayFilter.connect(this.wetGain);
+    this.wetGain.connect(this.masterLimiter);
+
+    // 7. Phase 15: Procedural Stereo Convolution Reverb (Exponential-decay velvet noise)
+    this.setupProceduralConvolutionReverb();
+
+    // 8. Phase 15: Living Harmonic Drone Bed
+    this.initHarmonicDroneBed();
+  }
+
+  /**
+   * Phase 15: Procedural Stereo Impulse Response Generator
+   * Synthesizes an exponential-decay velvet stereo AudioBuffer at startup feeding
+   * a ConvolverNode wet/dry bus so every pluck blooms in an infinite 3D acoustic space
+   * without external .wav asset downloads.
+   */
+  private setupProceduralConvolutionReverb(): void {
+    if (!this.audioCtx || !this.masterLimiter) return;
+
+// [Chrono-Loom Milestone 6/25] feat(audio): implement fast attack (10ms) and exponential decay ADSR envelope
