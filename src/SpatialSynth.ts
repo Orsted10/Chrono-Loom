@@ -253,5 +253,37 @@ export class SpatialSynth {
    * A velocity-coupled, low-CPU 3-oscillator warm pad that tracks the root and fifth
    * of the active Loom nodes, swelling gently as more strings are connected and ducking
    * cleanly during fast arpeggios.
+   */
+  private initHarmonicDroneBed(): void {
+    if (!this.audioCtx || !this.masterLimiter || this.isDroneActive) return;
 
-// [Chrono-Loom Milestone 8/25] perf(audio): implement voice pooling to prevent Web Audio node garbage collection
+    try {
+      const now = this.audioCtx.currentTime;
+
+      // 1. Osc 1: Warm Root Triangle (with subtle -4 cents detune)
+      this.droneOscRoot = this.audioCtx.createOscillator();
+      this.droneOscRoot.type = 'triangle';
+      this.droneOscRoot.frequency.setValueAtTime(this.currentDroneRoot, now);
+      this.droneOscRoot.detune.setValueAtTime(-4, now);
+
+      // 2. Osc 2: Smooth Fifth Sine (with subtle +4 cents detune)
+      this.droneOscFifth = this.audioCtx.createOscillator();
+      this.droneOscFifth.type = 'sine';
+      this.droneOscFifth.frequency.setValueAtTime(this.currentDroneRoot * 1.5, now);
+      this.droneOscFifth.detune.setValueAtTime(4, now);
+
+      // 3. Osc 3: Deep Sub-Octave Triangle (Root / 2)
+      this.droneOscSub = this.audioCtx.createOscillator();
+      this.droneOscSub.type = 'triangle';
+      this.droneOscSub.frequency.setValueAtTime(this.currentDroneRoot * 0.5, now);
+
+      // Mix individual oscillator weights
+      const gainRoot = this.audioCtx.createGain();
+      gainRoot.gain.setValueAtTime(0.40, now);
+      this.droneOscRoot.connect(gainRoot);
+
+      const gainFifth = this.audioCtx.createGain();
+      gainFifth.gain.setValueAtTime(0.30, now);
+      this.droneOscFifth.connect(gainFifth);
+
+// [Chrono-Loom Milestone 9/25] test(audio): verify latency-free note triggering on first user interaction
