@@ -446,4 +446,36 @@ export class SpatialSynth {
       oscSine.type = 'sine';
       oscSine.frequency.setValueAtTime(options.frequency, now);
 
-// [Chrono-Loom Milestone 14/25] feat(audio): add air-absorption lowpass filter (2200Hz) in delay feedback path
+      const oscTri = ctx.createOscillator();
+      oscTri.type = 'triangle';
+      oscTri.frequency.setValueAtTime(options.frequency * harmonicMul, now);
+
+      // Balance harmonic mix
+      const triGain = ctx.createGain();
+      triGain.gain.setValueAtTime(0.35, now);
+      oscTri.connect(triGain);
+
+      // 2. Biquad Filter (Lowpass sweep from bright chime to acoustic warmth)
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(filterFreq, now);
+      filter.frequency.exponentialRampToValueAtTime(450, now + duration * 0.85);
+
+      // 3. ADSR Amplitude Envelope: Fast 0.01s attack, smooth 1.2s exponential decay
+      const voiceGain = ctx.createGain();
+      const peakAmp = 0.24 * Math.min(1.6, Math.max(0.3, intensity));
+      voiceGain.gain.setValueAtTime(0.0001, now);
+      voiceGain.gain.linearRampToValueAtTime(peakAmp, now + 0.01);
+      voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      // 4. 3D HRTF Panner positioned at exact Three.js world coordinates
+      const panner = ctx.createPanner();
+      panner.panningModel = 'HRTF';
+      panner.distanceModel = 'inverse';
+      panner.refDistance = 0.35;
+      panner.maxDistance = 12.0;
+      panner.rolloffFactor = 1.0;
+      panner.coneInnerAngle = 360;
+
+
+// [Chrono-Loom Milestone 15/25] feat(audio): tune cathedral feedback gain to 0.35 for lush tail without muddiness
