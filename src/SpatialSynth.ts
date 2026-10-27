@@ -286,4 +286,36 @@ export class SpatialSynth {
       gainFifth.gain.setValueAtTime(0.30, now);
       this.droneOscFifth.connect(gainFifth);
 
-// [Chrono-Loom Milestone 9/25] test(audio): verify latency-free note triggering on first user interaction
+      const gainSub = this.audioCtx.createGain();
+      gainSub.gain.setValueAtTime(0.35, now);
+      this.droneOscSub.connect(gainSub);
+
+      // Warm Analog Lowpass Filter (450Hz warmth with gentle resonance)
+      this.droneFilter = this.audioCtx.createBiquadFilter();
+      this.droneFilter.type = 'lowpass';
+      this.droneFilter.frequency.setValueAtTime(450, now);
+      this.droneFilter.Q.setValueAtTime(1.8, now);
+
+      gainRoot.connect(this.droneFilter);
+      gainFifth.connect(this.droneFilter);
+      gainSub.connect(this.droneFilter);
+
+      // Fast-acting Ducking Gain for Pluck Arpeggios
+      this.droneDuckingGain = this.audioCtx.createGain();
+      this.droneDuckingGain.gain.setValueAtTime(1.0, now);
+      this.droneFilter.connect(this.droneDuckingGain);
+
+      // Master Swell Gain (coupled to string count)
+      this.droneGain = this.audioCtx.createGain();
+      this.droneGain.gain.setValueAtTime(0.0, now); // Starts silent until strings are woven
+      this.droneDuckingGain.connect(this.droneGain);
+
+      // Route into Master Limiter and Convolution Reverb bloom
+      this.droneGain.connect(this.masterLimiter);
+      if (this.convolverNode) {
+        this.droneGain.connect(this.convolverNode);
+      }
+
+      // Start all 3 oscillators
+
+// [Chrono-Loom Milestone 10/25] feat(audio): implement 3D HRTF spatial panner nodes for every active voice
