@@ -413,5 +413,37 @@ export class SpatialSynth {
       this.listener.upY.setValueAtTime(camUp.y, now);
       this.listener.upZ.setValueAtTime(camUp.z, now);
     } else {
+      // Backward compatibility fallback for WebKit
+      (this.listener as any).setPosition(camPos.x, camPos.y, camPos.z);
+      (this.listener as any).setOrientation(
+        camForward.x,
+        camForward.y,
+        camForward.z,
+        camUp.x,
+        camUp.y,
+        camUp.z
+      );
+    }
+  }
 
-// [Chrono-Loom Milestone 13/25] feat(audio): implement master Cathedral delay feedback loop (280ms)
+  /**
+   * Plays a 3D HRTF Spatialized Note with dual oscillator blend, biquad filter sweep,
+   * fast 0.01s attack, and 1.2s exponential decay envelope.
+   */
+  public playSpatialNote(options: NoteVoiceOptions): void {
+    const ctx = this.ensureContext();
+    if (!ctx || !this.dryGain || !this.delayNode) return;
+
+    try {
+      const now = ctx.currentTime;
+      const intensity = options.intensity ?? 1.0;
+      const duration = options.duration ?? 1.2;
+      const harmonicMul = options.harmonicMultiplier ?? 2.0;
+      const filterFreq = options.filterCutoff ?? 3200;
+
+      // 1. Dual Oscillators: Fundamental Sine + Warm Triangle
+      const oscSine = ctx.createOscillator();
+      oscSine.type = 'sine';
+      oscSine.frequency.setValueAtTime(options.frequency, now);
+
+// [Chrono-Loom Milestone 14/25] feat(audio): add air-absorption lowpass filter (2200Hz) in delay feedback path
