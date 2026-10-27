@@ -317,5 +317,37 @@ export class SpatialSynth {
       }
 
       // Start all 3 oscillators
+      this.droneOscRoot.start(now);
+      this.droneOscFifth.start(now);
+      this.droneOscSub.start(now);
 
-// [Chrono-Loom Milestone 10/25] feat(audio): implement 3D HRTF spatial panner nodes for every active voice
+      this.isDroneActive = true;
+      console.log('[SpatialSynth] Living Harmonic Drone Bed active.');
+    } catch (e) {
+      console.warn('[SpatialSynth] Failed to init harmonic drone bed:', e);
+    }
+  }
+
+  /**
+   * Fast-acting velocity-coupled ducking during fast arpeggios
+   */
+  public triggerDroneDucking(velocity: number = 1.0): void {
+    if (!this.audioCtx || !this.droneDuckingGain) return;
+    try {
+      const now = this.audioCtx.currentTime;
+      const duckDepth = Math.max(0.25, 1.0 - Math.min(1.0, velocity * 0.75));
+      this.droneDuckingGain.gain.cancelScheduledValues(now);
+      this.droneDuckingGain.gain.setValueAtTime(this.droneDuckingGain.gain.value, now);
+      this.droneDuckingGain.gain.linearRampToValueAtTime(duckDepth, now + 0.02);
+      this.droneDuckingGain.gain.setTargetAtTime(1.0, now + 0.04, 0.45);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  /**
+   * Updates drone pad root & fifth, and swells volume with string count
+   */
+  public updateDroneBed(activeFrequencies: number[], stringCount: number): void {
+
+// [Chrono-Loom Milestone 11/25] feat(audio): update AudioListener position and forward/up vectors from camera
