@@ -349,5 +349,37 @@ export class SpatialSynth {
    * Updates drone pad root & fifth, and swells volume with string count
    */
   public updateDroneBed(activeFrequencies: number[], stringCount: number): void {
+    if (!this.audioCtx || !this.droneGain) return;
 
-// [Chrono-Loom Milestone 11/25] feat(audio): update AudioListener position and forward/up vectors from camera
+    try {
+      const now = this.audioCtx.currentTime;
+
+      // 1. Swell gain coupled to string count
+      let targetVolume = 0.0;
+      if (stringCount === 1) targetVolume = 0.06;
+      else if (stringCount === 2) targetVolume = 0.11;
+      else if (stringCount >= 3) targetVolume = Math.min(0.22, 0.11 + stringCount * 0.02);
+
+      this.droneGain.gain.setTargetAtTime(targetVolume, now, 0.6);
+
+      // 2. Track key center (lowest harmonic frequency among active nodes)
+      if (activeFrequencies && activeFrequencies.length > 0) {
+        let lowest = activeFrequencies[0];
+        for (const f of activeFrequencies) {
+          if (f < lowest) lowest = f;
+        }
+
+        // Normalize root to bass octave [65Hz, 196Hz]
+        while (lowest > 200.0) lowest *= 0.5;
+        while (lowest < 65.0) lowest *= 2.0;
+
+        if (Math.abs(lowest - this.currentDroneRoot) > 1.0) {
+          this.currentDroneRoot = lowest;
+          if (this.droneOscRoot && this.droneOscFifth && this.droneOscSub) {
+            this.droneOscRoot.frequency.setTargetAtTime(this.currentDroneRoot, now, 0.45);
+            this.droneOscFifth.frequency.setTargetAtTime(this.currentDroneRoot * 1.5, now, 0.45);
+            this.droneOscSub.frequency.setTargetAtTime(this.currentDroneRoot * 0.5, now, 0.45);
+          }
+        }
+
+// [Chrono-Loom Milestone 12/25] feat(audio): configure inverse distance attenuation curve for seated space
