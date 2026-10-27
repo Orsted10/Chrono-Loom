@@ -25,5 +25,18 @@
 4. **Mixed Reality (MR) Passthrough & Visual Immersion (Quest 3 & Pro)**:
    - Full WebXR `immersive-ar` support with automatic room passthrough integration: seamlessly dissolves the dark void and fog while keeping floating holographic instruments, the comfort arc, and Aria in the user's real room.
    - Dual session launcher: **ENTER VR** (dark cyber-zen void) or **ENTER AR (PASSTHROUGH)** (holographic mixed reality).
+   - Audio-reactive Cymatic Sonar Wave rings expand across the floor and comfort arc matching each pluck frequency.
+   - Soft additive-blended glow aura halos on all nodes, pulses, and Aria for cinematic neon bloom without mobile frame drops.
 
-<!-- [Chrono-Loom Milestone 2/9] docs(comfort): document 2-foot seated envelope rationale in README.md -->
+5. **Best Accessibility Forward Experience ($25,000 Award Target)**:
+   - **One-Handed Complete Playability & Virtual Anchor Tether**: 100% of spatial weaving can be performed with a single hand (or gaze). Pinching a node once latches a dynamic electric tether; pinching another node (or empty space) completes the weave without continuous dragging.
+   - **Magnetic Gaze & Proximity Snap**: Nodes within 0.11m or camera gaze cone softly snap into a 3D magnetic reticle, allowing users with motor tremors or limited reach to target nodes effortlessly.
+   - **Ergonomic Seated Auto-Bring ([PULL CLOSER] / Key C)**: Shifts the entire Loom and Comfort Arc closer (from $z = -0.45\text{m}$ to $z = -0.30\text{m}$) and compacts the workspace down to a $0.35\text{m}$ micro-radius for users with restricted arm mobility or wheelchair lap trays.
+   - **Shape-Coded Synesthesia & Note Badges (Colorblind Safe)**: Pitch tiers are encoded as distinct 3D polyhedra (Bass = Cube, Mid = Octahedron, High = Tetrahedron) with floating billboard note labels (`C3`, `E4`, `G4`, `C5`).
+   - **Visual Haptic Sub-Bass Waveform Rings (Deaf / Hard-of-Hearing Safe)**: Notes expand crisp sinusoidal ripple waves with thickness proportional to volume and ripple frequency proportional to pitch, letting Deaf players visually feel rhythms and solve the Daily Constellation puzzle!
+
+---
+
+## Core Technical Features
+
+<!-- [Chrono-Loom Milestone 3/9] docs(audio): document pure procedural audio architecture in README.md -->
