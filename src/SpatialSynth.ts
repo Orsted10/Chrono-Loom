@@ -541,5 +541,37 @@ export class SpatialSynth {
 
       // 3. Early Reflection Tone: Filtered short transient chirp at harmonic octave
       const osc = ctx.createOscillator();
+      osc.type = surfaceType === 'table' || surfaceType === 'desk' ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(sourceFrequency * 1.5, now + physicalDelaySec);
+      osc.frequency.exponentialRampToValueAtTime(
+        Math.max(60, sourceFrequency * 0.75),
+        now + physicalDelaySec + 0.12
+      );
 
-// [Chrono-Loom Milestone 17/25] feat(audio): add frequency-to-pitch notation helper for UI telemetry
+      // 4. Acoustic Absorption Filter
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(cutoffFreq, now + physicalDelaySec);
+
+      // 5. Amplitude Envelope: Brief slapback pulse
+      const gain = ctx.createGain();
+      // Inverse distance attenuation based on real room dimensions
+      const distanceAttenuation = THREE.MathUtils.clamp(1.0 / (distanceToListener * 1.2 + 0.5), 0.2, 1.1);
+      const peakAmp = 0.16 * distanceAttenuation;
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.setValueAtTime(0.0001, now + physicalDelaySec);
+      gain.gain.linearRampToValueAtTime(peakAmp, now + physicalDelaySec + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + physicalDelaySec + 0.14);
+
+      // 6. 3D HRTF Panner located at the exact wall/table bounce coordinates
+      const panner = ctx.createPanner();
+      panner.panningModel = 'HRTF';
+      panner.distanceModel = 'inverse';
+      panner.refDistance = 0.4;
+      panner.maxDistance = 15.0;
+      panner.rolloffFactor = 1.0;
+
+      if (panner.positionX) {
+
+// [Chrono-Loom Milestone 18/25] refactor(audio): streamline SpatialSynth note triggering API with options object
