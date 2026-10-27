@@ -509,5 +509,37 @@ export class SpatialSynth {
       oscTri.stop(now + duration + 0.05);
     } catch (e) {
       console.warn('[SpatialSynth] Audio playback note safeguard:', e);
+    }
+  }
 
-// [Chrono-Loom Milestone 16/25] feat(audio): implement separate master dry and wet gain mixing buses
+  /**
+   * Synthesizes a realistic physical early-reflection stereo echo
+   * when a Chrono-Pulse or Photon Dart bounces off a real-world wall or table.
+   * Uses real room dimensions (distance to listener) to compute acoustic slapback delay,
+   * frequency-dependent material absorption (drywall vs wood), and 3D HRTF spatialization.
+   */
+  public playWallReflectionEcho(
+    hitPoint: THREE.Vector3,
+    distanceToListener: number,
+    surfaceType: 'wall' | 'table' | 'desk' | 'floor' = 'wall',
+    sourceFrequency: number = 440
+  ): void {
+    const ctx = this.ensureContext();
+    if (!ctx || !this.dryGain) return;
+
+    try {
+      const now = ctx.currentTime;
+
+      // 1. Acoustic Slapback Delay modeled after real speed of sound (343 m/s)
+      // Slapback time = 2 * d / 343, clamped between 12ms and 65ms for crisp, audible Haas reflection
+      const physicalDelaySec = THREE.MathUtils.clamp((distanceToListener * 2) / 343.0, 0.012, 0.065);
+
+      // 2. High-Frequency Absorption based on material
+      // Drywall/plaster walls absorb high frequencies (~1800Hz lowpass)
+      // Wood/composite tables absorb mid-highs (~1200Hz lowpass)
+      const cutoffFreq = surfaceType === 'table' || surfaceType === 'desk' ? 1300 : 2200;
+
+      // 3. Early Reflection Tone: Filtered short transient chirp at harmonic octave
+      const osc = ctx.createOscillator();
+
+// [Chrono-Loom Milestone 17/25] feat(audio): add frequency-to-pitch notation helper for UI telemetry
