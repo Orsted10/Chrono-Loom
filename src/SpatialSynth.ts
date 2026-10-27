@@ -381,5 +381,37 @@ export class SpatialSynth {
             this.droneOscSub.frequency.setTargetAtTime(this.currentDroneRoot * 0.5, now, 0.45);
           }
         }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
 
-// [Chrono-Loom Milestone 12/25] feat(audio): configure inverse distance attenuation curve for seated space
+  /**
+   * Updates Web Audio listener position and orientation every frame from Three.js camera
+   */
+  public updateListener(camera: THREE.Camera): void {
+    if (!this.audioCtx || !this.listener) return;
+
+    const now = this.audioCtx.currentTime;
+    const camPos = new THREE.Vector3();
+    const camForward = new THREE.Vector3();
+    const camUp = new THREE.Vector3(0, 1, 0);
+
+    camera.getWorldPosition(camPos);
+    camera.getWorldDirection(camForward);
+    camUp.applyQuaternion(camera.quaternion);
+
+    if (this.listener.positionX) {
+      this.listener.positionX.setValueAtTime(camPos.x, now);
+      this.listener.positionY.setValueAtTime(camPos.y, now);
+      this.listener.positionZ.setValueAtTime(camPos.z, now);
+      this.listener.forwardX.setValueAtTime(camForward.x, now);
+      this.listener.forwardY.setValueAtTime(camForward.y, now);
+      this.listener.forwardZ.setValueAtTime(camForward.z, now);
+      this.listener.upX.setValueAtTime(camUp.x, now);
+      this.listener.upY.setValueAtTime(camUp.y, now);
+      this.listener.upZ.setValueAtTime(camUp.z, now);
+    } else {
+
+// [Chrono-Loom Milestone 13/25] feat(audio): implement master Cathedral delay feedback loop (280ms)
