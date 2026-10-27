@@ -477,5 +477,37 @@ export class SpatialSynth {
       panner.rolloffFactor = 1.0;
       panner.coneInnerAngle = 360;
 
+      if (panner.positionX) {
+        panner.positionX.setValueAtTime(options.position.x, now);
+        panner.positionY.setValueAtTime(options.position.y, now);
+        panner.positionZ.setValueAtTime(options.position.z, now);
+      } else {
+        (panner as any).setPosition(
+          options.position.x,
+          options.position.y,
+          options.position.z
+        );
+      }
 
-// [Chrono-Loom Milestone 15/25] feat(audio): tune cathedral feedback gain to 0.35 for lush tail without muddiness
+      // 5. Connect Signal Chain:
+      // Oscillators -> Filter -> VoiceGain -> HRTF Panner -> [Master Dry + Cathedral Delay Bus]
+      oscSine.connect(filter);
+      triGain.connect(filter);
+      filter.connect(voiceGain);
+      voiceGain.connect(panner);
+
+      panner.connect(this.dryGain);
+      panner.connect(this.delayNode);
+      if (this.convolverNode) {
+        panner.connect(this.convolverNode);
+      }
+
+      // Start & Stop with automatic garbage cleanup
+      oscSine.start(now);
+      oscTri.start(now);
+      oscSine.stop(now + duration + 0.05);
+      oscTri.stop(now + duration + 0.05);
+    } catch (e) {
+      console.warn('[SpatialSynth] Audio playback note safeguard:', e);
+
+// [Chrono-Loom Milestone 16/25] feat(audio): implement separate master dry and wet gain mixing buses
