@@ -204,5 +204,35 @@ export class LoomEngine {
   private particleGeo: THREE.BufferGeometry;
   private particlePositions: Float32Array;
   private particleColors: Float32Array;
+  private activeParticles: LoomParticle[] = [];
+  private readonly MAX_PARTICLES = 360;
 
-// [Chrono-Loom Milestone 7/84] feat(loom): create holographic 'PINCH & PULL TO AWAKEN' floating text banner
+  // 6. Procedural Spatial Synthesizer (HRTF 3D Panning + Cathedral Delay)
+  public spatialSynth: SpatialSynth;
+
+  // Track previous fingertip positions for pluck velocity and collision detection
+  private prevFingertipPositions: Map<Handedness, THREE.Vector3> = new Map();
+
+  // Reusable vectors for zero-garbage performance
+  private _v1 = new THREE.Vector3();
+  private _v2 = new THREE.Vector3();
+  private _v3 = new THREE.Vector3();
+
+  // Reusable procedural soft additive glow texture
+  private auraTexture: THREE.CanvasTexture | null = null;
+
+  /**
+   * Generates or retrieves cached radial gradient glow texture
+   * for high-dynamic additive bloom on mobile WebXR without post-processing hits
+   */
+  public getAuraTexture(): THREE.CanvasTexture {
+    if (!this.auraTexture) {
+      const size = 128;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d')!;
+
+      const center = size / 2;
+
+// [Chrono-Loom Milestone 8/84] feat(loom): implement pinch grab detection on Seed Orb within 0.08m
