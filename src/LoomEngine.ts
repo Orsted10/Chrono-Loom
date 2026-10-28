@@ -145,5 +145,35 @@ export class LoomEngine {
   private seedOrbPrompt!: THREE.Sprite;
   private isLoomAwakened = false;
   private isSeedOrbGrabbed = false;
+  private seedOrbInitialPos = new THREE.Vector3(0, 1.2, -0.45);
+  private seedOrbCurrentPos = new THREE.Vector3(0, 1.2, -0.45);
 
-// [Chrono-Loom Milestone 5/84] feat(loom): implement breathing scale pulsation (1.0 to 1.06x) on Seed Orb
+  // 2. Harmonic Nodes
+  public nodes: Map<string, HarmonicNode> = new Map();
+  private nextNodeIndex = 1;
+
+  // Pinch-hold timer for spawning nodes in empty space
+  private pinchHoldTimers: Map<
+    Handedness,
+    {
+      startTime: number;
+      startPosition: THREE.Vector3;
+      hasSpawned: boolean;
+    }
+  > = new Map();
+
+  // 3. ChronoStrings
+  public strings: Map<string, ChronoString> = new Map();
+  private nextStringIndex = 1;
+
+  // 4. Autonomous Kinetic Pulses (The Clockwork Engine)
+  public pulses: Map<string, ChronoPulse> = new Map();
+  private nextPulseIndex = 1;
+  private clockworkPulseTimer = 0;
+  private readonly CLOCKWORK_BEAT_INTERVAL = 2.4; // Periodic pulse beat (seconds)
+  private readonly MAX_ACTIVE_PULSES = 12;
+
+  // Phase 10: Global Time-Dilation BPM (Conductor Frame: 40-180 BPM)
+  public globalBPM = 90;
+
+// [Chrono-Loom Milestone 6/84] feat(loom): add gentle floating vertical bobbing animation to Seed Orb
