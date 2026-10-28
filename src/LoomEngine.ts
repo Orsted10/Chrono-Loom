@@ -234,5 +234,34 @@ export class LoomEngine {
       const ctx = canvas.getContext('2d')!;
 
       const center = size / 2;
+      const gradient = ctx.createRadialGradient(center, center, 2, center, center, center);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.85)');
+      gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.28)');
+      gradient.addColorStop(0.8, 'rgba(255, 255, 255, 0.08)');
+      gradient.addColorStop(1.0, 'rgba(0, 0, 0, 0)');
 
-// [Chrono-Loom Milestone 8/84] feat(loom): implement pinch grab detection on Seed Orb within 0.08m
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+
+      this.auraTexture = new THREE.CanvasTexture(canvas);
+      this.auraTexture.wrapS = THREE.ClampToEdgeWrapping;
+      this.auraTexture.wrapT = THREE.ClampToEdgeWrapping;
+    }
+    return this.auraTexture;
+  }
+
+  constructor(sceneManager: SceneManager, handInputManager: HandInputManager) {
+    this.sceneManager = sceneManager;
+    this.handInputManager = handInputManager;
+
+    this.loomGroup = new THREE.Group();
+    this.loomGroup.name = 'LoomEngine';
+    this.sceneManager.scene.add(this.loomGroup);
+
+    // Initialize Procedural Spatial Synthesizer
+    this.spatialSynth = new SpatialSynth();
+
+    // Initialize pluck & collision particle burst system
+
+// [Chrono-Loom Milestone 9/84] style(loom): add golden corona aura sprite surrounding Seed Orb
