@@ -58,4 +58,33 @@ export interface ChronoString {
   solitonProgress?: number;
 }
 
-// [Chrono-Loom Milestone 2/84] feat(loom): create central Seed Orb at initial position (0.0, 1.15, -0.45)
+// Autonomous Kinetic Chrono-Pulse bead traveling along strings
+export interface ChronoPulse {
+  id: string;
+  stringId: string;
+  sourceNode: HarmonicNode;
+  targetNode: HarmonicNode;
+  progress: number; // 0.0 to 1.0
+  speed: number;
+  meshGroup: THREE.Group;
+  mesh: THREE.Mesh;
+  glowLight: THREE.PointLight;
+  color: THREE.Color;
+  auraSprite: THREE.Sprite;
+}
+
+// Phase 9: Luminous Photon Dart shooting outward from open-ended strings
+export interface PhotonDart {
+  id: string;
+  position: THREE.Vector3;
+  velocity: THREE.Vector3;
+  color: THREE.Color;
+  frequency: number;
+  meshGroup: THREE.Group;
+  coreMesh: THREE.Mesh;
+  tailLine: THREE.Line;
+  tailPoints: THREE.Vector3[];
+  light: THREE.PointLight;
+  bouncesRemaining: number;
+
+// [Chrono-Loom Milestone 3/84] feat(loom): design Seed Orb with core glowing icosahedron and outer wireframe shell
