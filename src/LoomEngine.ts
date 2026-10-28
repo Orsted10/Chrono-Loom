@@ -27,5 +27,35 @@ export interface HarmonicNode {
   noteFrequency: number;
   auraSprite: THREE.Sprite;
   pitchTier?: 'BASS' | 'MID' | 'HIGH';
+  noteName?: string;
+  shapeName?: string;
+  pitchLabelSprite?: THREE.Sprite;
+  isSurfaceAnchored?: boolean;
+  anchoredPlaneId?: string;
+  pedestalGroup?: THREE.Group;
+  targetFrequency?: number;
+  euclideanConfig?: any;
+}
 
-// [Chrono-Loom Milestone 1/84] feat(loom): initialize LoomEngine.ts to manage clockwork kinetic sculpture
+// ChronoString interface
+export interface ChronoString {
+  id: string;
+  nodeA: HarmonicNode;
+  nodeB: HarmonicNode;
+  length: number;
+  frequency: number;
+  color: THREE.Color;
+  meshGroup: THREE.Group;
+  tubeMesh: THREE.Mesh;
+  glowLine: THREE.Line;
+  vibrationAmplitude: number;
+  vibrationDecay: number;
+  vibrationFrequency: number;
+  vibrationPhase: number;
+  vibrationNormal: THREE.Vector3;
+  lastPluckTime: number;
+  quantumMaterial?: THREE.ShaderMaterial;
+  solitonProgress?: number;
+}
+
+// [Chrono-Loom Milestone 2/84] feat(loom): create central Seed Orb at initial position (0.0, 1.15, -0.45)
