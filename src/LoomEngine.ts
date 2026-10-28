@@ -263,5 +263,35 @@ export class LoomEngine {
     this.spatialSynth = new SpatialSynth();
 
     // Initialize pluck & collision particle burst system
+    const { mesh, geo, positions, colors } = this.initParticleSystem();
+    this.particleMesh = mesh;
+    this.particleGeo = geo;
+    this.particlePositions = positions;
+    this.particleColors = colors;
+    this.loomGroup.add(this.particleMesh);
 
-// [Chrono-Loom Milestone 9/84] style(loom): add golden corona aura sprite surrounding Seed Orb
+    // Initialize Phase 14: Instanced GPU Ribbon Trail Pool (Max 256 instances, 1 draw call)
+    this.ribbonTrailPool = new RibbonTrailPool();
+    this.loomGroup.add(this.ribbonTrailPool.instancedMesh);
+
+    // Initialize "First Five Minutes" Seed Orb at (0, 1.2, -0.45)
+    this.createSeedOrb();
+
+    // Hook Hand Input events
+    this.bindHandEvents();
+  }
+
+  // ----------------------------------------------------
+  // 1. "First Five Minutes" Seed Orb
+  // ----------------------------------------------------
+
+  private createSeedOrb(): void {
+    this.seedOrbGroup = new THREE.Group();
+    this.seedOrbGroup.name = 'SeedOrbGroup';
+    this.seedOrbGroup.position.copy(this.seedOrbInitialPos);
+
+    // Core pulsing golden icosahedron
+    const coreGeo = new THREE.IcosahedronGeometry(0.038, 1);
+    const coreMat = new THREE.MeshStandardMaterial({
+
+// [Chrono-Loom Milestone 10/84] test(loom): verify Seed Orb hover state highlighting when hand approaches
