@@ -86,5 +86,35 @@ export interface PhotonDart {
   tailPoints: THREE.Vector3[];
   light: THREE.PointLight;
   bouncesRemaining: number;
+  maxBounces: number;
+  life: number;
+  maxLife: number;
+}
 
-// [Chrono-Loom Milestone 3/84] feat(loom): design Seed Orb with core glowing icosahedron and outer wireframe shell
+// Particle for plucks, collisions, and awakening bursts
+interface LoomParticle {
+  position: THREE.Vector3;
+  velocity: THREE.Vector3;
+  color: THREE.Color;
+  size: number;
+  life: number;
+  maxLife: number;
+}
+
+export class LoomEngine {
+  private sceneManager: SceneManager;
+  private handInputManager: HandInputManager;
+
+  // Root container in Three.js scene
+  public loomGroup: THREE.Group;
+
+  // Accessibility Manager reference
+  public accessibilityManager: any = null;
+
+  public setAccessibilityManager(a11y: any): void {
+    this.accessibilityManager = a11y;
+  }
+
+  // Phase 9: MR Surface Manager (Plane Detection & Physical Surface Anchoring)
+
+// [Chrono-Loom Milestone 4/84] feat(loom): add continuous counter-rotation animation to Seed Orb shells
