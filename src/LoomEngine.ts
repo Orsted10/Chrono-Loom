@@ -116,5 +116,34 @@ export class LoomEngine {
   }
 
   // Phase 9: MR Surface Manager (Plane Detection & Physical Surface Anchoring)
+  public mrSurfaceManager: MRSurfaceManager | null = null;
 
-// [Chrono-Loom Milestone 4/84] feat(loom): add continuous counter-rotation animation to Seed Orb shells
+  public setMRSurfaceManager(manager: MRSurfaceManager): void {
+    this.mrSurfaceManager = manager;
+  }
+
+  // Phase 9: Luminous Photon Darts & Stray Wall-Bounce Pulses
+  public photonDarts: Map<string, PhotonDart> = new Map();
+  private nextDartIndex = 1;
+  private readonly MAX_ACTIVE_DARTS = 8;
+
+  // Phase 14: Instanced GPU Ribbon Trail Pool (Max 256 instances, 1 draw call)
+  public ribbonTrailPool: RibbonTrailPool;
+  private prevLeftTipPos: THREE.Vector3 | null = null;
+  private prevRightTipPos: THREE.Vector3 | null = null;
+  private prevPulsePositions: Map<string, THREE.Vector3> = new Map();
+
+  // 3D Holographic Toast Notification
+  private toastSprite: THREE.Sprite | null = null;
+  private toastTimer = 0;
+  private toastDuration = 3.2;
+
+  // 1. Seed Orb state
+  private seedOrbGroup: THREE.Group | null = null;
+  private seedOrbMesh!: THREE.Mesh;
+  private seedOrbShell!: THREE.Mesh;
+  private seedOrbPrompt!: THREE.Sprite;
+  private isLoomAwakened = false;
+  private isSeedOrbGrabbed = false;
+
+// [Chrono-Loom Milestone 5/84] feat(loom): implement breathing scale pulsation (1.0 to 1.06x) on Seed Orb
