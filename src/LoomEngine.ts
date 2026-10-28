@@ -176,4 +176,33 @@ export class LoomEngine {
   // Phase 10: Global Time-Dilation BPM (Conductor Frame: 40-180 BPM)
   public globalBPM = 90;
 
-// [Chrono-Loom Milestone 6/84] feat(loom): add gentle floating vertical bobbing animation to Seed Orb
+  // Phase 11: Multiplayer Synchronization Hooks
+  public onNodeCreated?: (node: HarmonicNode) => void;
+  public onNodeMoved?: (nodeId: string, position: THREE.Vector3) => void;
+  public onStringCreated?: (str: ChronoString) => void;
+  public onStringPlucked?: (stringId: string, pos: THREE.Vector3, vel: number) => void;
+  public onStringSevered?: (cutPoint: THREE.Vector3, stringId?: string) => void;
+  public onBPMChanged?: (bpm: number) => void;
+  public isApplyingRemote = false;
+
+  // Phase 13: String Plucked Listeners for Phrase Analysis & Aria Call-and-Response
+  public stringPluckedListeners: Array<(stringId: string, pos: THREE.Vector3, vel: number, frequency: number) => void> = [];
+
+  public addStringPluckedListener(listener: (stringId: string, pos: THREE.Vector3, vel: number, frequency: number) => void): void {
+    this.stringPluckedListeners.push(listener);
+  }
+
+  public setGlobalBPM(bpm: number): void {
+    this.globalBPM = THREE.MathUtils.clamp(bpm, 40, 180);
+    if (!this.isApplyingRemote) {
+      this.onBPMChanged?.(this.globalBPM);
+    }
+  }
+
+  // 5. Pluck & Collision Particle System
+  private particleMesh: THREE.Points;
+  private particleGeo: THREE.BufferGeometry;
+  private particlePositions: Float32Array;
+  private particleColors: Float32Array;
+
+// [Chrono-Loom Milestone 7/84] feat(loom): create holographic 'PINCH & PULL TO AWAKEN' floating text banner
