@@ -322,5 +322,35 @@ export class LoomEngine {
       'PINCH & PULL ME WITH YOUR HAND TO WEAVE'
     );
     this.seedOrbPrompt.position.set(0, 0.12, 0);
+    this.seedOrbGroup.add(this.seedOrbPrompt);
 
-// [Chrono-Loom Milestone 11/84] feat(loom): implement Loom awakening gesture (pulling Seed Orb > 0.12m)
+    this.loomGroup.add(this.seedOrbGroup);
+  }
+
+  /**
+   * Renders billboard text prompt
+   */
+  private createFloatingPromptSprite(message: string): THREE.Sprite {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    // Translucent glass pill backdrop
+    ctx.fillStyle = 'rgba(7, 24, 45, 0.85)';
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.6)';
+    ctx.lineWidth = 6;
+    this.roundRect(ctx, 30, 40, 964, 176, 40);
+    ctx.fill();
+    ctx.stroke();
+
+    // Subtle neon inner glow
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 18;
+
+    // Golden / Cyan text
+    ctx.font = 'bold 38px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#fef08a';
+    ctx.textAlign = 'center';
+
+// [Chrono-Loom Milestone 12/84] feat(loom): trigger celestial awakening chime chord in SpatialSynth
