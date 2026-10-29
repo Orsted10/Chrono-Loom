@@ -411,5 +411,35 @@ export class LoomEngine {
     });
 
     // Fade out and remove Seed Orb group
+    if (this.seedOrbGroup) {
+      this.loomGroup.remove(this.seedOrbGroup);
+      this.seedOrbGroup = null;
+    }
 
-// [Chrono-Loom Milestone 14/84] feat(loom): spawn initial ring of Harmonic Anchor Nodes along comfort arc
+    // Spawn first Harmonic Node at the release point
+    this.spawnHarmonicNode(spawnPos);
+  }
+
+  // ----------------------------------------------------
+  // 2. Harmonic Nodes
+  // ----------------------------------------------------
+
+  /**
+   * Spawns a glowing crystalline Harmonic Node
+   * Equipped with Shape-Coded Synesthesia & Note Badges for Deaf / Colorblind accessibility
+   */
+  public spawnHarmonicNode(
+    position: THREE.Vector3,
+    customFrequency?: number,
+    customId?: string
+  ): HarmonicNode {
+    const id = customId || `node_${this.nextNodeIndex++}`;
+    if (customId && customId.startsWith('node_')) {
+      const idx = parseInt(customId.replace('node_', ''), 10);
+      if (!isNaN(idx) && idx >= this.nextNodeIndex) {
+        this.nextNodeIndex = idx + 1;
+      }
+    }
+    const group = new THREE.Group();
+
+// [Chrono-Loom Milestone 15/84] feat(loom): create HarmonicNode data interface and active node registry
