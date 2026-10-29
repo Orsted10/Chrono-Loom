@@ -293,5 +293,34 @@ export class LoomEngine {
     // Core pulsing golden icosahedron
     const coreGeo = new THREE.IcosahedronGeometry(0.038, 1);
     const coreMat = new THREE.MeshStandardMaterial({
+      color: 0xffd700,
+      roughness: 0.25,
+      metalness: 0.85,
+      emissive: 0xff9900,
+      emissiveIntensity: 0.6
+    });
+    this.seedOrbMesh = new THREE.Mesh(coreGeo, coreMat);
+    this.seedOrbGroup.add(this.seedOrbMesh);
 
-// [Chrono-Loom Milestone 10/84] test(loom): verify Seed Orb hover state highlighting when hand approaches
+    // Emissive outer wireframe shell
+    const shellGeo = new THREE.IcosahedronGeometry(0.052, 1);
+    const shellMat = new THREE.MeshBasicMaterial({
+      color: 0xfff089,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.75
+    });
+    this.seedOrbShell = new THREE.Mesh(shellGeo, shellMat);
+    this.seedOrbGroup.add(this.seedOrbShell);
+
+    // Warm golden point light
+    const orbLight = new THREE.PointLight(0xffb700, 1.6, 0.6);
+    this.seedOrbGroup.add(orbLight);
+
+    // Floating 3D canvas text prompt above Seed Orb
+    this.seedOrbPrompt = this.createFloatingPromptSprite(
+      'PINCH & PULL ME WITH YOUR HAND TO WEAVE'
+    );
+    this.seedOrbPrompt.position.set(0, 0.12, 0);
+
+// [Chrono-Loom Milestone 11/84] feat(loom): implement Loom awakening gesture (pulling Seed Orb > 0.12m)
