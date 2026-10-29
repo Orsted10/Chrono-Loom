@@ -352,5 +352,34 @@ export class LoomEngine {
     ctx.font = 'bold 38px "Space Grotesk", sans-serif';
     ctx.fillStyle = '#fef08a';
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(message, 512, 128);
 
-// [Chrono-Loom Milestone 12/84] feat(loom): trigger celestial awakening chime chord in SpatialSynth
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    const spriteMat = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.95,
+      depthTest: false
+    });
+
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(0.36, 0.09, 1);
+    return sprite;
+  }
+
+  private roundRect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number
+  ) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+
+// [Chrono-Loom Milestone 13/84] feat(loom): animate Seed Orb smooth dispersal into comfort arc positions
