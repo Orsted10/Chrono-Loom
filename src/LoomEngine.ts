@@ -529,5 +529,35 @@ export class LoomEngine {
       duration: 1.0
     });
 
+    const node: HarmonicNode = {
+      id,
+      position: group.position,
+      meshGroup: group,
+      coreMesh,
+      wireframeMesh,
+      innerGlow,
+      isMuted: false,
+      isGrabbed: false,
+      grabbedByHand: null,
+      baseColor,
+      muteColor,
+      rotationSpeed: new THREE.Vector3(
+        0.008 + Math.random() * 0.012,
+        0.012 + Math.random() * 0.016,
+        0.006 + Math.random() * 0.01
+      ),
+      currentScale: 1.0,
+      noteFrequency,
+      auraSprite,
+      pitchTier: tierInfo.tier,
+      noteName: tierInfo.noteName,
+      shapeName: tierInfo.shapeName,
+      pitchLabelSprite
+    };
 
-// [Chrono-Loom Milestone 18/84] feat(loom): set random slow tumbling rotation vectors on each node core
+    this.nodes.set(id, node);
+
+    // Phase 9: Physical Surface Anchoring check on initial spawn
+    if (this.mrSurfaceManager) {
+
+// [Chrono-Loom Milestone 19/84] style(loom): apply neon cyan and violet physical materials with roughness 0.2
