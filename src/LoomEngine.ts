@@ -441,5 +441,34 @@ export class LoomEngine {
       }
     }
     const group = new THREE.Group();
+    group.name = `HarmonicNode_${id}`;
+    group.position.copy(position);
 
-// [Chrono-Loom Milestone 15/84] feat(loom): create HarmonicNode data interface and active node registry
+    // Assign harmonic note frequency to node based on sequence
+    const scaleIndex = (this.nextNodeIndex - 2) % HARMONIC_SCALE_FREQUENCIES.length;
+    const noteFrequency = customFrequency || HARMONIC_SCALE_FREQUENCIES[scaleIndex];
+
+    // Shape-Coded Synesthesia: Geometry matched to pitch tier (Cube = Bass, Octahedron = Mid, Tetrahedron = High)
+    let coreGeo: THREE.BufferGeometry;
+    let shellGeo: THREE.BufferGeometry;
+    let tierInfo: any = { tier: 'MID', noteName: 'C4', shapeName: 'OCTAHEDRON' };
+
+    if (this.accessibilityManager && this.accessibilityManager.isShapeSynesthesiaEnabled) {
+      const syn = this.accessibilityManager.createShapeCodedGeometry(noteFrequency);
+      coreGeo = syn.coreGeo;
+      shellGeo = syn.shellGeo;
+      tierInfo = syn.tierInfo;
+    } else {
+      coreGeo = new THREE.OctahedronGeometry(0.035, 1);
+      shellGeo = new THREE.OctahedronGeometry(0.043, 1);
+    }
+
+    const baseColor = new THREE.Color(0x00f0ff);
+    const muteColor = new THREE.Color(0x38bdf8);
+
+    const coreMat = new THREE.MeshPhysicalMaterial({
+      color: baseColor,
+      roughness: 0.15,
+      metalness: 0.2,
+
+// [Chrono-Loom Milestone 16/84] feat(loom): design 3D geometric polyhedra for Harmonic Nodes (octahedrons)
