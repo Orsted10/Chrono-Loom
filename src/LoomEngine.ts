@@ -470,5 +470,35 @@ export class LoomEngine {
       color: baseColor,
       roughness: 0.15,
       metalness: 0.2,
+      transmission: 0.65,
+      ior: 1.45,
+      emissive: 0x0088aa,
+      emissiveIntensity: 0.5,
+      transparent: true,
+      opacity: 0.85
+    });
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    group.add(coreMesh);
 
-// [Chrono-Loom Milestone 16/84] feat(loom): design 3D geometric polyhedra for Harmonic Nodes (octahedrons)
+    // Outer emissive wireframe shell
+    const shellMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.85
+    });
+    const wireframeMesh = new THREE.Mesh(shellGeo, shellMat);
+    group.add(wireframeMesh);
+
+    // Inner glow point light
+    const innerGlow = new THREE.PointLight(0x00f0ff, 1.2, 0.45);
+    group.add(innerGlow);
+
+    // Soft additive-blended glow aura halo sprite
+    const auraMat = new THREE.SpriteMaterial({
+      map: this.getAuraTexture(),
+      color: baseColor,
+      transparent: true,
+      opacity: 0.72,
+
+// [Chrono-Loom Milestone 17/84] feat(loom): assign dual-mesh structure (physical core + emissive wireframe)
