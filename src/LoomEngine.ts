@@ -500,5 +500,34 @@ export class LoomEngine {
       color: baseColor,
       transparent: true,
       opacity: 0.72,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const auraSprite = new THREE.Sprite(auraMat);
+    auraSprite.scale.set(0.16, 0.16, 1);
+    group.add(auraSprite);
 
-// [Chrono-Loom Milestone 17/84] feat(loom): assign dual-mesh structure (physical core + emissive wireframe)
+    // 3D Billboard Pitch/Note Label for Deaf & Colorblind players
+    let pitchLabelSprite: THREE.Sprite | undefined;
+    if (this.accessibilityManager) {
+      const sprite: THREE.Sprite = this.accessibilityManager.createPitchLabelSprite(noteFrequency);
+      sprite.visible = !!this.accessibilityManager.isAccessibilitySuiteEnabled;
+      group.add(sprite);
+      pitchLabelSprite = sprite;
+    }
+
+    this.loomGroup.add(group);
+
+    // Birth particle spark, floor cymatic pulse & visual haptic sub-bass ring
+    this.spawnParticleBurst(position, 18, baseColor, 0.05);
+    this.sceneManager.triggerCymaticPulse(position, baseColor, 1.0);
+    this.accessibilityManager?.triggerVisualHapticWave(position, noteFrequency, 1.2);
+    this.spatialSynth.playSpatialNote({
+      frequency: noteFrequency,
+      position,
+      intensity: 1.0,
+      duration: 1.0
+    });
+
+
+// [Chrono-Loom Milestone 18/84] feat(loom): set random slow tumbling rotation vectors on each node core
