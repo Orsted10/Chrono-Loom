@@ -381,5 +381,35 @@ export class LoomEngine {
     ctx.moveTo(x + r, y);
     ctx.arcTo(x + w, y, x + w, y + h, r);
     ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y + w, x, y, r);
+    ctx.closePath();
+  }
 
-// [Chrono-Loom Milestone 13/84] feat(loom): animate Seed Orb smooth dispersal into comfort arc positions
+  /**
+   * Awakens the Loom: dissolves prompt and spawns first Harmonic Node
+   */
+  private awakenLoomAt(spawnPos: THREE.Vector3): void {
+    if (this.isLoomAwakened) return;
+    this.isLoomAwakened = true;
+
+    console.log('[LoomEngine] Loom Awakened! Dissolving seed orb prompt & spawning Harmonic Node #1.');
+
+    // Particle burst at Seed Orb release point
+    this.spawnParticleBurst(spawnPos, 35, new THREE.Color(0xffd700), 0.08);
+
+    // Audio-reactive cymatic wave pulse on floor & desk zone
+    this.sceneManager.triggerCymaticPulse(spawnPos, new THREE.Color(0xffd700), 1.6);
+    this.accessibilityManager?.triggerVisualHapticWave(spawnPos, 523.25, 1.5);
+
+    // Audio chime for awakening routed through 3D Spatial Panner
+    this.spatialSynth.playSpatialNote({
+      frequency: 523.25, // C5
+      position: spawnPos,
+      intensity: 1.6,
+      duration: 1.8
+    });
+
+    // Fade out and remove Seed Orb group
+
+// [Chrono-Loom Milestone 14/84] feat(loom): spawn initial ring of Harmonic Anchor Nodes along comfort arc
