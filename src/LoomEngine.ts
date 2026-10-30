@@ -825,5 +825,34 @@ export class LoomEngine {
 
     if (t < 0.5) {
       const subT = t / 0.5;
+      color.copy(new THREE.Color(0x00f0ff)).lerp(new THREE.Color(0xd946ef), subT);
+    } else {
+      const subT = (t - 0.5) / 0.5;
+      color.copy(new THREE.Color(0xd946ef)).lerp(new THREE.Color(0xf59e0b), subT);
+    }
+    return color;
+  }
 
-// [Chrono-Loom Milestone 28/84] feat(loom): add empty space pinch detection (0.2s hold) to spawn new nodes
+  /**
+   * Creates a CatmullRomCurve3 path with sine-wave displacement for tension physics
+   */
+  private createSegmentedStringPath(
+    pA: THREE.Vector3,
+    pB: THREE.Vector3,
+    segments: number,
+    amplitude: number = 0,
+    normal: THREE.Vector3 = this._v1.set(0, 1, 0)
+  ): THREE.CatmullRomCurve3 {
+    const points: THREE.Vector3[] = [];
+    for (let i = 0; i <= segments; i++) {
+      const s = i / segments;
+      const disp = amplitude * Math.sin(Math.PI * s);
+      const pt = new THREE.Vector3()
+        .lerpVectors(pA, pB, s)
+        .addScaledVector(normal, disp);
+      points.push(pt);
+    }
+    return new THREE.CatmullRomCurve3(points);
+  }
+
+// [Chrono-Loom Milestone 29/84] fix(loom): prevent accidental node spawning during quick hand sweeps
