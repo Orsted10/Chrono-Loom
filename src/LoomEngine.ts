@@ -765,5 +765,35 @@ export class LoomEngine {
       opacity: 0.35,
       blending: THREE.AdditiveBlending
     });
+    const glowLine = new THREE.Line(glowLineGeo, glowLineMat);
+    group.add(glowLine);
 
-// [Chrono-Loom Milestone 26/84] feat(loom): add magnetic snap attraction when dragging near comfort arc anchors
+    this.loomGroup.add(group);
+
+    const midPoint = new THREE.Vector3().addVectors(nodeA.position, nodeB.position).multiplyScalar(0.5);
+
+    // Spatial sound & burst upon weaving
+    this.spatialSynth.playSpatialNote({
+      frequency,
+      position: midPoint,
+      intensity: 1.3,
+      duration: 1.4
+    });
+
+    this.spawnParticleBurst(midPoint, 20, color, 0.06);
+
+    const chronoStr: ChronoString = {
+      id,
+      nodeA,
+      nodeB,
+      length,
+      frequency,
+      color,
+      meshGroup: group,
+      tubeMesh,
+      glowLine,
+      vibrationAmplitude: 0.015,
+      vibrationDecay: 2.2,
+      vibrationFrequency: frequency * 0.12,
+
+// [Chrono-Loom Milestone 27/84] feat(loom): implement tactile snap sound in SpatialSynth on magnetic docking
