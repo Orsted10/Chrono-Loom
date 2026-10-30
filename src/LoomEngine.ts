@@ -678,4 +678,33 @@ export class LoomEngine {
     node.anchoredPlaneId = undefined;
   }
 
-// [Chrono-Loom Milestone 23/84] feat(loom): ensure pitch label billboards always face the active camera
+  /**
+   * Finds the nearest Harmonic Node to a given 3D position
+   */
+  public findNearestNode(
+    pos: THREE.Vector3,
+    maxDistance: number = 0.075
+  ): { node: HarmonicNode | null; distance: number } {
+    let nearest: HarmonicNode | null = null;
+    let minDist = maxDistance;
+
+    for (const node of this.nodes.values()) {
+      const d = pos.distanceTo(node.position);
+      if (d < minDist) {
+        minDist = d;
+        nearest = node;
+      }
+    }
+    return { node: nearest, distance: minDist };
+  }
+
+  // ----------------------------------------------------
+  // 3. Two-Hand String Weaving & Tension Physics
+  // ----------------------------------------------------
+
+  /**
+   * Connects two Harmonic Nodes with a physical, resonant ChronoString
+   */
+  public createChronoString(
+
+// [Chrono-Loom Milestone 24/84] feat(loom): implement node grabbing and 3D translation via pinch-and-drag
