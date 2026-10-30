@@ -559,5 +559,34 @@ export class LoomEngine {
 
     // Phase 9: Physical Surface Anchoring check on initial spawn
     if (this.mrSurfaceManager) {
+      const anchor = this.mrSurfaceManager.checkSurfaceAnchor(position, 0.06);
+      if (anchor) {
+        node.position.y = anchor.anchorY;
+        group.position.copy(node.position);
+        this.attachOrUpdatePedestal(node, anchor.surface);
+      }
+    }
 
-// [Chrono-Loom Milestone 19/84] style(loom): apply neon cyan and violet physical materials with roughness 0.2
+    console.log(`[LoomEngine] Spawned Harmonic Node [${id}] (freq: ${noteFrequency.toFixed(1)}Hz) at (${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`);
+    if (!this.isApplyingRemote) {
+      this.onNodeCreated?.(node);
+    }
+    return node;
+  }
+
+  /**
+   * Attaches or updates a glowing holographic base-pedestal extending down to the physical table/desk
+   */
+  public attachOrUpdatePedestal(node: HarmonicNode, surface: MRSurface): void {
+    if (!this.mrSurfaceManager || !this.mrSurfaceManager.isRoomScanEnabled) return;
+
+    node.isSurfaceAnchored = true;
+    node.anchoredPlaneId = surface.id;
+
+    const surfaceY = surface.center.y;
+    const height = Math.max(0.015, node.position.y - surfaceY);
+
+    if (!node.pedestalGroup) {
+      const pedGroup = new THREE.Group();
+
+// [Chrono-Loom Milestone 20/84] feat(loom): attach soft additive-blended glow aura halo sprites to nodes
