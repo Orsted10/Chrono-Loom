@@ -588,5 +588,35 @@ export class LoomEngine {
 
     if (!node.pedestalGroup) {
       const pedGroup = new THREE.Group();
+      pedGroup.name = `Pedestal_${node.id}`;
 
-// [Chrono-Loom Milestone 20/84] feat(loom): attach soft additive-blended glow aura halo sprites to nodes
+      // 1. Glowing table projection ring flush on physical desk surface
+      const ringGeo = new THREE.RingGeometry(0.038, 0.058, 32);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: node.baseColor,
+        transparent: true,
+        opacity: 0.85,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+      ringMesh.rotation.x = -Math.PI / 2;
+      ringMesh.position.y = -height + 0.002;
+      ringMesh.name = 'BaseRing';
+      pedGroup.add(ringMesh);
+
+      // 2. Three vertical cyber energy conduit struts
+      const strutGeo = new THREE.CylinderGeometry(0.002, 0.002, height, 8);
+      const strutMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        transparent: true,
+        opacity: 0.75,
+        blending: THREE.AdditiveBlending
+      });
+
+      const radius = 0.032;
+      for (let i = 0; i < 3; i++) {
+        const theta = (i * Math.PI * 2) / 3;
+
+// [Chrono-Loom Milestone 21/84] feat(loom): add dynamic pulsing glow intensity synchronized with node clock
