@@ -736,5 +736,34 @@ export class LoomEngine {
     const length = nodeA.position.distanceTo(nodeB.position);
 
     // Map length to neon color spectrum (Cyan -> Magenta -> Gold)
+    const color = this.mapLengthToNeonColor(length);
 
-// [Chrono-Loom Milestone 25/84] feat(loom): constrain node drag envelope to comfortable seated reach zone
+    // Map length to Lydian / Pentatonic frequency
+    const frequency = this.spatialSynth.mapLengthToScaleFrequency(length);
+
+    // Build Phase 14: Custom GLSL Quantum String cylinder mesh
+    const tubeGeo = createQuantumStringGeometry();
+    const tubeMat = createQuantumStringMaterial(color, length);
+    const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
+
+    const stringDir = new THREE.Vector3().subVectors(nodeB.position, nodeA.position);
+    const upVector = new THREE.Vector3(0, 1, 0);
+    tubeMesh.position.copy(nodeA.position);
+    tubeMesh.quaternion.setFromUnitVectors(upVector, stringDir.clone().normalize());
+    tubeMesh.scale.set(1, length, 1);
+    group.add(tubeMesh);
+
+    // Core bright neon laser filament (rendered via shader + lightweight anchor line)
+    const glowLineGeo = new THREE.BufferGeometry().setFromPoints([
+      nodeA.position.clone(),
+      nodeB.position.clone()
+    ]);
+    const glowLineMat = new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      linewidth: 1,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending
+    });
+
+// [Chrono-Loom Milestone 26/84] feat(loom): add magnetic snap attraction when dragging near comfort arc anchors
