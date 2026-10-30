@@ -706,5 +706,35 @@ export class LoomEngine {
    * Connects two Harmonic Nodes with a physical, resonant ChronoString
    */
   public createChronoString(
+    nodeA: HarmonicNode,
+    nodeB: HarmonicNode,
+    customId?: string
+  ): ChronoString | null {
+    if (nodeA.id === nodeB.id) return null;
 
-// [Chrono-Loom Milestone 24/84] feat(loom): implement node grabbing and 3D translation via pinch-and-drag
+    // Prevent duplicate string between same nodes
+    for (const str of this.strings.values()) {
+      if (
+        (str.nodeA.id === nodeA.id && str.nodeB.id === nodeB.id) ||
+        (str.nodeA.id === nodeB.id && str.nodeB.id === nodeA.id)
+      ) {
+        return str;
+      }
+    }
+
+    const id = customId || `string_${this.nextStringIndex++}`;
+    if (customId && customId.startsWith('string_')) {
+      const idx = parseInt(customId.replace('string_', ''), 10);
+      if (!isNaN(idx) && idx >= this.nextStringIndex) {
+        this.nextStringIndex = idx + 1;
+      }
+    }
+    const group = new THREE.Group();
+    group.name = `ChronoString_${id}`;
+
+    // Calculate length L (between 0.1m and 0.6m)
+    const length = nodeA.position.distanceTo(nodeB.position);
+
+    // Map length to neon color spectrum (Cyan -> Magenta -> Gold)
+
+// [Chrono-Loom Milestone 25/84] feat(loom): constrain node drag envelope to comfortable seated reach zone
