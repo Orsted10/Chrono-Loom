@@ -795,5 +795,35 @@ export class LoomEngine {
       vibrationAmplitude: 0.015,
       vibrationDecay: 2.2,
       vibrationFrequency: frequency * 0.12,
+      vibrationPhase: 0,
+      vibrationNormal: new THREE.Vector3(0, 1, 0),
+      lastPluckTime: performance.now(),
+      quantumMaterial: tubeMat,
+      solitonProgress: 0.0
+    };
 
-// [Chrono-Loom Milestone 27/84] feat(loom): implement tactile snap sound in SpatialSynth on magnetic docking
+    this.strings.set(id, chronoStr);
+
+    // Spawn an autonomous Chrono-Pulse on the newly woven string!
+    this.spawnChronoPulse(nodeA, nodeB, chronoStr);
+
+    if (!this.isApplyingRemote) {
+      this.onStringCreated?.(chronoStr);
+    }
+
+    console.log(`[LoomEngine] Created ChronoString [${id}] (L = ${(length * 100).toFixed(1)}cm, freq = ${frequency.toFixed(0)}Hz)`);
+    return chronoStr;
+  }
+
+  /**
+   * Maps string length L (0.1m - 0.6m) to neon spectrum:
+   * Cyan (0.1m) -> Magenta (0.35m) -> Gold (0.60m)
+   */
+  private mapLengthToNeonColor(length: number): THREE.Color {
+    const t = THREE.MathUtils.clamp((length - 0.1) / (0.6 - 0.1), 0, 1);
+    const color = new THREE.Color();
+
+    if (t < 0.5) {
+      const subT = t / 0.5;
+
+// [Chrono-Loom Milestone 28/84] feat(loom): add empty space pinch detection (0.2s hold) to spawn new nodes
