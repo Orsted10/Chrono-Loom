@@ -618,5 +618,34 @@ export class LoomEngine {
       const radius = 0.032;
       for (let i = 0; i < 3; i++) {
         const theta = (i * Math.PI * 2) / 3;
+        const strut = new THREE.Mesh(strutGeo, strutMat);
+        strut.position.set(Math.cos(theta) * radius, -height / 2, Math.sin(theta) * radius);
+        strut.name = `Strut_${i}`;
+        pedGroup.add(strut);
+      }
 
-// [Chrono-Loom Milestone 21/84] feat(loom): add dynamic pulsing glow intensity synchronized with node clock
+      // 3. Subtle glow on table surface
+      const floorGlow = new THREE.PointLight(node.baseColor, 1.2, 0.25);
+      floorGlow.position.y = -height + 0.02;
+      floorGlow.name = 'FloorGlow';
+      pedGroup.add(floorGlow);
+
+      node.pedestalGroup = pedGroup;
+      node.meshGroup.add(pedGroup);
+
+      // Subtle tactile snap sound
+      this.spatialSynth.playSpatialNote({
+        frequency: node.noteFrequency * 2,
+        position: node.position,
+        intensity: 0.6,
+        duration: 0.35
+      });
+      this.spawnParticleBurst(new THREE.Vector3(node.position.x, surfaceY, node.position.z), 10, node.baseColor, 0.03);
+    } else {
+      // Update heights of existing pedestal elements if node moved slightly
+      const ring = node.pedestalGroup.getObjectByName('BaseRing') as THREE.Mesh;
+      if (ring) ring.position.y = -height + 0.002;
+
+      const floorGlow = node.pedestalGroup.getObjectByName('FloorGlow') as THREE.PointLight;
+
+// [Chrono-Loom Milestone 22/84] feat(loom): create floating 3D billboard pitch labels (e.g. C3, G4, E5)
