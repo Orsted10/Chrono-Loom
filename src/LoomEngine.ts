@@ -647,5 +647,35 @@ export class LoomEngine {
       if (ring) ring.position.y = -height + 0.002;
 
       const floorGlow = node.pedestalGroup.getObjectByName('FloorGlow') as THREE.PointLight;
+      if (floorGlow) floorGlow.position.y = -height + 0.02;
 
-// [Chrono-Loom Milestone 22/84] feat(loom): create floating 3D billboard pitch labels (e.g. C3, G4, E5)
+      for (let i = 0; i < 3; i++) {
+        const strut = node.pedestalGroup.getObjectByName(`Strut_${i}`) as THREE.Mesh;
+        if (strut) {
+          strut.position.y = -height / 2;
+          strut.scale.y = height / 0.045;
+        }
+      }
+    }
+  }
+
+  /**
+   * Detaches and disposes the base-pedestal when node is pulled away from surface
+   */
+  public detachPedestal(node: HarmonicNode): void {
+    if (node.pedestalGroup) {
+      node.meshGroup.remove(node.pedestalGroup);
+      node.pedestalGroup.traverse((obj: any) => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          if (Array.isArray(obj.material)) obj.material.forEach((m: any) => m.dispose());
+          else obj.material.dispose();
+        }
+      });
+      node.pedestalGroup = undefined;
+    }
+    node.isSurfaceAnchored = false;
+    node.anchoredPlaneId = undefined;
+  }
+
+// [Chrono-Loom Milestone 23/84] feat(loom): ensure pitch label billboards always face the active camera
