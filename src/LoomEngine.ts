@@ -914,4 +914,34 @@ export class LoomEngine {
     pulseAuraSprite.scale.set(0.065, 0.065, 1);
     group.add(pulseAuraSprite);
 
-// [Chrono-Loom Milestone 31/84] feat(loom): restore node active harmonic state when open palm retreats
+    this.loomGroup.add(group);
+
+    // Speed: takes ~1.5 to 2.2 seconds to traverse string length
+    const speed = 0.42;
+
+    const pulse: ChronoPulse = {
+      id,
+      stringId: string.id,
+      sourceNode,
+      targetNode,
+      progress: 0.0,
+      speed,
+      meshGroup: group,
+      mesh,
+      glowLight,
+      color: string.color.clone(),
+      auraSprite: pulseAuraSprite
+    };
+
+    this.pulses.set(id, pulse);
+    return pulse;
+  }
+
+  /**
+   * Advances all kinetic pulses, detects node arrivals, triggers scale flash & cascades
+   */
+  private updateKineticPulses(deltaTime: number): void {
+    const finishedPulseIds: string[] = [];
+
+
+// [Chrono-Loom Milestone 32/84] perf(loom): optimize node matrix transforms with dirty flag caching
