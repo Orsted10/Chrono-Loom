@@ -39,4 +39,18 @@
 
 ## Core Technical Features
 
-<!-- [Chrono-Loom Milestone 3/9] docs(audio): document pure procedural audio architecture in README.md -->
+- **Pure Procedural Web Audio API (Zero External Audio Files)**:
+  - 100% synthesized in real time with zero network assets or latency.
+  - Lydian / Pentatonic harmonic tuning (C3 to E5) guarantees that every combination of strings and pulses sounds resonant and harmonious.
+  - Dual-oscillator blend (fundamental `sine` + warm `triangle`), biquad filter lowpass sweep ($3200\text{Hz} \to 450\text{Hz}$), and fast $0.01\text{s}$ attack / $1.2\text{s}$ exponential decay ADSR envelope.
+  - **3D HRTF Spatial Panning**: Every voice routes through a Web Audio `PannerNode` (`panningModel = 'HRTF'`) positioned at the exact 3D world coordinates $(x, y, z)$ in Three.js space, with continuous head-tracking listener updates.
+  - **Cathedral Stereo Delay / Reverb Feedback Loop**: Master delay bus with $280\text{ms}$ delay, lowpass air-absorption filtering ($2200\text{Hz}$), and a $0.35$ feedback ratio.
+
+- **Native WebXR Hand Tracking & Euclidean Pinch Detector**:
+  - Direct integration with `renderer.xr.getHand(0)` and `getHand(1)` as `THREE.XRHandSpace`.
+  - Offline-safe `XRHandModelFactory` sphere primitives augmented with glowing low-poly joint indicators.
+  - High-precision Euclidean pinch hysteresis:
+    - `onPinchStart` at $< 0.025\text{m}$ ($25\text{mm}$).
+    - `onPinchMove` while held.
+
+<!-- [Chrono-Loom Milestone 4/9] docs(loom): update README with seated comfort arc and node interaction guide -->
