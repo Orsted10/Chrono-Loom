@@ -566,5 +566,43 @@ export class SceneManager {
         const radius = 0.08 + wave.progress * wave.maxRadius;
         wave.mesh.scale.set(radius, radius, 1);
         const opacity = Math.max(0, (1 - wave.progress) * 0.85);
+        (wave.mesh.material as THREE.MeshBasicMaterial).opacity = opacity;
 
-// [Chrono-Loom Milestone 15/20] refactor(scene): modularize comfort arc creation into helper methods
+        if (wave.progress >= 1.0) {
+          wave.active = false;
+          wave.mesh.visible = false;
+        }
+      }
+    }
+  }
+
+  /**
+   * Initializes a reusable pool of expanding Cymatic Sonar Wave rings
+   */
+  private initCymaticWavePool(count: number = 8): void {
+    const ringGeo = new THREE.RingGeometry(0.06, 0.10, 64);
+
+    for (let i = 0; i < count; i++) {
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0x00f0ff,
+        transparent: true,
+        opacity: 0.0,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+
+      const mesh = new THREE.Mesh(ringGeo, ringMat);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(0, 0.004, 0);
+      mesh.visible = false;
+      this.cymaticContainer.add(mesh);
+
+      this.cymaticPool.push({
+        mesh,
+        progress: 1.0,
+        speed: 1.2,
+        maxRadius: 2.2,
+        color: new THREE.Color(0x00f0ff),
+
+// [Chrono-Loom Milestone 16/20] feat(cymatics): create audio-reactive Cymatic Sonar Wave rings in SceneManager
