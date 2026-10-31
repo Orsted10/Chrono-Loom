@@ -628,5 +628,162 @@ class ChronoLoomApp {
     }
 
     let anyAlive = false;
+    for (let i = 0; i < this.MAX_SPARKS; i++) {
+      if (this.sparkLives[i] > 0) {
+        anyAlive = true;
+        const i3 = i * 3;
+        this.sparkPositions[i3] += this.sparkVelocities[i3] * deltaTime;
+        this.sparkPositions[i3 + 1] += this.sparkVelocities[i3 + 1] * deltaTime;
+        this.sparkPositions[i3 + 2] += this.sparkVelocities[i3 + 2] * deltaTime;
 
-// [Chrono-Loom Milestone 4/6] refactor(main): wire HandInputManager lifecycle hooks into main.ts render loop
+        this.sparkVelocities[i3] *= 0.95;
+        this.sparkVelocities[i3 + 1] -= 0.015 * deltaTime;
+        this.sparkVelocities[i3 + 2] *= 0.95;
+
+        this.sparkLives[i] -= deltaTime;
+        if (this.sparkLives[i] <= 0) {
+          this.sparkPositions[i3 + 1] = -999;
+        }
+      }
+    }
+
+    if (anyAlive) {
+      const attr = this.pinchSparks.geometry.attributes.position as THREE.BufferAttribute;
+      attr.needsUpdate = true;
+    }
+  }
+
+  /**
+   * Refreshes HTML HUD telemetry readouts
+   */
+  private updateHUD(): void {
+    const left = this.handInputManager.getTelemetry('left');
+    const right = this.handInputManager.getTelemetry('right');
+    const isXR = this.sceneManager.renderer.xr.isPresenting;
+    const loomStatus = this.loomEngine.getStatusSummary();
+    const puzzleStatus = this.constellationMode.getStatusSummary();
+
+    // Mode
+    if (this.hudModeEl) {
+      if (isXR) {
+        if (this.sceneManager.isPassthroughActive) {
+          this.hudModeEl.textContent = 'WebXR Passthrough MR Active (Quest 3)';
+          this.hudModeEl.className = 'badge badge-emerald';
+        } else {
+          this.hudModeEl.textContent = 'WebXR Immersive VR Active';
+          this.hudModeEl.className = 'badge badge-green';
+        }
+      } else {
+        this.hudModeEl.textContent = 'Desktop 3D Simulator Active';
+        this.hudModeEl.className = 'badge badge-cyan';
+      }
+    }
+
+    // Left Hand
+    if (this.hudLeftDistEl) {
+      const dMm = Math.round(left.pinchDistance * 1000);
+      this.hudLeftDistEl.textContent = `${dMm} mm`;
+    }
+    if (this.hudLeftStatusEl) {
+      if (left.isPinching) {
+        this.hudLeftStatusEl.textContent = 'PINCHING';
+        this.hudLeftStatusEl.className = 'status-tag status-pinched';
+      } else if (left.pinchDistance < 0.035) {
+        this.hudLeftStatusEl.textContent = 'PROXIMITY';
+        this.hudLeftStatusEl.className = 'status-tag status-near';
+      } else {
+        this.hudLeftStatusEl.textContent = 'RESTING';
+        this.hudLeftStatusEl.className = 'status-tag status-rest';
+      }
+    }
+
+    // Right Hand
+    if (this.hudRightDistEl) {
+      const dMm = Math.round(right.pinchDistance * 1000);
+      this.hudRightDistEl.textContent = `${dMm} mm`;
+    }
+    if (this.hudRightStatusEl) {
+      if (right.isPinching) {
+        this.hudRightStatusEl.textContent = 'PINCHING';
+        this.hudRightStatusEl.className = 'status-tag status-pinched';
+      } else if (right.pinchDistance < 0.035) {
+        this.hudRightStatusEl.textContent = 'PROXIMITY';
+        this.hudRightStatusEl.className = 'status-tag status-near';
+      } else {
+        this.hudRightStatusEl.textContent = 'RESTING';
+        this.hudRightStatusEl.className = 'status-tag status-rest';
+      }
+    }
+
+    // Open Palm status
+    if (this.hudPalmBadgeEl) {
+      const isPalm = left.isOpenPalm || right.isOpenPalm;
+      this.hudPalmBadgeEl.textContent = isPalm ? 'OPEN PALM (ACTIVE)' : 'CLOSED / RELAXED';
+      this.hudPalmBadgeEl.className = isPalm ? 'badge badge-emerald' : 'badge badge-muted';
+    }
+
+    // Spatial Loom Phase 2 & 3 Telemetry
+    if (this.hudLoomStateEl) {
+      this.hudLoomStateEl.textContent = loomStatus.isAwakened
+        ? 'LOOM AWAKENED'
+        : 'SEED ORB PULSING';
+      this.hudLoomStateEl.className = loomStatus.isAwakened
+        ? 'badge badge-emerald'
+        : 'badge badge-gold';
+    }
+    if (this.hudNodesCountEl) {
+      this.hudNodesCountEl.textContent = `${loomStatus.nodeCount}`;
+    }
+    if (this.hudStringsCountEl) {
+      this.hudStringsCountEl.textContent = `${loomStatus.stringCount}`;
+    }
+    if (this.hudPulsesCountEl) {
+      this.hudPulsesCountEl.textContent = `${loomStatus.pulseCount}`;
+    }
+
+    // Phase 4: Agent Aria & Daily Constellation HUD Readouts
+    if (this.hudAriaBadgeEl) {
+      this.hudAriaBadgeEl.textContent = `ARIA: ${this.agentAria.mode.replace('_', ' ')} (${this.agentAria.state})`;
+      this.hudAriaBadgeEl.className =
+        this.agentAria.mode === 'CO-CREATE'
+          ? 'badge badge-purple'
+          : this.agentAria.mode === 'RHYTHM_BOOST'
+          ? 'badge badge-gold'
+          : 'badge badge-cyan';
+    }
+
+    if (this.hudConstellationEl) {
+      if (puzzleStatus.isHarmonized) {
+        this.hudConstellationEl.textContent = 'CONSTELLATION HARMONIZED!';
+        this.hudConstellationEl.className = 'badge badge-emerald';
+      } else if (puzzleStatus.currentMode === 'DAILY_CONSTELLATION') {
+        this.hudConstellationEl.textContent = `PUZZLE #322: ${puzzleStatus.ringsEnergized} / ${puzzleStatus.totalRings} RINGS`;
+        this.hudConstellationEl.className = 'badge badge-gold';
+      } else {
+        this.hudConstellationEl.textContent = 'FREEFORM LOOM';
+        this.hudConstellationEl.className = 'badge badge-muted';
+      }
+    }
+
+    // Phase 7: Accessibility Manager Status Readout
+    const a11ySummary = this.accessibilityManager.getStatusSummary();
+    if (this.hudA11yBadgeEl) {
+      this.hudA11yBadgeEl.textContent = a11ySummary.suiteEnabled
+        ? (a11ySummary.isCompact ? 'A11Y: COMPACT (<0.35m)' : 'A11Y SUITE: ACTIVE')
+        : 'A11Y: OFF';
+      this.hudA11yBadgeEl.className = a11ySummary.suiteEnabled ? 'badge badge-emerald' : 'badge badge-muted';
+    }
+
+    // Update Demo Showcase button state
+    const demoBtn = document.getElementById('demo-showcase-btn');
+    if (demoBtn) {
+      if (this.demoDirector.isPlaying) {
+        demoBtn.textContent = `🎬 Stop Demo (${Math.round(this.demoDirector.elapsedTime)}s)`;
+        demoBtn.classList.add('active');
+      } else {
+        demoBtn.textContent = '🎬 Auto-Demo [D]';
+        demoBtn.classList.remove('active');
+      }
+    }
+
+// [Chrono-Loom Milestone 5/6] refactor(main): integrate LoomEngine update and render calls in main.ts
