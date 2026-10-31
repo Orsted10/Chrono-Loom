@@ -642,5 +642,43 @@ export class SceneManager {
    */
   public setPassthroughMode(isAR: boolean): void {
     this.isPassthroughActive = isAR;
+    if (isAR) {
+      this.scene.background = null;
+      this.renderer.setClearAlpha(0);
+      this.scene.fog = null;
+      if (this.floorMesh) this.floorMesh.visible = false;
+      if (this.particlesMesh) this.particlesMesh.visible = false;
+      console.log('[SceneManager] Mixed Reality (AR Passthrough) ACTIVE. Real room visible via Quest 3.');
+    } else {
+      this.scene.background = new THREE.Color(0x030712);
+      this.renderer.setClearAlpha(1);
+      this.scene.fog = new THREE.FogExp2(0x030712, 0.12);
+      if (this.floorMesh) this.floorMesh.visible = true;
+      if (this.particlesMesh) this.particlesMesh.visible = true;
+      console.log('[SceneManager] Cyber-zen dark void active.');
+    }
+  }
 
-// [Chrono-Loom Milestone 17/20] feat(cymatics): expand concentric wave rings across floor matching pluck frequencies
+  /**
+   * Floating 3D Title Header high above workspace (y = 1.75m, z = -1.2m)
+   * reads: "CHRONO-LOOM // HANDS-FIRST SPATIAL SYNTH & AI CO-COMPOSER"
+   */
+  private createFloatingTitleHeader(): THREE.Group {
+    const group = new THREE.Group();
+    group.name = 'FloatingTitleHeader';
+    group.position.set(0, 1.75, -1.2);
+
+    // Canvas texture for ultra-crisp holographic title banner
+    const canvas = document.createElement('canvas');
+    canvas.width = 2048;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    // Translucent dark glass pill
+    ctx.fillStyle = 'rgba(7, 24, 45, 0.78)';
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.55)';
+    ctx.lineWidth = 5;
+
+    // Rounded rectangle
+
+// [Chrono-Loom Milestone 18/20] style(cymatics): add subtle opacity fade and chromatic glow to cymatic rings
