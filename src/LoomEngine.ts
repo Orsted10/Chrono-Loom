@@ -885,4 +885,33 @@ export class LoomEngine {
     const mesh = new THREE.Mesh(beadGeo, beadMat);
     group.add(mesh);
 
-// [Chrono-Loom Milestone 30/84] feat(loom): implement open-palm node muting (turns nodes icy blue and silent)
+    // Aura ring
+    const auraGeo = new THREE.RingGeometry(0.014, 0.019, 16);
+    const auraMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending
+    });
+    const aura = new THREE.Mesh(auraGeo, auraMat);
+    group.add(aura);
+
+    // Radial light
+    const glowLight = new THREE.PointLight(string.color, 1.4, 0.28);
+    group.add(glowLight);
+
+    // Soft additive-blended glow aura halo sprite
+    const pulseAuraMat = new THREE.SpriteMaterial({
+      map: this.getAuraTexture(),
+      color: string.color,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const pulseAuraSprite = new THREE.Sprite(pulseAuraMat);
+    pulseAuraSprite.scale.set(0.065, 0.065, 1);
+    group.add(pulseAuraSprite);
+
+// [Chrono-Loom Milestone 31/84] feat(loom): restore node active harmonic state when open palm retreats
