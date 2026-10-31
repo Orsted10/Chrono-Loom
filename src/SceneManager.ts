@@ -680,5 +680,43 @@ export class SceneManager {
     ctx.lineWidth = 5;
 
     // Rounded rectangle
+    const x = 30, y = 30, w = 1988, h = 196, r = 40;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y + w, x, y, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
 
-// [Chrono-Loom Milestone 18/20] style(cymatics): add subtle opacity fade and chromatic glow to cymatic rings
+    // Subtle neon glow line
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 20;
+
+    // Brand Title Header
+    ctx.font = 'bold 58px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CHRONO-LOOM // HANDS-FIRST SPATIAL SYNTH & AI CO-COMPOSER', 1024, 105);
+
+    // Meta VR Start Subtitle
+    ctx.font = 'bold 28px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('META VR START DEVELOPER COMPETITION 2026 // SEATED SPATIAL AUDIO EXPERIENCE', 1024, 165);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    const bannerGeo = new THREE.PlaneGeometry(1.65, 0.21);
+    const bannerMat = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.95,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+
+// [Chrono-Loom Milestone 19/20] feat(cymatics): trigger floor cymatic pulse whenever a node is spawned or plucked
