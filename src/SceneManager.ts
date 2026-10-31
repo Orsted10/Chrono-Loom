@@ -604,5 +604,43 @@ export class SceneManager {
         speed: 1.2,
         maxRadius: 2.2,
         color: new THREE.Color(0x00f0ff),
+        active: false
+      });
+    }
+  }
 
-// [Chrono-Loom Milestone 16/20] feat(cymatics): create audio-reactive Cymatic Sonar Wave rings in SceneManager
+  /**
+   * Triggers an expanding Cymatic Sonar Wave Ring on the floor and desk zone
+   * when a string is plucked or a node pulse collision occurs.
+   */
+  public triggerCymaticPulse(pos: THREE.Vector3, color: THREE.Color, intensity: number = 1.0): void {
+    // Find an inactive wave or the oldest active one
+    let targetWave = this.cymaticPool.find((w) => !w.active);
+    if (!targetWave) {
+      targetWave = this.cymaticPool.reduce((prev, curr) =>
+        curr.progress > prev.progress ? curr : prev
+      );
+    }
+
+    targetWave.mesh.position.set(pos.x, 0.004, pos.z);
+    targetWave.color.copy(color);
+    (targetWave.mesh.material as THREE.MeshBasicMaterial).color.copy(color);
+    targetWave.progress = 0.0;
+    targetWave.speed = 1.0 + intensity * 0.4;
+    targetWave.maxRadius = 1.4 + intensity * 1.2;
+    targetWave.active = true;
+    targetWave.mesh.visible = true;
+
+    // Flash Seated Comfort Arc desk highlight
+    this.setDeskHighlight(Math.min(1.0, intensity * 0.85));
+  }
+
+  /**
+   * Mixed Reality (MR) Passthrough Manager:
+   * When immersive-ar session starts, clears background, hides dark fog and opaque floor
+   * so user's real room is visible on Quest 3, leaving only floating holographic instruments!
+   */
+  public setPassthroughMode(isAR: boolean): void {
+    this.isPassthroughActive = isAR;
+
+// [Chrono-Loom Milestone 17/20] feat(cymatics): expand concentric wave rings across floor matching pluck frequencies
