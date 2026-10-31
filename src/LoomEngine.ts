@@ -855,4 +855,34 @@ export class LoomEngine {
     return new THREE.CatmullRomCurve3(points);
   }
 
-// [Chrono-Loom Milestone 29/84] fix(loom): prevent accidental node spawning during quick hand sweeps
+  // ----------------------------------------------------
+  // 4. Autonomous Kinetic Pulses (The Clockwork Engine)
+  // ----------------------------------------------------
+
+  /**
+   * Spawns a glowing Chrono-Pulse bead traveling from sourceNode to targetNode
+   */
+  public spawnChronoPulse(
+    sourceNode: HarmonicNode,
+    targetNode: HarmonicNode,
+    string: ChronoString
+  ): ChronoPulse | null {
+    if (this.pulses.size >= this.MAX_ACTIVE_PULSES) return null;
+
+    const id = `pulse_${this.nextPulseIndex++}`;
+    const group = new THREE.Group();
+    group.name = `ChronoPulse_${id}`;
+    group.position.copy(sourceNode.position);
+
+    // Glowing bead sphere
+    const beadGeo = new THREE.SphereGeometry(0.012, 10, 10);
+    const beadMat = new THREE.MeshBasicMaterial({
+      color: string.color,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending
+    });
+    const mesh = new THREE.Mesh(beadGeo, beadMat);
+    group.add(mesh);
+
+// [Chrono-Loom Milestone 30/84] feat(loom): implement open-palm node muting (turns nodes icy blue and silent)
