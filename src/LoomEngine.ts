@@ -1002,5 +1002,34 @@ export class LoomEngine {
         pulse.mesh.geometry.dispose();
         (pulse.mesh.material as THREE.Material).dispose();
         pulse.auraSprite.geometry.dispose();
+        (pulse.auraSprite.material as THREE.Material).dispose();
+        this.pulses.delete(id);
+        this.prevPulsePositions.delete(id);
+      }
+    }
 
-// [Chrono-Loom Milestone 34/84] feat(strings): create dynamic 3D ChronoString data structure in LoomEngine
+    // Clockwork Beat Engine: Periodically inject pulses if strings exist and count is low
+    if (this.strings.size > 0) {
+      this.clockworkPulseTimer += deltaTime * (this.globalBPM / 90);
+      if (
+        this.clockworkPulseTimer >= this.CLOCKWORK_BEAT_INTERVAL ||
+        this.pulses.size === 0
+      ) {
+        this.clockworkPulseTimer = 0;
+        this.triggerClockworkPulseCycle();
+      }
+    }
+  }
+
+  /**
+   * Pulse arrives at target node: triggers spatial audio, flashes scale 1.4x, and cascades!
+   */
+  private handlePulseArrival(pulse: ChronoPulse, arrivedString: ChronoString): void {
+    const target = pulse.targetNode;
+
+    // Check Palm-Mute status: if muted, absorb pulse with icy freeze
+    if (target.isMuted) {
+      this.spawnParticleBurst(target.position, 12, target.muteColor, 0.03);
+      console.log(`[LoomEngine] Chrono-Pulse absorbed by FROZEN Node [${target.id}]`);
+
+// [Chrono-Loom Milestone 35/84] feat(strings): generate procedural tube geometry connecting Node A to Node B
