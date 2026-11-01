@@ -1150,4 +1150,34 @@ export class LoomEngine {
         str.vibrationDecay = 2.4;
         str.vibrationPhase = 0;
 
-// [Chrono-Loom Milestone 39/84] feat(strings): assign chromatic color gradient to strings based on musical pitch
+        const dir = this._v1.subVectors(pB, pA).normalize();
+        const up = Math.abs(dir.y) > 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+        str.vibrationNormal.crossVectors(dir, up).normalize();
+
+        // 2. Emit burst of 15 glowing particles at the contact point & trigger floor cymatic pulse
+        this.spawnParticleBurst(closestPoint, 15, str.color, 0.045);
+        this.sceneManager.triggerCymaticPulse(closestPoint, str.color, 1.15);
+        this.accessibilityManager?.triggerVisualHapticWave(closestPoint, str.frequency, fingerVel * 1.3);
+
+        // 3. Play 3D HRTF Spatialized Pluck Note & Duck Drone Bed
+        this.spatialSynth.triggerDroneDucking(fingerVel);
+        this.spatialSynth.playSpatialNote({
+          frequency: str.frequency,
+          position: closestPoint,
+          intensity: fingerVel * 1.2,
+          duration: 1.3
+        });
+
+        // 4. Manual plucks inject kinetic pulses heading toward both ends of the string!
+        this.spawnChronoPulse(str.nodeA, str.nodeB, str);
+
+        // 5. Powerful plucks eject an energetic photon dart outward toward room walls!
+        if (fingerVel > 1.1 && this.photonDarts.size < this.MAX_ACTIVE_DARTS) {
+          const dartDir = str.vibrationNormal.clone();
+          if (Math.random() < 0.5) dartDir.negate();
+          this.spawnPhotonDart(closestPoint, dartDir, str.color, str.frequency);
+        }
+
+        console.log(`[LoomEngine] PLUCK! ChronoString [${str.id}] plucked at 3D pos (${closestPoint.x.toFixed(2)}, ${closestPoint.y.toFixed(2)}, ${closestPoint.z.toFixed(2)})`);
+
+// [Chrono-Loom Milestone 40/84] feat(strings): prevent duplicate string connections between identical node pairs
