@@ -1061,5 +1061,34 @@ export class LoomEngine {
     if (this.pulses.size >= this.MAX_ACTIVE_PULSES) return;
 
     // Find all strings connected to this node
+    const connectedStrings: { string: ChronoString; otherNode: HarmonicNode }[] = [];
+    for (const str of this.strings.values()) {
+      if (str.nodeA.id === node.id) {
+        connectedStrings.push({ string: str, otherNode: str.nodeB });
+      } else if (str.nodeB.id === node.id) {
+        connectedStrings.push({ string: str, otherNode: str.nodeA });
+      }
+    }
 
-// [Chrono-Loom Milestone 36/84] feat(strings): add glowing central core line inside tube for neon laser visual
+    if (connectedStrings.length === 0) return;
+
+    // Filter out the incoming string if other branches exist
+    let outgoing = connectedStrings.filter((c) => c.string.id !== incomingString.id);
+
+    // If it's a leaf node with only one string, bounce back AND shoot stray pulse outward!
+    if (outgoing.length === 0) {
+      outgoing = connectedStrings;
+
+      // Phase 9: Allow stray Chrono-Pulses fired from open-ended strings to shoot outward
+      // as luminous photon darts that bounce off real walls/tables and reflect back!
+      if (this.photonDarts.size < this.MAX_ACTIVE_DARTS) {
+        const otherNode = incomingString.nodeA.id === node.id ? incomingString.nodeB : incomingString.nodeA;
+        const outDir = node.position.clone().sub(otherNode.position).normalize();
+        outDir.y += 0.15;
+        outDir.normalize();
+        this.spawnPhotonDart(node.position, outDir, incomingString.color, node.noteFrequency);
+      }
+    }
+
+
+// [Chrono-Loom Milestone 37/84] feat(strings): calculate string pitch from physical length (0.1m to 0.6m)
