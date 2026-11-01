@@ -1179,5 +1179,34 @@ export class LoomEngine {
         }
 
         console.log(`[LoomEngine] PLUCK! ChronoString [${str.id}] plucked at 3D pos (${closestPoint.x.toFixed(2)}, ${closestPoint.y.toFixed(2)}, ${closestPoint.z.toFixed(2)})`);
+        if (!this.isApplyingRemote) {
+          this.onStringPlucked?.(str.id, closestPoint, fingerVel);
+          for (const listener of this.stringPluckedListeners) {
+            listener(str.id, closestPoint, fingerVel, str.frequency);
+          }
+        }
+      }
+    }
 
-// [Chrono-Loom Milestone 40/84] feat(strings): prevent duplicate string connections between identical node pairs
+    prevPos.copy(tipPos);
+  }
+
+  /**
+   * Evaluates Open Palm gesture near nodes to toggle "Mute/Freeze" state
+   */
+  private checkPalmMuting(hand: Handedness, palmPos: THREE.Vector3): void {
+    const telemetry = this.handInputManager.getTelemetry(hand);
+    if (!telemetry.isOpenPalm) return;
+
+    for (const node of this.nodes.values()) {
+      const dist = palmPos.distanceTo(node.position);
+      if (dist < 0.12) {
+        if (!node.isMuted) {
+          node.isMuted = true;
+          this.applyNodeMuteVisuals(node, true);
+          this.spawnParticleBurst(node.position, 12, node.muteColor, 0.03);
+          console.log(`[LoomEngine] Harmonic Node [${node.id}] FROZEN / MUTED by ${hand} Open Palm!`);
+        }
+      } else if (dist > 0.22 && node.isMuted) {
+
+// [Chrono-Loom Milestone 41/84] feat(strings): play resonant weaving chime in SpatialSynth when string is formed
