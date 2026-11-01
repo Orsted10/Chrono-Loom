@@ -972,5 +972,35 @@ export class LoomEngine {
       // Phase 14: Feed pulse position into Instanced GPU Ribbon Trail Pool (tapering width & opacity)
       const pulsePos = pulse.meshGroup.position;
       const prevPos = this.prevPulsePositions.get(id);
+      if (prevPos) {
+        if (prevPos.distanceTo(pulsePos) > 0.0025) {
+          this.ribbonTrailPool.addSegment(prevPos, pulsePos, pulse.color, 0.016);
+          prevPos.copy(pulsePos);
+        }
+      } else {
+        this.prevPulsePositions.set(id, pulsePos.clone());
+      }
 
-// [Chrono-Loom Milestone 33/84] feat(strings): implement two-hand string weaving mechanic between nodes
+      // Pulse micro-spin & light breathing & aura halo pulse
+      pulse.mesh.rotation.x += 0.05;
+      pulse.mesh.rotation.y += 0.08;
+      pulse.glowLight.intensity = 1.2 + Math.sin(performance.now() * 0.01) * 0.4;
+      pulse.auraSprite.scale.setScalar(0.065 + Math.sin(performance.now() * 0.012) * 0.012);
+
+      // Check arrival at target node
+      if (pulse.progress >= 1.0) {
+        finishedPulseIds.push(id);
+        this.handlePulseArrival(pulse, string);
+      }
+    }
+
+    // Clean up finished pulses
+    for (const id of finishedPulseIds) {
+      const pulse = this.pulses.get(id);
+      if (pulse) {
+        this.loomGroup.remove(pulse.meshGroup);
+        pulse.mesh.geometry.dispose();
+        (pulse.mesh.material as THREE.Material).dispose();
+        pulse.auraSprite.geometry.dispose();
+
+// [Chrono-Loom Milestone 34/84] feat(strings): create dynamic 3D ChronoString data structure in LoomEngine
