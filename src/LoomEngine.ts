@@ -943,5 +943,34 @@ export class LoomEngine {
   private updateKineticPulses(deltaTime: number): void {
     const finishedPulseIds: string[] = [];
 
+    for (const [id, pulse] of this.pulses.entries()) {
+      const string = this.strings.get(pulse.stringId);
+      if (!string) {
+        finishedPulseIds.push(id);
+        continue;
+      }
 
-// [Chrono-Loom Milestone 32/84] perf(loom): optimize node matrix transforms with dirty flag caching
+      // Progress along string scaled by global BPM (Time-Dilation Conductor Frame: 40-180 BPM)
+      const length = Math.max(string.length, 0.08);
+      const bpmFactor = this.globalBPM / 90;
+      pulse.progress += (pulse.speed * bpmFactor * deltaTime) / length;
+
+      // Position interpolation along string with vibration displacement
+      const pA = pulse.sourceNode.position;
+      const pB = pulse.targetNode.position;
+      const s = THREE.MathUtils.clamp(pulse.progress, 0, 1);
+
+      const disp =
+        string.vibrationAmplitude *
+        Math.cos(string.vibrationPhase) *
+        Math.sin(Math.PI * s);
+
+      pulse.meshGroup.position
+        .lerpVectors(pA, pB, s)
+        .addScaledVector(string.vibrationNormal, disp);
+
+      // Phase 14: Feed pulse position into Instanced GPU Ribbon Trail Pool (tapering width & opacity)
+      const pulsePos = pulse.meshGroup.position;
+      const prevPos = this.prevPulsePositions.get(id);
+
+// [Chrono-Loom Milestone 33/84] feat(strings): implement two-hand string weaving mechanic between nodes
