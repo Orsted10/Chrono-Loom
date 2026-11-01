@@ -1208,5 +1208,35 @@ export class LoomEngine {
           console.log(`[LoomEngine] Harmonic Node [${node.id}] FROZEN / MUTED by ${hand} Open Palm!`);
         }
       } else if (dist > 0.22 && node.isMuted) {
+        node.isMuted = false;
+        this.applyNodeMuteVisuals(node, false);
+        this.spawnParticleBurst(node.position, 8, node.baseColor, 0.03);
+        console.log(`[LoomEngine] Harmonic Node [${node.id}] UNMUTED.`);
+      }
+    }
+  }
 
-// [Chrono-Loom Milestone 41/84] feat(strings): play resonant weaving chime in SpatialSynth when string is formed
+  /**
+   * Visual icy blue frost transformation for muted nodes
+   */
+  private applyNodeMuteVisuals(node: HarmonicNode, isMuted: boolean): void {
+    const targetColor = isMuted ? node.muteColor : node.baseColor;
+    const coreMat = node.coreMesh.material as THREE.MeshPhysicalMaterial;
+    const shellMat = node.wireframeMesh.material as THREE.MeshBasicMaterial;
+
+    coreMat.color.copy(targetColor);
+    coreMat.emissive.copy(isMuted ? new THREE.Color(0x0284c7) : new THREE.Color(0x0088aa));
+    coreMat.roughness = isMuted ? 0.4 : 0.15;
+    shellMat.color.copy(targetColor);
+    node.innerGlow.color.copy(targetColor);
+
+    // Update aura glow halo color & opacity
+    const auraMat = node.auraSprite.material as THREE.SpriteMaterial;
+    auraMat.color.copy(targetColor);
+    auraMat.opacity = isMuted ? 0.35 : 0.72;
+
+    // Freeze any connected strings' vibrations immediately
+    for (const str of this.strings.values()) {
+      if (str.nodeA.id === node.id || str.nodeB.id === node.id) {
+
+// [Chrono-Loom Milestone 42/84] test(strings): verify string tube reorientation when connected nodes move
