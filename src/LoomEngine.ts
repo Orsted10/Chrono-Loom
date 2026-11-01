@@ -1031,5 +1031,35 @@ export class LoomEngine {
     if (target.isMuted) {
       this.spawnParticleBurst(target.position, 12, target.muteColor, 0.03);
       console.log(`[LoomEngine] Chrono-Pulse absorbed by FROZEN Node [${target.id}]`);
+      return;
+    }
 
-// [Chrono-Loom Milestone 35/84] feat(strings): generate procedural tube geometry connecting Node A to Node B
+    // 1. Trigger Target Node's Spatial Audio Note via HRTF Synthesizer
+    this.spatialSynth.playSpatialNote({
+      frequency: target.noteFrequency,
+      position: target.position,
+      intensity: 1.15,
+      duration: 1.2
+    });
+
+    // 2. Flash node scale by 1.4x (smoothly decays back to 1.0x in update)
+    target.currentScale = 1.4;
+
+    // 3. Collision particle burst & Audio-Reactive Cymatic Sonar Wave
+    this.spawnParticleBurst(target.position, 16, pulse.color, 0.055);
+    this.sceneManager.triggerCymaticPulse(target.position, pulse.color, 1.25);
+    this.accessibilityManager?.triggerVisualHapticWave(target.position, target.noteFrequency, 1.35);
+
+    // 4. Cascade along connected strings (polyrhythmic kinetic sculpture!)
+    this.cascadePulseFromNode(target, arrivedString);
+  }
+
+  /**
+   * Cascades the kinetic pulse along connected strings
+   */
+  private cascadePulseFromNode(node: HarmonicNode, incomingString: ChronoString): void {
+    if (this.pulses.size >= this.MAX_ACTIVE_PULSES) return;
+
+    // Find all strings connected to this node
+
+// [Chrono-Loom Milestone 36/84] feat(strings): add glowing central core line inside tube for neon laser visual
