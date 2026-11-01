@@ -1090,5 +1090,35 @@ export class LoomEngine {
       }
     }
 
+    // Spawn pulse along next branch
+    const nextBranch = outgoing[Math.floor(Math.random() * outgoing.length)];
+    this.spawnChronoPulse(node, nextBranch.otherNode, nextBranch.string);
+  }
 
-// [Chrono-Loom Milestone 37/84] feat(strings): calculate string pitch from physical length (0.1m to 0.6m)
+  /**
+   * Spawns a pulse from root nodes to sustain the Clockwork Engine
+   */
+  private triggerClockworkPulseCycle(): void {
+    if (this.strings.size === 0) return;
+    const allStrings = Array.from(this.strings.values());
+    const randomStr = allStrings[Math.floor(Math.random() * allStrings.length)];
+    this.spawnChronoPulse(randomStr.nodeA, randomStr.nodeB, randomStr);
+  }
+
+  // ----------------------------------------------------
+  // 5. Plucking & Palm-Muting Interactions
+  // ----------------------------------------------------
+
+  /**
+   * Checks if an index-finger-tip crossed or hit any ChronoString to pluck it
+   */
+  private checkStringPlucking(hand: Handedness, tipPos: THREE.Vector3, deltaTime: number): void {
+    const prevPos = this.prevFingertipPositions.get(hand);
+    if (!prevPos) {
+      this.prevFingertipPositions.set(hand, tipPos.clone());
+      return;
+    }
+
+    const fingerVel = tipPos.distanceTo(prevPos) / Math.max(deltaTime, 0.001);
+
+// [Chrono-Loom Milestone 38/84] feat(strings): map shorter string lengths to higher crystal bell octaves
