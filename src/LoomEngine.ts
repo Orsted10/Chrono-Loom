@@ -1121,4 +1121,33 @@ export class LoomEngine {
 
     const fingerVel = tipPos.distanceTo(prevPos) / Math.max(deltaTime, 0.001);
 
-// [Chrono-Loom Milestone 38/84] feat(strings): map shorter string lengths to higher crystal bell octaves
+    for (const str of this.strings.values()) {
+      if (str.nodeA.isMuted || str.nodeB.isMuted) continue;
+
+      const pA = str.nodeA.position;
+      const pB = str.nodeB.position;
+
+      const v = this._v2.subVectors(pB, pA);
+      const w = this._v3.subVectors(tipPos, pA);
+
+      const c1 = w.dot(v);
+      const c2 = v.dot(v);
+
+      if (c2 === 0) continue;
+
+      const param = THREE.MathUtils.clamp(c1 / c2, 0, 1);
+      const closestPoint = new THREE.Vector3().copy(pA).addScaledVector(v, param);
+      const dist = tipPos.distanceTo(closestPoint);
+
+      const isTouching = dist < 0.022;
+      const timeSinceLastPluck = (performance.now() - str.lastPluckTime) / 1000;
+
+      if (isTouching && timeSinceLastPluck > 0.16 && fingerVel > 0.05) {
+        str.lastPluckTime = performance.now();
+
+        // 1. Damped harmonic physical vibration
+        str.vibrationAmplitude = 0.024 * Math.min(2.0, Math.max(0.6, fingerVel * 3));
+        str.vibrationDecay = 2.4;
+        str.vibrationPhase = 0;
+
+// [Chrono-Loom Milestone 39/84] feat(strings): assign chromatic color gradient to strings based on musical pitch
