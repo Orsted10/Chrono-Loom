@@ -1327,5 +1327,34 @@ export class LoomEngine {
 
     this.photonDarts.set(id, dart);
     return dart;
+  }
 
-// [Chrono-Loom Milestone 45/84] feat(physics): simulate amplitude decay over time with exponential damping (e^-2.4t)
+  /**
+   * Updates all active Photon Darts: advances along velocity vector,
+   * performs physical wall-bounce against detected surfaces, triggers early-reflection stereo echo,
+   * and checks collision with Harmonic Nodes.
+   */
+  private updatePhotonDarts(deltaTime: number): void {
+    const toRemove: string[] = [];
+    const seatedUserPos = new THREE.Vector3(0, 1.2, 0);
+
+    for (const [id, dart] of this.photonDarts) {
+      dart.life += deltaTime;
+
+      if (dart.life >= dart.maxLife || dart.bouncesRemaining <= 0) {
+        toRemove.push(id);
+        continue;
+      }
+
+      // 1. Advance position along velocity vector
+      dart.position.addScaledVector(dart.velocity, deltaTime);
+
+      // 2. Update trailing light ribbon points
+      for (let i = dart.tailPoints.length - 1; i > 0; i--) {
+        dart.tailPoints[i].copy(dart.tailPoints[i - 1]);
+      }
+      dart.tailPoints[0].copy(dart.position);
+      dart.tailLine.geometry.dispose();
+      dart.tailLine.geometry = new THREE.BufferGeometry().setFromPoints(dart.tailPoints);
+
+// [Chrono-Loom Milestone 46/84] feat(physics): update string tube scale and displacement along vibration normal
