@@ -1387,4 +1387,33 @@ export class LoomEngine {
           // Spawn particle burst on the wall
           this.spawnParticleBurst(bounce.hitPoint, 14, dart.color, 0.045);
 
-// [Chrono-Loom Milestone 47/84] feat(physics): implement index-finger-tip string plucking detection
+          dart.bouncesRemaining--;
+        }
+      }
+
+      // 4. Check if reflected dart returns and strikes any Harmonic Node in the Loom!
+      if (dart.bouncesRemaining < dart.maxBounces) {
+        for (const node of this.nodes.values()) {
+          if (dart.position.distanceTo(node.position) < 0.075) {
+            // Reflected dart strike!
+            node.currentScale = 1.4;
+            this.spatialSynth.playSpatialNote({
+              frequency: node.noteFrequency,
+              position: node.position,
+              intensity: 1.25,
+              duration: 1.2
+            });
+            this.spawnParticleBurst(node.position, 18, dart.color, 0.05);
+            this.sceneManager.triggerCymaticPulse(node.position, dart.color, 1.2);
+            this.accessibilityManager?.triggerVisualHapticWave(node.position, node.noteFrequency, 1.3);
+
+            // Re-ignite a pulse into connected strings
+            const connected: ChronoString[] = [];
+            for (const str of this.strings.values()) {
+              if (str.nodeA.id === node.id || str.nodeB.id === node.id) {
+                connected.push(str);
+              }
+            }
+            if (connected.length > 0) {
+
+// [Chrono-Loom Milestone 48/84] feat(physics): calculate fingertip crossing velocity vector through string segment
