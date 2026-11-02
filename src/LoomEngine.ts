@@ -1445,5 +1445,34 @@ export class LoomEngine {
   }
 
   // ----------------------------------------------------
+  // Hand Input Event Handlers
+  // ----------------------------------------------------
 
-// [Chrono-Loom Milestone 49/84] feat(physics): scale pluck volume and vibration amplitude by finger velocity
+  private bindHandEvents(): void {
+    // 1. Pinch Start
+    this.handInputManager.onPinchStart((hand, midpoint, distance) => {
+      // Audio activation trigger
+      this.spatialSynth.ensureContext();
+
+      // A. Check Seed Orb interaction if not yet awakened
+      if (!this.isLoomAwakened && this.seedOrbGroup) {
+        const distToOrb = midpoint.distanceTo(this.seedOrbCurrentPos);
+        if (distToOrb < 0.08) {
+          this.isSeedOrbGrabbed = true;
+          console.log('[LoomEngine] Seed Orb grabbed by hand!');
+          return;
+        }
+      }
+
+      // B0. One-Handed Virtual Anchor Tether check
+      if (this.accessibilityManager?.handleOneHandedPinch(hand, midpoint)) {
+        return;
+      }
+
+      // B. Check if pinching an existing Harmonic Node to drag it
+      const { node } = this.findNearestNode(midpoint, 0.065);
+      if (node) {
+        node.isGrabbed = true;
+        node.grabbedByHand = hand;
+
+// [Chrono-Loom Milestone 50/84] feat(physics): add minimum pluck velocity threshold (0.05 m/s) to avoid noise
