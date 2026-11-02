@@ -1297,5 +1297,35 @@ export class LoomEngine {
       color: color.clone(),
       transparent: true,
       opacity: 0.8,
+      linewidth: 2,
+      blending: THREE.AdditiveBlending
+    });
+    const tailLine = new THREE.Line(tailGeo, tailMat);
+    this.loomGroup.add(tailLine);
 
-// [Chrono-Loom Milestone 44/84] feat(physics): compute transverse vibration normal orthogonal to string vector
+    this.loomGroup.add(group);
+
+    const speed = 2.2; // m/s
+    const velocity = direction.clone().normalize().multiplyScalar(speed);
+
+    const dart: PhotonDart = {
+      id,
+      position: group.position,
+      velocity,
+      color: color.clone(),
+      frequency,
+      meshGroup: group,
+      coreMesh,
+      tailLine,
+      tailPoints,
+      light,
+      bouncesRemaining: 3,
+      maxBounces: 3,
+      life: 0,
+      maxLife: 4.5
+    };
+
+    this.photonDarts.set(id, dart);
+    return dart;
+
+// [Chrono-Loom Milestone 45/84] feat(physics): simulate amplitude decay over time with exponential damping (e^-2.4t)
