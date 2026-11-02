@@ -1268,5 +1268,34 @@ export class LoomEngine {
       blending: THREE.AdditiveBlending
     });
     const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    group.add(coreMesh);
 
-// [Chrono-Loom Milestone 43/84] feat(physics): implement damped harmonic vibration physics on ChronoStrings
+    // 2. Outer glow aura sprite
+    const auraMat = new THREE.SpriteMaterial({
+      map: this.getAuraTexture(),
+      color: color.clone(),
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const aura = new THREE.Sprite(auraMat);
+    aura.scale.set(0.12, 0.12, 1);
+    group.add(aura);
+
+    // 3. Point light
+    const light = new THREE.PointLight(color, 1.4, 0.55);
+    group.add(light);
+
+    // 4. Trailing light ribbon
+    const tailPoints: THREE.Vector3[] = [];
+    for (let i = 0; i < 5; i++) {
+      tailPoints.push(origin.clone());
+    }
+    const tailGeo = new THREE.BufferGeometry().setFromPoints(tailPoints);
+    const tailMat = new THREE.LineBasicMaterial({
+      color: color.clone(),
+      transparent: true,
+      opacity: 0.8,
+
+// [Chrono-Loom Milestone 44/84] feat(physics): compute transverse vibration normal orthogonal to string vector
