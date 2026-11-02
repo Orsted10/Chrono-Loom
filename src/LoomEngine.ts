@@ -1357,4 +1357,34 @@ export class LoomEngine {
       dart.tailLine.geometry.dispose();
       dart.tailLine.geometry = new THREE.BufferGeometry().setFromPoints(dart.tailPoints);
 
-// [Chrono-Loom Milestone 46/84] feat(physics): update string tube scale and displacement along vibration normal
+      // 3. Physical Wall/Table bounce check against detected MR Surfaces
+      if (this.mrSurfaceManager) {
+        const bounce = this.mrSurfaceManager.checkPhotonBounce(dart.position, dart.velocity, deltaTime);
+        if (bounce) {
+          // Snap position to hit point
+          dart.position.copy(bounce.hitPoint);
+
+          // Specular reflection: v' = v - 2(v . n)n
+          const dot = dart.velocity.dot(bounce.normal);
+          dart.velocity.sub(bounce.normal.clone().multiplyScalar(2 * dot));
+
+          // Soft steering guidance back toward the user seated workspace (0, 1.2, -0.45)
+          const towardWorkspace = new THREE.Vector3(0, 1.2, -0.45).sub(bounce.hitPoint).normalize();
+          dart.velocity.lerp(towardWorkspace.multiplyScalar(dart.velocity.length()), 0.32);
+
+          // Flash real-world wall/table surface with expanding ripple
+          this.mrSurfaceManager.flashSurface(bounce.surface, bounce.hitPoint);
+
+          // Trigger Early-Reflection Stereo Echo in SpatialSynth based on real room dimensions!
+          const distToListener = bounce.hitPoint.distanceTo(seatedUserPos);
+          this.spatialSynth.playWallReflectionEcho(
+            bounce.hitPoint,
+            distToListener,
+            bounce.surface.semanticLabel,
+            dart.frequency
+          );
+
+          // Spawn particle burst on the wall
+          this.spawnParticleBurst(bounce.hitPoint, 14, dart.color, 0.045);
+
+// [Chrono-Loom Milestone 47/84] feat(physics): implement index-finger-tip string plucking detection
