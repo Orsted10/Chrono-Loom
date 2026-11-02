@@ -1415,5 +1415,35 @@ export class LoomEngine {
               }
             }
             if (connected.length > 0) {
+              const str = connected[Math.floor(Math.random() * connected.length)];
+              const other = str.nodeA.id === node.id ? str.nodeB : str.nodeA;
+              this.spawnChronoPulse(node, other, str);
+            }
 
-// [Chrono-Loom Milestone 48/84] feat(physics): calculate fingertip crossing velocity vector through string segment
+            toRemove.push(id);
+            break;
+          }
+        }
+      }
+    }
+
+    // Clean up expired or consumed darts
+    for (const id of toRemove) {
+      const dart = this.photonDarts.get(id);
+      if (dart) {
+        this.loomGroup.remove(dart.meshGroup);
+        dart.coreMesh.geometry.dispose();
+        (dart.coreMesh.material as THREE.Material).dispose();
+
+        this.loomGroup.remove(dart.tailLine);
+        dart.tailLine.geometry.dispose();
+        (dart.tailLine.material as THREE.Material).dispose();
+
+        this.photonDarts.delete(id);
+      }
+    }
+  }
+
+  // ----------------------------------------------------
+
+// [Chrono-Loom Milestone 49/84] feat(physics): scale pluck volume and vibration amplitude by finger velocity
