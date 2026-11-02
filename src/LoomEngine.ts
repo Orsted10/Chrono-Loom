@@ -1504,5 +1504,34 @@ export class LoomEngine {
 
       // B. Move dragged Node
       for (const node of this.nodes.values()) {
+        if (node.isGrabbed && node.grabbedByHand === hand) {
+          if (this.mrSurfaceManager) {
+            const anchor = this.mrSurfaceManager.checkSurfaceAnchor(midpoint, 0.06);
+            if (anchor) {
+              // Magnetically snap and lock onto physical surface!
+              node.position.set(midpoint.x, anchor.anchorY, midpoint.z);
+              node.meshGroup.position.copy(node.position);
+              this.attachOrUpdatePedestal(node, anchor.surface);
+            } else {
+              node.position.copy(midpoint);
+              node.meshGroup.position.copy(midpoint);
+              this.detachPedestal(node);
+            }
+          } else {
+            node.position.copy(midpoint);
+            node.meshGroup.position.copy(midpoint);
+          }
+          this.updateConnectedStrings(node);
+          if (!this.isApplyingRemote) {
+            this.onNodeMoved?.(node.id, node.position);
+          }
+          return;
+        }
+      }
 
-// [Chrono-Loom Milestone 51/84] feat(physics): add pluck cooldown debounce timer (160ms) per string
+      // C. Evaluate 0.2s hold timer for empty space node spawning
+      const timer = this.pinchHoldTimers.get(hand);
+      if (timer && !timer.hasSpawned) {
+        const holdDuration = (performance.now() - timer.startTime) / 1000;
+
+// [Chrono-Loom Milestone 52/84] test(physics): verify tactile responsiveness of string plucking in simulator
