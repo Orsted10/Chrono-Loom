@@ -1474,5 +1474,35 @@ export class LoomEngine {
       if (node) {
         node.isGrabbed = true;
         node.grabbedByHand = hand;
+        this.checkTwoHandSimultaneousWeave();
+        return;
+      }
 
-// [Chrono-Loom Milestone 50/84] feat(physics): add minimum pluck velocity threshold (0.05 m/s) to avoid noise
+      // C. Otherwise, start 0.2s hold timer to spawn Harmonic Node in empty space
+      if (this.isWithinComfortZone(midpoint)) {
+        this.pinchHoldTimers.set(hand, {
+          startTime: performance.now(),
+          startPosition: midpoint.clone(),
+          hasSpawned: false
+        });
+      }
+    });
+
+    // 2. Pinch Move
+    this.handInputManager.onPinchMove((hand, midpoint, distance) => {
+      // A. Seed Orb dragging
+      if (this.isSeedOrbGrabbed && this.seedOrbGroup) {
+        this.seedOrbCurrentPos.copy(midpoint);
+        this.seedOrbGroup.position.copy(midpoint);
+
+        if (midpoint.distanceTo(this.seedOrbInitialPos) > 0.055) {
+          this.isSeedOrbGrabbed = false;
+          this.awakenLoomAt(midpoint);
+        }
+        return;
+      }
+
+      // B. Move dragged Node
+      for (const node of this.nodes.values()) {
+
+// [Chrono-Loom Milestone 51/84] feat(physics): add pluck cooldown debounce timer (160ms) per string
