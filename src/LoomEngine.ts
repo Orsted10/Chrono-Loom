@@ -1238,5 +1238,35 @@ export class LoomEngine {
     // Freeze any connected strings' vibrations immediately
     for (const str of this.strings.values()) {
       if (str.nodeA.id === node.id || str.nodeB.id === node.id) {
+        str.vibrationAmplitude = 0;
+      }
+    }
+  }
 
-// [Chrono-Loom Milestone 42/84] test(strings): verify string tube reorientation when connected nodes move
+  // ----------------------------------------------------
+  // Phase 9: Luminous Photon Darts & Wall-Bounce Reflections
+  // ----------------------------------------------------
+
+  /**
+   * Spawns a luminous Photon Dart shooting outward from an open string or node
+   */
+  public spawnPhotonDart(
+    origin: THREE.Vector3,
+    direction: THREE.Vector3,
+    color: THREE.Color,
+    frequency: number
+  ): PhotonDart {
+    const id = `dart_${this.nextDartIndex++}`;
+    const group = new THREE.Group();
+    group.name = `PhotonDart_${id}`;
+    group.position.copy(origin);
+
+    // 1. Core Luminous Bead
+    const coreGeo = new THREE.SphereGeometry(0.016, 16, 16);
+    const coreMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      blending: THREE.AdditiveBlending
+    });
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+
+// [Chrono-Loom Milestone 43/84] feat(physics): implement damped harmonic vibration physics on ChronoStrings
