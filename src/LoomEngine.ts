@@ -1652,5 +1652,34 @@ export class LoomEngine {
    */
   public triggerAcousticScissorsSnip(cutPoint: THREE.Vector3): boolean {
     let nearestStr: ChronoString | null = null;
+    let minDist = 0.065;
 
-// [Chrono-Loom Milestone 56/84] feat(pulses): design glowing kinetic Chrono-Pulse energy packets
+    for (const str of this.strings.values()) {
+      const pA = str.nodeA.position;
+      const pB = str.nodeB.position;
+
+      const v = this._v2.subVectors(pB, pA);
+      const w = this._v3.subVectors(cutPoint, pA);
+      const c1 = w.dot(v);
+      const c2 = v.dot(v);
+
+      if (c2 === 0) continue;
+      const param = THREE.MathUtils.clamp(c1 / c2, 0, 1);
+      const closestOnLine = new THREE.Vector3().copy(pA).addScaledVector(v, param);
+      const d = cutPoint.distanceTo(closestOnLine);
+
+      if (d < minDist) {
+        minDist = d;
+        nearestStr = str;
+      }
+    }
+
+    if (!nearestStr) return false;
+
+    // Cleanly sever the string
+    const stringId = nearestStr.id;
+    this.loomGroup.remove(nearestStr.meshGroup);
+    nearestStr.tubeMesh.geometry.dispose();
+    (nearestStr.tubeMesh.material as THREE.Material).dispose();
+
+// [Chrono-Loom Milestone 57/84] feat(pulses): spawn kinetic pulses traveling along strings towards connected nodes
