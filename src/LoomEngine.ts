@@ -1622,5 +1622,35 @@ export class LoomEngine {
     const node2 = this.spawnHarmonicNode(pos2, f1);
     const node3 = this.spawnHarmonicNode(pos3, f2);
 
+    // Pre-wire 3 strings forming the closed resonant triangle
+    const str1 = this.createChronoString(rootNode, node2);
+    const str2 = this.createChronoString(node2, node3);
+    const str3 = this.createChronoString(node3, rootNode);
 
-// [Chrono-Loom Milestone 55/84] style(particles): match spark particle colors to the plucked string's pitch tint
+    // Radiant golden chord bloom particle burst
+    this.spawnParticleBurst(p0, 35, new THREE.Color(0xffd700), 0.09);
+    this.sceneManager.triggerCymaticPulse(p0, new THREE.Color(0xffd700), 1.5);
+    this.accessibilityManager?.triggerVisualHapticWave(p0, f0, 1.4);
+
+    // Play all 3 chord notes simultaneously in SpatialSynth
+    this.spatialSynth.playSpatialNote({ frequency: f0, position: p0, intensity: 1.2, duration: 1.6 });
+    this.spatialSynth.playSpatialNote({ frequency: f1, position: pos2, intensity: 1.2, duration: 1.6 });
+    this.spatialSynth.playSpatialNote({ frequency: f2, position: pos3, intensity: 1.2, duration: 1.6 });
+
+    // Launch circulating kinetic pulses around the triad
+    if (str1) this.spawnChronoPulse(rootNode, node2, str1);
+    if (str2) this.spawnChronoPulse(node2, node3, str2);
+    if (str3) this.spawnChronoPulse(node3, rootNode, str3);
+
+    this.showHolographicToast('✨ HARMONIC CHORD BLOOM!', 'Major Triad Cluster Synthesized', 3.0);
+    console.log(`[LoomEngine] CHORD BLOOM! Split node [${rootNode.id}] into Triad Cluster with nodes [${node2.id}, ${node3.id}]`);
+  }
+
+  /**
+   * Phase 10: Acoustic Scissors Snip:
+   * Cleanly severs a single string with an electric spark shower without deleting connected nodes.
+   */
+  public triggerAcousticScissorsSnip(cutPoint: THREE.Vector3): boolean {
+    let nearestStr: ChronoString | null = null;
+
+// [Chrono-Loom Milestone 56/84] feat(pulses): design glowing kinetic Chrono-Pulse energy packets
