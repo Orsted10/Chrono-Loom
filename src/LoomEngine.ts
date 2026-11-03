@@ -1712,4 +1712,33 @@ export class LoomEngine {
     let leftGrabbedNode: HarmonicNode | null = null;
     let rightGrabbedNode: HarmonicNode | null = null;
 
-// [Chrono-Loom Milestone 58/84] feat(pulses): interpolate pulse travel progress from Node A to Node B over time
+    for (const node of this.nodes.values()) {
+      if (node.isGrabbed) {
+        if (node.grabbedByHand === 'left') leftGrabbedNode = node;
+        if (node.grabbedByHand === 'right') rightGrabbedNode = node;
+      }
+    }
+
+    if (leftGrabbedNode && rightGrabbedNode && leftGrabbedNode.id !== rightGrabbedNode.id) {
+      this.createChronoString(leftGrabbedNode, rightGrabbedNode);
+    }
+  }
+
+  /**
+   * Checks if position is within seated comfort envelope
+   */
+  private isWithinComfortZone(pos: THREE.Vector3): boolean {
+    const userOrigin = this._v1.set(0, 1.2, 0);
+    const distToUser = pos.distanceTo(userOrigin);
+    return distToUser < 0.65 && pos.z <= -0.12 && pos.y >= 0.85 && pos.y <= 1.45;
+  }
+
+  /**
+   * Re-evaluates length, pitch, and updates geometry of strings attached to a moved node
+   */
+  public updateConnectedStrings(node: HarmonicNode): void {
+    for (const str of this.strings.values()) {
+      if (str.nodeA.id === node.id || str.nodeB.id === node.id) {
+        str.length = str.nodeA.position.distanceTo(str.nodeB.position);
+
+// [Chrono-Loom Milestone 59/84] feat(pulses): trigger target node note in SpatialSynth when pulse arrives
