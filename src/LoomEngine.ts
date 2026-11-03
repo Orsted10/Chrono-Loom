@@ -1563,5 +1563,34 @@ export class LoomEngine {
             const anchor = this.mrSurfaceManager.checkSurfaceAnchor(node.position, 0.06);
             if (anchor) {
               node.position.y = anchor.anchorY;
+              node.meshGroup.position.copy(node.position);
+              this.attachOrUpdatePedestal(node, anchor.surface);
+              this.updateConnectedStrings(node);
+            }
+          }
 
-// [Chrono-Loom Milestone 53/84] feat(particles): implement GPU particle burst system on string pluck points
+          for (const otherNode of this.nodes.values()) {
+            if (otherNode.id !== node.id) {
+              const d = node.position.distanceTo(otherNode.position);
+              if (d < 0.09) {
+                this.createChronoString(node, otherNode);
+                break;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Phase 10: Conductor Tempo Listener
+    this.handInputManager.onConductorTempo((bpm) => {
+      this.setGlobalBPM(bpm);
+    });
+
+    // Phase 10: Harmonic Chord Bloom (Pinch + Flick)
+    this.handInputManager.onChordBloom((hand, position) => {
+      this.triggerChordBloomAt(position, hand);
+    });
+
+
+// [Chrono-Loom Milestone 54/84] feat(particles): emit 15 glowing stardust sparks expanding along pluck normal
