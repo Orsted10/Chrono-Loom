@@ -1592,5 +1592,35 @@ export class LoomEngine {
       this.triggerChordBloomAt(position, hand);
     });
 
+    // Phase 10: Acoustic Scissors Snip
+    this.handInputManager.onAcousticScissors((hand, cutPoint) => {
+      this.triggerAcousticScissorsSnip(cutPoint);
+    });
+  }
 
-// [Chrono-Loom Milestone 54/84] feat(particles): emit 15 glowing stardust sparks expanding along pluck normal
+  /**
+   * Phase 10: Harmonic Chord Bloom:
+   * Splits a single Harmonic Node into a triangulated 3-node major/minor triad cluster
+   * with pre-wired strings, particle explosion, and synchronized pulses.
+   */
+  public triggerChordBloomAt(position: THREE.Vector3, hand: Handedness): void {
+    const nearest = this.findNearestNode(position, 0.095);
+    if (!nearest.node) return;
+
+    const rootNode = nearest.node;
+    const f0 = rootNode.noteFrequency;
+    const p0 = rootNode.position;
+
+    // Offsets for triangulated 3-node triad
+    const pos2 = new THREE.Vector3(p0.x + 0.075, p0.y + 0.035, p0.z - 0.02);
+    const pos3 = new THREE.Vector3(p0.x - 0.075, p0.y + 0.035, p0.z - 0.02);
+
+    // Harmonic Major Triad frequencies (Root, Major 3rd ~1.25x, Perfect 5th ~1.50x)
+    const f1 = f0 * 1.25;
+    const f2 = f0 * 1.50;
+
+    const node2 = this.spawnHarmonicNode(pos2, f1);
+    const node3 = this.spawnHarmonicNode(pos3, f2);
+
+
+// [Chrono-Loom Milestone 55/84] style(particles): match spark particle colors to the plucked string's pitch tint
