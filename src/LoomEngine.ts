@@ -1681,5 +1681,35 @@ export class LoomEngine {
     this.loomGroup.remove(nearestStr.meshGroup);
     nearestStr.tubeMesh.geometry.dispose();
     (nearestStr.tubeMesh.material as THREE.Material).dispose();
+    nearestStr.glowLine.geometry.dispose();
+    (nearestStr.glowLine.material as THREE.Material).dispose();
+    this.strings.delete(stringId);
 
-// [Chrono-Loom Milestone 57/84] feat(pulses): spawn kinetic pulses traveling along strings towards connected nodes
+    // Electric cyan/white spark shower at the cut point
+    this.spawnParticleBurst(cutPoint, 28, new THREE.Color(0x00f0ff), 0.08);
+    this.sceneManager.triggerCymaticPulse(cutPoint, new THREE.Color(0x00f0ff), 1.35);
+
+    // Acoustic snap/twang in SpatialSynth
+    this.spatialSynth.playSpatialNote({
+      frequency: nearestStr.frequency * 2.8,
+      position: cutPoint,
+      intensity: 1.4,
+      duration: 0.25
+    });
+
+    this.showHolographicToast('✂️ STRING SEVERED', 'Connected Nodes Preserved', 2.8);
+    console.log(`[LoomEngine] SCISSORS SNIP! Severed string [${stringId}] without deleting nodes [${nearestStr.nodeA.id}, ${nearestStr.nodeB.id}].`);
+    if (!this.isApplyingRemote) {
+      this.onStringSevered?.(cutPoint, stringId);
+    }
+    return true;
+  }
+
+  /**
+   * Two-Hand Simultaneous Weave
+   */
+  private checkTwoHandSimultaneousWeave(): void {
+    let leftGrabbedNode: HarmonicNode | null = null;
+    let rightGrabbedNode: HarmonicNode | null = null;
+
+// [Chrono-Loom Milestone 58/84] feat(pulses): interpolate pulse travel progress from Node A to Node B over time
