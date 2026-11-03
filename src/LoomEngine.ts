@@ -1533,5 +1533,35 @@ export class LoomEngine {
       const timer = this.pinchHoldTimers.get(hand);
       if (timer && !timer.hasSpawned) {
         const holdDuration = (performance.now() - timer.startTime) / 1000;
+        const drift = midpoint.distanceTo(timer.startPosition);
 
-// [Chrono-Loom Milestone 52/84] test(physics): verify tactile responsiveness of string plucking in simulator
+        if (holdDuration >= 0.20 && drift < 0.045) {
+          timer.hasSpawned = true;
+          const newNode = this.spawnHarmonicNode(midpoint);
+          newNode.isGrabbed = true;
+          newNode.grabbedByHand = hand;
+        }
+      }
+    });
+
+    // 3. Pinch End
+    this.handInputManager.onPinchEnd((hand, midpoint, distance) => {
+      this.pinchHoldTimers.delete(hand);
+
+      if (this.isSeedOrbGrabbed) {
+        this.isSeedOrbGrabbed = false;
+        this.awakenLoomAt(midpoint);
+        return;
+      }
+
+      for (const node of this.nodes.values()) {
+        if (node.isGrabbed && node.grabbedByHand === hand) {
+          node.isGrabbed = false;
+          node.grabbedByHand = null;
+
+          if (this.mrSurfaceManager) {
+            const anchor = this.mrSurfaceManager.checkSurfaceAnchor(node.position, 0.06);
+            if (anchor) {
+              node.position.y = anchor.anchorY;
+
+// [Chrono-Loom Milestone 53/84] feat(particles): implement GPU particle burst system on string pluck points
