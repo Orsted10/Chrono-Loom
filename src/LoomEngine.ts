@@ -1770,5 +1770,34 @@ export class LoomEngine {
     for (let i = 0; i < this.MAX_PARTICLES; i++) {
       positions[i * 3 + 1] = -999;
       colors[i * 3] = 1;
+      colors[i * 3 + 1] = 1;
+      colors[i * 3 + 2] = 1;
+    }
 
-// [Chrono-Loom Milestone 60/84] feat(pulses): trigger 1.4x scale flash on nodes when struck by kinetic pulse
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d')!;
+    const grad = ctx.createRadialGradient(16, 16, 1, 16, 16, 15);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.3, '#38bdf8');
+    grad.addColorStop(0.8, '#a855f7');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 32, 32);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const mat = new THREE.PointsMaterial({
+      size: 0.02,
+      map: texture,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+// [Chrono-Loom Milestone 61/84] feat(pulses): cascade incoming pulses across all branching strings connected to node
