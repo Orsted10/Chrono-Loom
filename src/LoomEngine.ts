@@ -1740,5 +1740,35 @@ export class LoomEngine {
     for (const str of this.strings.values()) {
       if (str.nodeA.id === node.id || str.nodeB.id === node.id) {
         str.length = str.nodeA.position.distanceTo(str.nodeB.position);
+        str.frequency = this.spatialSynth.mapLengthToScaleFrequency(str.length);
+        str.color = this.mapLengthToNeonColor(str.length);
 
-// [Chrono-Loom Milestone 59/84] feat(pulses): trigger target node note in SpatialSynth when pulse arrives
+        if (str.quantumMaterial) {
+          str.quantumMaterial.uniforms.uColor.value.copy(str.color);
+          str.quantumMaterial.uniforms.uLength.value = str.length;
+        } else if ((str.tubeMesh.material as any).color) {
+          (str.tubeMesh.material as any).color.copy(str.color);
+        }
+      }
+    }
+  }
+
+  // ----------------------------------------------------
+  // 6. Particle Burst System
+  // ----------------------------------------------------
+
+  private initParticleSystem(): {
+    mesh: THREE.Points;
+    geo: THREE.BufferGeometry;
+    positions: Float32Array;
+    colors: Float32Array;
+  } {
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(this.MAX_PARTICLES * 3);
+    const colors = new Float32Array(this.MAX_PARTICLES * 3);
+
+    for (let i = 0; i < this.MAX_PARTICLES; i++) {
+      positions[i * 3 + 1] = -999;
+      colors[i * 3] = 1;
+
+// [Chrono-Loom Milestone 60/84] feat(pulses): trigger 1.4x scale flash on nodes when struck by kinetic pulse
