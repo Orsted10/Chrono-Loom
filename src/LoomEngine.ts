@@ -1800,4 +1800,34 @@ export class LoomEngine {
       depthWrite: false
     });
 
-// [Chrono-Loom Milestone 61/84] feat(pulses): cascade incoming pulses across all branching strings connected to node
+    const mesh = new THREE.Points(geo, mat);
+    return { mesh, geo, positions, colors };
+  }
+
+  public spawnParticleBurst(
+    pos: THREE.Vector3,
+    count: number,
+    color: THREE.Color,
+    speed: number = 0.05
+  ): void {
+    for (let i = 0; i < count; i++) {
+      if (this.activeParticles.length >= this.MAX_PARTICLES) {
+        this.activeParticles.shift();
+      }
+
+      const theta = Math.random() * Math.PI * 2;
+      const phi = (Math.random() - 0.5) * Math.PI;
+      const spd = speed * (0.5 + Math.random() * 0.8);
+
+      const vel = new THREE.Vector3(
+        Math.cos(theta) * Math.cos(phi) * spd,
+        Math.sin(phi) * spd + 0.015,
+        Math.sin(theta) * Math.cos(phi) * spd
+      );
+
+      this.activeParticles.push({
+        position: pos.clone().add(new THREE.Vector3(
+          (Math.random() - 0.5) * 0.01,
+          (Math.random() - 0.5) * 0.01,
+
+// [Chrono-Loom Milestone 62/84] feat(clock): implement master BPM clockwork sequencer for automatic pulses
