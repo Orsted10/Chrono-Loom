@@ -2035,5 +2035,35 @@ export class LoomEngine {
       } else {
         this.particlePositions[i3 + 1] = -999;
       }
+    }
+    (this.particleGeo.attributes.position as THREE.BufferAttribute).needsUpdate = true;
+    (this.particleGeo.attributes.color as THREE.BufferAttribute).needsUpdate = true;
 
-// [Chrono-Loom Milestone 69/84] fix(pulses): handle smooth destruction of pulses when connected strings are severed
+    // 6.5. Update Phase 9: Luminous Photon Darts & Wall-Bounce Reflections
+    this.updatePhotonDarts(deltaTime);
+
+    // 7. Update 3D Holographic Toast Notification
+    if (this.toastSprite) {
+      this.toastTimer += deltaTime;
+      this.toastSprite.position.y += 0.008 * deltaTime;
+      this.toastSprite.lookAt(this.sceneManager.camera.position);
+
+      if (this.toastTimer > this.toastDuration - 0.8) {
+        const fade = (this.toastDuration - this.toastTimer) / 0.8;
+        this.toastSprite.material.opacity = Math.max(0, fade * 0.98);
+      }
+
+      if (this.toastTimer >= this.toastDuration) {
+        this.loomGroup.remove(this.toastSprite);
+        (this.toastSprite.material as THREE.Material).dispose();
+        this.toastSprite = null;
+      }
+    }
+
+    // 8. Phase 15: Living Harmonic Drone Bed (Track root/fifth & swell with active strings)
+    const activeFreqs = Array.from(this.nodes.values()).map(n => n.noteFrequency);
+    this.spatialSynth.updateDroneBed(activeFreqs, this.strings.size);
+  }
+
+
+// [Chrono-Loom Milestone 70/84] refactor(loom): decouple pulse traversal logic into dedicated update method
