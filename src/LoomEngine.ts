@@ -1976,5 +1976,35 @@ export class LoomEngine {
       } else {
         this.prevLeftTipPos = leftTele.indexTipPosition.clone();
       }
+    } else {
+      this.prevLeftTipPos = null;
+    }
 
-// [Chrono-Loom Milestone 67/84] style(pulses): attach additive glow aura sprites to traveling pulse beads
+    if (rightTele.isTracked) {
+      this.checkStringPlucking('right', rightTele.indexTipPosition, deltaTime);
+      this.checkPalmMuting('right', rightTele.wristPosition);
+
+      // Feed right fingertip into GPU Ribbon Trail Pool (Neon purple ribbon, tapering width & opacity)
+      if (this.prevRightTipPos) {
+        if (this.prevRightTipPos.distanceTo(rightTele.indexTipPosition) > 0.0025) {
+          this.ribbonTrailPool.addSegment(
+            this.prevRightTipPos,
+            rightTele.indexTipPosition,
+            new THREE.Color(0xa855f7),
+            0.012
+          );
+          this.prevRightTipPos.copy(rightTele.indexTipPosition);
+        }
+      } else {
+        this.prevRightTipPos = rightTele.indexTipPosition.clone();
+      }
+    } else {
+      this.prevRightTipPos = null;
+    }
+
+    // Update GPU Ribbon Trail Pool (tapers instances over 0.45s, 1 draw call)
+    this.ribbonTrailPool.update(deltaTime, this.sceneManager.camera.position);
+
+    // 6. Update Pluck & Collision Particles
+
+// [Chrono-Loom Milestone 68/84] perf(pulses): pool pulse mesh instances to maintain locked 90fps on Quest 3
