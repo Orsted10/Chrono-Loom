@@ -1858,5 +1858,35 @@ export class LoomEngine {
       this.seedOrbMesh.scale.setScalar(pulse);
       this.seedOrbShell.scale.setScalar(pulse * 1.05);
 
+      if (!this.isSeedOrbGrabbed) {
+        this.seedOrbGroup.position.y = this.seedOrbInitialPos.y + Math.sin(time * 2.0) * 0.008;
+      }
+    }
 
-// [Chrono-Loom Milestone 63/84] feat(clock): add global tempo control (default 80 BPM) in LoomEngine
+    // 2. Harmonic Nodes tumbling & smooth 1.4x scale flash decay
+    for (const node of this.nodes.values()) {
+      node.coreMesh.rotation.x += node.rotationSpeed.x;
+      node.coreMesh.rotation.y += node.rotationSpeed.y;
+      node.wireframeMesh.rotation.x -= node.rotationSpeed.x * 1.2;
+      node.wireframeMesh.rotation.y -= node.rotationSpeed.y * 1.2;
+
+      // Smooth decay of kinetic pulse 1.4x scale flash
+      if (node.currentScale > 1.001) {
+        node.currentScale = THREE.MathUtils.lerp(node.currentScale, 1.0, 0.12);
+        node.meshGroup.scale.setScalar(node.currentScale);
+      } else {
+        node.currentScale = 1.0;
+        node.meshGroup.scale.setScalar(1.0);
+      }
+
+      // Glow intensity modulation
+      const pulse = node.isMuted ? 0.3 : 0.6 + Math.sin(time * 4.0 + node.id.charCodeAt(5)) * 0.25;
+      (node.coreMesh.material as THREE.MeshPhysicalMaterial).emissiveIntensity = pulse;
+
+      // Soft glow aura halo scaling and breathing
+      node.auraSprite.scale.setScalar(node.currentScale * 0.16);
+      const auraMat = node.auraSprite.material as THREE.SpriteMaterial;
+      if (!node.isMuted) {
+        auraMat.opacity = 0.62 + Math.sin(time * 3.5 + node.id.charCodeAt(5)) * 0.15;
+
+// [Chrono-Loom Milestone 64/84] feat(clock): emit periodic kinetic pulses from root nodes along clock intervals
