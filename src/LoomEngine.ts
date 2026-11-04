@@ -1829,5 +1829,34 @@ export class LoomEngine {
         position: pos.clone().add(new THREE.Vector3(
           (Math.random() - 0.5) * 0.01,
           (Math.random() - 0.5) * 0.01,
+          (Math.random() - 0.5) * 0.01
+        )),
+        velocity: vel,
+        color: color.clone(),
+        size: 0.02,
+        life: 0.6 + Math.random() * 0.5,
+        maxLife: 0.6 + Math.random() * 0.5
+      });
+    }
+  }
 
-// [Chrono-Loom Milestone 62/84] feat(clock): implement master BPM clockwork sequencer for automatic pulses
+  // ----------------------------------------------------
+  // Per-Frame Update Loop
+  // ----------------------------------------------------
+
+  public update(deltaTime: number): void {
+    const time = performance.now() * 0.001;
+
+    // 1. Seed Orb Pulse & Prompt Floating
+    if (!this.isLoomAwakened && this.seedOrbGroup) {
+      this.seedOrbMesh.rotation.y += 0.012;
+      this.seedOrbMesh.rotation.x += 0.008;
+      this.seedOrbShell.rotation.y -= 0.018;
+      this.seedOrbShell.rotation.z += 0.01;
+
+      const pulse = 1 + Math.sin(time * 3.5) * 0.06;
+      this.seedOrbMesh.scale.setScalar(pulse);
+      this.seedOrbShell.scale.setScalar(pulse * 1.05);
+
+
+// [Chrono-Loom Milestone 63/84] feat(clock): add global tempo control (default 80 BPM) in LoomEngine
