@@ -2006,5 +2006,34 @@ export class LoomEngine {
     this.ribbonTrailPool.update(deltaTime, this.sceneManager.camera.position);
 
     // 6. Update Pluck & Collision Particles
+    for (let i = this.activeParticles.length - 1; i >= 0; i--) {
+      const p = this.activeParticles[i];
+      p.life -= deltaTime;
+      if (p.life <= 0) {
+        this.activeParticles.splice(i, 1);
+        continue;
+      }
 
-// [Chrono-Loom Milestone 68/84] perf(pulses): pool pulse mesh instances to maintain locked 90fps on Quest 3
+      p.position.addScaledVector(p.velocity, deltaTime);
+      p.velocity.multiplyScalar(0.96);
+      p.velocity.y -= 0.015 * deltaTime;
+    }
+
+    // Flush active particles to GPU buffer
+    for (let i = 0; i < this.MAX_PARTICLES; i++) {
+      const i3 = i * 3;
+      if (i < this.activeParticles.length) {
+        const p = this.activeParticles[i];
+        this.particlePositions[i3] = p.position.x;
+        this.particlePositions[i3 + 1] = p.position.y;
+        this.particlePositions[i3 + 2] = p.position.z;
+
+        const alpha = Math.max(0, p.life / p.maxLife);
+        this.particleColors[i3] = p.color.r * alpha;
+        this.particleColors[i3 + 1] = p.color.g * alpha;
+        this.particleColors[i3 + 2] = p.color.b * alpha;
+      } else {
+        this.particlePositions[i3 + 1] = -999;
+      }
+
+// [Chrono-Loom Milestone 69/84] fix(pulses): handle smooth destruction of pulses when connected strings are severed
