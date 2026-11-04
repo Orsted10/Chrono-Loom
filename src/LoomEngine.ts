@@ -1888,5 +1888,34 @@ export class LoomEngine {
       const auraMat = node.auraSprite.material as THREE.SpriteMaterial;
       if (!node.isMuted) {
         auraMat.opacity = 0.62 + Math.sin(time * 3.5 + node.id.charCodeAt(5)) * 0.15;
+      }
 
-// [Chrono-Loom Milestone 64/84] feat(clock): emit periodic kinetic pulses from root nodes along clock intervals
+      // Orient pitch label sprite towards camera
+      if (node.pitchLabelSprite && node.pitchLabelSprite.visible) {
+        node.pitchLabelSprite.lookAt(this.sceneManager.camera.position);
+      }
+    }
+
+    // 3. Phase 14: Custom GLSL Quantum Strings (GPU standing-wave harmonics, chromatic fringe & solitons)
+    for (const str of this.strings.values()) {
+      if (str.nodeA.isMuted || str.nodeB.isMuted) {
+        str.vibrationAmplitude = 0;
+      }
+
+      if (str.vibrationAmplitude > 0.0002) {
+        str.vibrationAmplitude *= Math.exp(-str.vibrationDecay * deltaTime);
+        str.vibrationPhase += str.vibrationFrequency * deltaTime * Math.PI * 2;
+      } else {
+        str.vibrationAmplitude = 0;
+      }
+
+      // Update Quantum String position, orientation and scale between nodeA and nodeB
+      const dir = this._v1.subVectors(str.nodeB.position, str.nodeA.position);
+      const len = Math.max(0.001, dir.length());
+      dir.normalize();
+      const up = this._v2.set(0, 1, 0);
+      str.tubeMesh.position.copy(str.nodeA.position);
+      str.tubeMesh.quaternion.setFromUnitVectors(up, dir);
+      str.tubeMesh.scale.set(1, len, 1);
+
+// [Chrono-Loom Milestone 65/84] feat(clock): create self-playing polyrhythmic loops from closed string triangles
