@@ -52,5 +52,18 @@
   - High-precision Euclidean pinch hysteresis:
     - `onPinchStart` at $< 0.025\text{m}$ ($25\text{mm}$).
     - `onPinchMove` while held.
+    - `onPinchEnd` at $> 0.035\text{m}$ ($35\text{mm}$).
+  - Open Palm / Stop gesture ($> 0.09\text{m}$ from wrist for all 5 fingertips) toggles **Palm-Muting**, freezing nodes into icy blue and absorbing incoming pulses.
 
-<!-- [Chrono-Loom Milestone 4/9] docs(loom): update README with seated comfort arc and node interaction guide -->
+- **Kinetic Clockwork Pulses**:
+  - Glowing Chrono-Pulse beads travel along strings at a steady tempo.
+  - When reaching a node, a pulse triggers that node's spatial note, flashes its scale by $1.4\times$, and cascades along connected branches to create self-playing polyrhythmic 3D sculptures.
+
+- **Full Desktop 3D Simulator Fallback**:
+  - Raycasts mouse to the $z = -0.45\text{m}$ comfort plane.
+  - Left-Click Hold = Left Hand Pinch, Right-Click / Spacebar Hold = Right Hand Pinch, <kbd>O</kbd> Key = Open Palm Gesture, <kbd>H</kbd> Key = Toggle Demo Telemetry Bar.
+
+---
+
+
+<!-- [Chrono-Loom Milestone 5/9] docs(pulses): document clockwork looping mechanics in README.md -->
