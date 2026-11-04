@@ -1918,4 +1918,34 @@ export class LoomEngine {
       str.tubeMesh.quaternion.setFromUnitVectors(up, dir);
       str.tubeMesh.scale.set(1, len, 1);
 
-// [Chrono-Loom Milestone 65/84] feat(clock): create self-playing polyrhythmic loops from closed string triangles
+      // Compute local transverse vibration normal in cylinder's object space
+      const localNormal = this._v3
+        .copy(str.vibrationNormal)
+        .applyQuaternion(str.tubeMesh.quaternion.clone().invert())
+        .normalize();
+
+      const qMat = (str.quantumMaterial || str.tubeMesh.material) as THREE.ShaderMaterial;
+      if (qMat && qMat.uniforms) {
+        qMat.uniforms.uAmplitude.value = str.vibrationAmplitude;
+        qMat.uniforms.uVibrationPhase.value = str.vibrationPhase;
+        qMat.uniforms.uSolitonProgress.value =
+          (qMat.uniforms.uSolitonProgress.value + deltaTime * 1.5) % 1.0;
+        if (str.vibrationAmplitude > 0.001) {
+          qMat.uniforms.uSolitonAmp.value = Math.max(
+            qMat.uniforms.uSolitonAmp.value,
+            str.vibrationAmplitude * 35.0
+          );
+        }
+        qMat.uniforms.uSolitonAmp.value = Math.max(
+          0.2,
+          qMat.uniforms.uSolitonAmp.value * Math.exp(-deltaTime * 1.6)
+        );
+        qMat.uniforms.uTransverseDir.value.copy(localNormal);
+        qMat.uniforms.uTime.value += deltaTime;
+      }
+
+      // Keep glow line endpoints updated with zero CPU geometry re-allocations
+      const linePosAttr = str.glowLine.geometry.attributes.position as THREE.BufferAttribute;
+      linePosAttr.setXYZ(0, str.nodeA.position.x, str.nodeA.position.y, str.nodeA.position.z);
+
+// [Chrono-Loom Milestone 66/84] feat(clock): add pulse lifetime and loop damping to prevent acoustic chaos
