@@ -1947,5 +1947,34 @@ export class LoomEngine {
       // Keep glow line endpoints updated with zero CPU geometry re-allocations
       const linePosAttr = str.glowLine.geometry.attributes.position as THREE.BufferAttribute;
       linePosAttr.setXYZ(0, str.nodeA.position.x, str.nodeA.position.y, str.nodeA.position.z);
+      linePosAttr.setXYZ(1, str.nodeB.position.x, str.nodeB.position.y, str.nodeB.position.z);
+      linePosAttr.needsUpdate = true;
+    }
 
-// [Chrono-Loom Milestone 66/84] feat(clock): add pulse lifetime and loop damping to prevent acoustic chaos
+    // 4. Update Autonomous Kinetic Pulses (The Clockwork Engine)
+    this.updateKineticPulses(deltaTime);
+
+    // 5. Plucking & Palm-Muting checks & Phase 14 Instanced Fingertip Ribbon Trails
+    const leftTele = this.handInputManager.getTelemetry('left');
+    const rightTele = this.handInputManager.getTelemetry('right');
+
+    if (leftTele.isTracked) {
+      this.checkStringPlucking('left', leftTele.indexTipPosition, deltaTime);
+      this.checkPalmMuting('left', leftTele.wristPosition);
+
+      // Feed left fingertip into GPU Ribbon Trail Pool (Cyan ribbon, tapering width & opacity)
+      if (this.prevLeftTipPos) {
+        if (this.prevLeftTipPos.distanceTo(leftTele.indexTipPosition) > 0.0025) {
+          this.ribbonTrailPool.addSegment(
+            this.prevLeftTipPos,
+            leftTele.indexTipPosition,
+            new THREE.Color(0x00f0ff),
+            0.012
+          );
+          this.prevLeftTipPos.copy(leftTele.indexTipPosition);
+        }
+      } else {
+        this.prevLeftTipPos = leftTele.indexTipPosition.clone();
+      }
+
+// [Chrono-Loom Milestone 67/84] style(pulses): attach additive glow aura sprites to traveling pulse beads
