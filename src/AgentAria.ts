@@ -372,5 +372,68 @@ export class AgentAria {
           console.warn('[AgentAria] Could not start speech recognition:', e);
         }
       } else {
+        // Fallback for browsers without Web Speech
+        this.triggerEmotionalAnim('CURIOUS_TILT', 1.8);
+        this.spatialSynth.playVocalFormantChirp('CURIOUS', this.ariaGroup.position);
+        this.loomEngine.showHolographicToast(
+          '🎤 VOICE: CLICK HUD CHIPS',
+          'Use the quick command buttons below to talk with Aria!',
+          2.8
+        );
+      }
+    }
+  }
 
-// [Chrono-Loom Milestone 6/25] feat(aria): implement autonomous spring-damper orbital physics around seated user
+  /**
+   * Natural Intent Director: Parses human intent and executes actions
+   * with 3D expressive emotional animations and procedural vocalizations!
+   */
+  public executeNaturalIntent(phrase: string): boolean {
+    const text = phrase.toLowerCase().trim();
+    this.lastVoiceTranscript = phrase;
+
+    // 1. FASTER / TEMPO BOOST
+    if (
+      text.includes('fast') ||
+      text.includes('speed') ||
+      text.includes('tempo up') ||
+      text.includes('accelerate') ||
+      text.includes('quicker')
+    ) {
+      this.lastVoiceIntent = 'FASTER';
+      const targetBPM = Math.min(180, this.loomEngine.globalBPM + 25);
+      this.loomEngine.setGlobalBPM(targetBPM);
+
+      this.triggerEmotionalAnim('JOYFUL_BARREL_ROLL', 0.85);
+      this.spatialSynth.playVocalFormantChirp('TRIUMPHANT', this.ariaGroup.position, 1.3);
+
+      this.loomEngine.spawnParticleBurst(
+        this.ariaGroup.position,
+        28,
+        new THREE.Color(0xffd700),
+        0.08
+      );
+      this.sceneManager.triggerCymaticPulse(
+        this.ariaGroup.position,
+        new THREE.Color(0xffd700),
+        1.4
+      );
+
+      this.loomEngine.showHolographicToast(
+        '⚡ TEMPO ACCELERATED!',
+        `Aria boosted global clock to ${targetBPM} BPM`,
+        2.8
+      );
+      this.updateSpatialBadge();
+      return true;
+    }
+
+    // 2. SLOWER / RELAX TEMPO
+    if (
+      text.includes('slow') ||
+      text.includes('chill') ||
+      text.includes('tempo down') ||
+      text.includes('decelerate') ||
+      text.includes('calm')
+
+// [Chrono-Loom Milestone 7/25] feat(aria): add subtle flight turbulence and curiosity tilt when user weaves
