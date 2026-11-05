@@ -497,5 +497,68 @@ export class AgentAria {
         bassPos,
         new THREE.Color(0xf59e0b),
         1.5
+      );
 
-// [Chrono-Loom Milestone 8/25] feat(aria): implement perception-action state machine (OBSERVING -> HARMONIZING)
+      this.loomEngine.showHolographicToast(
+        '🎸 SUB-BASS ANCHORED!',
+        'Aria synthesized a resonant C3 sub-harmonic node',
+        3.0
+      );
+      this.updateSpatialBadge();
+      return true;
+    }
+
+    // 4. HARMONIZE / CALL-AND-RESPONSE
+    if (
+      text.includes('harmon') ||
+      text.includes('counter') ||
+      text.includes('play with me') ||
+      text.includes('sing') ||
+      text.includes('melody')
+    ) {
+      this.lastVoiceIntent = 'HARMONIZE';
+      this.triggerEmotionalAnim('FOCUSED_WEAVE', 2.0);
+
+      // Force immediate Call-and-Response sequence
+      if (this.userPlucks.length < 4) {
+        // Synthesize simulated phrase if user hasn't plucked 4 notes yet
+        const now = performance.now() * 0.001;
+        this.userPlucks = [
+          { time: now - 1.2, frequency: 261.63, position: new THREE.Vector3(-0.15, 1.15, -0.42), velocity: 1.0, stringId: 'sim_1' },
+          { time: now - 0.8, frequency: 329.63, position: new THREE.Vector3(-0.05, 1.20, -0.44), velocity: 1.1, stringId: 'sim_2' },
+          { time: now - 0.4, frequency: 392.00, position: new THREE.Vector3(0.05, 1.20, -0.44), velocity: 1.2, stringId: 'sim_3' },
+          { time: now - 0.1, frequency: 523.25, position: new THREE.Vector3(0.15, 1.15, -0.42), velocity: 1.3, stringId: 'sim_4' }
+        ];
+      }
+
+      this.initiateCallAndResponse(this.userPlucks.slice(-4));
+      return true;
+    }
+
+    // 5. SCALE SWITCHING (Lydian, Hirajoshi, Raga Yaman, Dorian, Drone)
+    if (
+      text.includes('scale') ||
+      text.includes('raga') ||
+      text.includes('yaman') ||
+      text.includes('lydian') ||
+      text.includes('hirajoshi') ||
+      text.includes('tokyo') ||
+      text.includes('dorian') ||
+      text.includes('noir') ||
+      text.includes('drone')
+    ) {
+      this.lastVoiceIntent = 'SWITCH_SCALE';
+      let targetIndex = 0;
+      let scaleName = 'Celestial Lydian';
+
+      if (text.includes('raga') || text.includes('yaman')) {
+        targetIndex = 2;
+        scaleName = 'Raga Yaman Evening';
+      } else if (text.includes('hirajoshi') || text.includes('tokyo')) {
+        targetIndex = 1;
+        scaleName = 'Tokyo Midnight Hirajoshi';
+      } else if (text.includes('dorian') || text.includes('noir')) {
+        targetIndex = 3;
+        scaleName = 'Dorian Cyber-Noir';
+
+// [Chrono-Loom Milestone 9/25] feat(aria): add WEAVING and CELEBRATING states with expressive orbital maneuvers
