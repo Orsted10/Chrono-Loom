@@ -310,5 +310,67 @@ export class AgentAria {
           this.onListeningStateChanged?.(true);
         };
 
+        this.speechRecognition.onresult = (event: any) => {
+          if (event.results && event.results.length > 0) {
+            const transcript = event.results[0][0].transcript;
+            console.log(`[AgentAria] Speech heard: "${transcript}"`);
+            this.lastVoiceTranscript = transcript;
+            this.executeNaturalIntent(transcript);
+          }
+        };
 
-// [Chrono-Loom Milestone 5/25] feat(aria): position Aria at default companion orbit (0.35, 1.35, -0.50)
+        this.speechRecognition.onerror = (e: any) => {
+          console.warn('[AgentAria] Speech recognition note/error:', e?.error || e);
+          this.isListening = false;
+          if (this.state === 'LISTENING_VOICE') {
+            this.state = 'OBSERVING';
+          }
+          this.updateSpatialBadge();
+          this.onListeningStateChanged?.(false);
+        };
+
+        this.speechRecognition.onend = () => {
+          this.isListening = false;
+          if (this.state === 'LISTENING_VOICE') {
+            this.state = 'OBSERVING';
+          }
+          this.updateSpatialBadge();
+          this.onListeningStateChanged?.(false);
+        };
+
+        this.isSpeechSupported = true;
+        console.log('[AgentAria] Web Speech API active & ready.');
+      } catch (err) {
+        console.warn('[AgentAria] SpeechRecognition initialization failed:', err);
+        this.isSpeechSupported = false;
+      }
+    } else {
+      this.isSpeechSupported = false;
+      console.log('[AgentAria] Web Speech API not supported natively; HUD intent chips available.');
+    }
+  }
+
+  /**
+   * Toggles Push-to-Talk speech recognition
+   */
+  public toggleSpeechListening(): void {
+    if (this.isListening) {
+      try {
+        this.speechRecognition?.stop();
+      } catch {
+        // ignore
+      }
+      this.isListening = false;
+      if (this.state === 'LISTENING_VOICE') this.state = 'OBSERVING';
+      this.updateSpatialBadge();
+      this.onListeningStateChanged?.(false);
+    } else {
+      if (this.speechRecognition) {
+        try {
+          this.speechRecognition.start();
+        } catch (e) {
+          console.warn('[AgentAria] Could not start speech recognition:', e);
+        }
+      } else {
+
+// [Chrono-Loom Milestone 6/25] feat(aria): implement autonomous spring-damper orbital physics around seated user
