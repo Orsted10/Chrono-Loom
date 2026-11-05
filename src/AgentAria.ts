@@ -122,5 +122,68 @@ export class AgentAria {
   constructor(
     sceneManager: SceneManager,
     handInputManager: HandInputManager,
+    loomEngine: LoomEngine,
+    spatialSynth: SpatialSynth
+  ) {
+    this.sceneManager = sceneManager;
+    this.handInputManager = handInputManager;
+    this.loomEngine = loomEngine;
+    this.spatialSynth = spatialSynth;
 
-// [Chrono-Loom Milestone 2/25] feat(aria): design Aria 3D mesh with three concentric glowing gold/purple rings
+    this.ariaGroup = new THREE.Group();
+    this.ariaGroup.name = 'AgentAria';
+    this.ariaGroup.position.copy(this.homePosition);
+
+    // 1. Core Pulsing Orb
+    const coreGeo = new THREE.IcosahedronGeometry(0.032, 2);
+    const coreMat = new THREE.MeshPhysicalMaterial({
+      color: 0xa855f7, // Royal Purple
+      emissive: 0x7c3aed,
+      emissiveIntensity: 0.7,
+      roughness: 0.2,
+      metalness: 0.8,
+      transmission: 0.5,
+      ior: 1.45,
+      transparent: true,
+      opacity: 0.95
+    });
+    this.coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    this.ariaGroup.add(this.coreMesh);
+
+    // 2. Three Counter-Rotating Glowing Rings
+    const ringMat1 = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff, // Electric Cyan
+      wireframe: false,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending
+    });
+    const ringMat2 = new THREE.MeshBasicMaterial({
+      color: 0xa855f7, // Neon Magenta
+      wireframe: false,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending
+    });
+    const ringMat3 = new THREE.MeshBasicMaterial({
+      color: 0xffd700, // Warm Gold
+      wireframe: false,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending
+    });
+
+    this.ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.0022, 16, 48), ringMat1);
+    this.ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.058, 0.0022, 16, 48), ringMat2);
+    this.ring3 = new THREE.Mesh(new THREE.TorusGeometry(0.070, 0.0022, 16, 48), ringMat3);
+
+    this.ariaGroup.add(this.ring1);
+    this.ariaGroup.add(this.ring2);
+    this.ariaGroup.add(this.ring3);
+
+    // 3. Aria Inner Glow Light
+    this.coreGlowLight = new THREE.PointLight(0xa855f7, 1.8, 1.4);
+    this.ariaGroup.add(this.coreGlowLight);
+
+
+// [Chrono-Loom Milestone 3/25] feat(aria): set distinct counter-rotational speeds on each of Aria's 3 rings
