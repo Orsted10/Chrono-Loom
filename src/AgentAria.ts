@@ -247,5 +247,68 @@ export class AgentAria {
     // Align cylinder along Z axis for lookAt
     beamGeo.rotateX(Math.PI / 2);
 
+    for (let i = 0; i < 4; i++) {
+      const beamMat = new THREE.MeshBasicMaterial({
+        color: i % 2 === 0 ? 0x00f0ff : 0xa855f7,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const mesh = new THREE.Mesh(beamGeo, beamMat);
 
-// [Chrono-Loom Milestone 4/25] feat(aria): add glowing central AI core orb with gentle breathing pulse
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, 1)
+      ]);
+      const lineMat = new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending
+      });
+      const line = new THREE.Line(lineGeo, lineMat);
+
+      this.laserGroup.add(mesh);
+      this.laserGroup.add(line);
+
+      this.laserBeams.push({
+        mesh,
+        line,
+        active: false,
+        target: new THREE.Vector3(),
+        intensity: 0
+      });
+    }
+  }
+
+  /**
+   * Initializes Web Speech API if supported in browser / WebXR headset
+   */
+  private initSpeechRecognition(): void {
+    const SpeechRec =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (SpeechRec) {
+      try {
+        this.speechRecognition = new SpeechRec();
+        this.speechRecognition.continuous = false;
+        this.speechRecognition.interimResults = false;
+        this.speechRecognition.lang = 'en-US';
+
+        this.speechRecognition.onstart = () => {
+          this.isListening = true;
+          this.state = 'LISTENING_VOICE';
+          this.triggerEmotionalAnim('CURIOUS_TILT', 3.0);
+          this.spatialSynth.playVocalFormantChirp(
+            'CURIOUS',
+            this.ariaGroup.position,
+            1.2
+          );
+          this.updateSpatialBadge();
+          this.onListeningStateChanged?.(true);
+        };
+
+
+// [Chrono-Loom Milestone 5/25] feat(aria): position Aria at default companion orbit (0.35, 1.35, -0.50)
