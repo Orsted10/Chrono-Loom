@@ -435,5 +435,67 @@ export class AgentAria {
       text.includes('tempo down') ||
       text.includes('decelerate') ||
       text.includes('calm')
+    ) {
+      this.lastVoiceIntent = 'SLOWER';
+      const targetBPM = Math.max(40, this.loomEngine.globalBPM - 25);
+      this.loomEngine.setGlobalBPM(targetBPM);
 
-// [Chrono-Loom Milestone 7/25] feat(aria): add subtle flight turbulence and curiosity tilt when user weaves
+      this.triggerEmotionalAnim('CLEANSING_WAVE', 1.2);
+      this.spatialSynth.playVocalFormantChirp('AFFIRMATIVE', this.ariaGroup.position, 1.1);
+
+      this.loomEngine.spawnParticleBurst(
+        this.ariaGroup.position,
+        18,
+        new THREE.Color(0x38bdf8),
+        0.05
+      );
+      this.sceneManager.triggerCymaticPulse(
+        this.ariaGroup.position,
+        new THREE.Color(0x38bdf8),
+        1.1
+      );
+
+      this.loomEngine.showHolographicToast(
+        '🌊 TEMPO DECELERATED',
+        `Aria relaxed global clock to ${targetBPM} BPM`,
+        2.8
+      );
+      this.updateSpatialBadge();
+      return true;
+    }
+
+    // 3. ADD BASSLINE / ANCHOR
+    if (
+      text.includes('bass') ||
+      text.includes('bassline') ||
+      text.includes('low note') ||
+      text.includes('sub') ||
+      text.includes('anchor')
+    ) {
+      this.lastVoiceIntent = 'ADD_BASSLINE';
+      const bassPos = new THREE.Vector3(0.0, 0.94, -0.46);
+      const bassNode = this.loomEngine.spawnHarmonicNode(bassPos);
+      bassNode.baseColor = new THREE.Color(0xf59e0b); // Amber Gold
+      bassNode.noteFrequency = 130.81; // C3 deep sub
+      (bassNode.coreMesh.material as THREE.MeshPhysicalMaterial).color.setHex(0xf59e0b);
+
+      const nearest = this.findNearestUserNode(bassPos);
+      if (nearest) {
+        this.loomEngine.createChronoString(bassNode, nearest);
+      }
+
+      this.triggerEmotionalAnim('FOCUSED_WEAVE', 1.5);
+      this.spatialSynth.playVocalFormantChirp('AFFIRMATIVE', this.ariaGroup.position, 1.3);
+
+      this.loomEngine.spawnParticleBurst(
+        bassPos,
+        24,
+        new THREE.Color(0xf59e0b),
+        0.07
+      );
+      this.sceneManager.triggerCymaticPulse(
+        bassPos,
+        new THREE.Color(0xf59e0b),
+        1.5
+
+// [Chrono-Loom Milestone 8/25] feat(aria): implement perception-action state machine (OBSERVING -> HARMONIZING)
