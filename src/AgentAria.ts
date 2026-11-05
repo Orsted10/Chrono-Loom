@@ -185,5 +185,67 @@ export class AgentAria {
     this.coreGlowLight = new THREE.PointLight(0xa855f7, 1.8, 1.4);
     this.ariaGroup.add(this.coreGlowLight);
 
+    // 4. High-Dynamic Neon Glow Halos (Dual-layer additive blended sprites)
+    const auraTex = this.createAuraTexture();
 
-// [Chrono-Loom Milestone 3/25] feat(aria): set distinct counter-rotational speeds on each of Aria's 3 rings
+    const innerAuraMat = new THREE.SpriteMaterial({
+      map: auraTex,
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.72,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    this.innerAuraSprite = new THREE.Sprite(innerAuraMat);
+    this.innerAuraSprite.scale.set(0.16, 0.16, 1);
+    this.ariaGroup.add(this.innerAuraSprite);
+
+    const outerHaloMat = new THREE.SpriteMaterial({
+      map: auraTex,
+      color: 0xa855f7,
+      transparent: true,
+      opacity: 0.38,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    this.outerHaloSprite = new THREE.Sprite(outerHaloMat);
+    this.outerHaloSprite.scale.set(0.28, 0.28, 1);
+    this.ariaGroup.add(this.outerHaloSprite);
+
+    // 5. Floating Spatial HUD Badge above Aria
+    const { sprite, canvas, ctx } = this.createSpatialBadge();
+    this.badgeSprite = sprite;
+    this.badgeCanvas = canvas;
+    this.badgeCtx = ctx;
+    this.badgeSprite.position.set(0, 0.125, 0);
+    this.ariaGroup.add(this.badgeSprite);
+
+    // 6. Laser Beam Filaments Group (Optical harmonic weaving)
+    this.laserGroup = new THREE.Group();
+    this.laserGroup.name = 'AriaLaserFilaments';
+    this.sceneManager.scene.add(this.laserGroup);
+    this.initLaserFilaments();
+
+    this.sceneManager.scene.add(this.ariaGroup);
+    this.updateSpatialBadge();
+
+    // 7. Initialize Web Speech API
+    this.initSpeechRecognition();
+
+    console.log('[AgentAria] Aria v2 initialized (Call-and-Response & Voice Director). Mode: CO-CREATE.');
+  }
+
+  public setEuclideanEngine(engine: any): void {
+    this.euclideanEngine = engine;
+  }
+
+  /**
+   * Initializes glowing holographic laser beam filaments for Call-and-Response
+   */
+  private initLaserFilaments(): void {
+    const beamGeo = new THREE.CylinderGeometry(0.0022, 0.0022, 1, 8);
+    // Align cylinder along Z axis for lookAt
+    beamGeo.rotateX(Math.PI / 2);
+
+
+// [Chrono-Loom Milestone 4/25] feat(aria): add glowing central AI core orb with gentle breathing pulse
