@@ -560,5 +560,67 @@ export class AgentAria {
       } else if (text.includes('dorian') || text.includes('noir')) {
         targetIndex = 3;
         scaleName = 'Dorian Cyber-Noir';
+      } else if (text.includes('drone')) {
+        targetIndex = 4;
+        scaleName = 'Deep Sub-Drone';
+      } else {
+        targetIndex = 0;
+        scaleName = 'Celestial Lydian';
+      }
 
-// [Chrono-Loom Milestone 9/25] feat(aria): add WEAVING and CELEBRATING states with expressive orbital maneuvers
+      if (this.euclideanEngine) {
+        this.euclideanEngine.applyScalePreset(targetIndex, true);
+      }
+
+      this.triggerEmotionalAnim('JOYFUL_BARREL_ROLL', 0.9);
+      this.spatialSynth.playVocalFormantChirp('AFFIRMATIVE', this.ariaGroup.position, 1.2);
+
+      this.loomEngine.showHolographicToast(
+        `🎵 SCALE: ${scaleName.toUpperCase()}`,
+        'Aria morphed all harmonic nodes & chromatic lighting',
+        2.8
+      );
+      this.updateSpatialBadge();
+      return true;
+    }
+
+    // 6. CLEAR / RESET LOOM
+    if (
+      text.includes('clear') ||
+      text.includes('reset') ||
+      text.includes('clean') ||
+      text.includes('empty') ||
+      text.includes('erase')
+    ) {
+      this.lastVoiceIntent = 'CLEAR_LOOM';
+      this.loomEngine.resetLoom();
+      this.reset();
+
+      this.triggerEmotionalAnim('CLEANSING_WAVE', 1.4);
+      this.spatialSynth.playVocalFormantChirp('RESET', this.ariaGroup.position, 1.2);
+
+      this.loomEngine.showHolographicToast(
+        '🧹 SPATIAL LOOM CLEARED',
+        'Aria refreshed the workspace to initial tranquil state',
+        2.8
+      );
+      this.updateSpatialBadge();
+      return true;
+    }
+
+    // Default: Unrecognized intent - curious tilt & vocal chirp
+    this.lastVoiceIntent = 'UNKNOWN';
+    this.triggerEmotionalAnim('CURIOUS_TILT', 1.8);
+    this.spatialSynth.playVocalFormantChirp('CURIOUS', this.ariaGroup.position, 1.0);
+
+    this.loomEngine.showHolographicToast(
+      '❓ ARIA IS CURIOUS',
+      `Heard: "${phrase.slice(0, 26)}..." (Try "Faster", "Bassline", "Raga", "Harmonize")`,
+      3.2
+    );
+    this.updateSpatialBadge();
+    return false;
+  }
+
+
+// [Chrono-Loom Milestone 10/25] style(aria): add golden particle slipstream trailing Aria during flight
