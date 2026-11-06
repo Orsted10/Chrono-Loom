@@ -997,5 +997,68 @@ export class AgentAria {
     this.updateSpatialBadge();
   }
 
+  /**
+   * Rhythm Boost Mode: Boosts pulse speeds and weaves a bass anchor node
+   */
+  private applyRhythmBoostMode(): void {
+    for (const pulse of this.loomEngine.pulses.values()) {
+      pulse.speed = 0.85;
+    }
 
-// [Chrono-Loom Milestone 16/25] feat(aria): implement fist-bump gesture detection (< 0.075m reach to Aria)
+    if (this.loomEngine.nodes.size >= 2) {
+      const bassPos = new THREE.Vector3(0.0, 0.94, -0.46);
+      const bassNode = this.loomEngine.spawnHarmonicNode(bassPos);
+      bassNode.baseColor = new THREE.Color(0xf59e0b); // Gold
+      bassNode.noteFrequency = 130.81; // C3 Deep bass
+      (bassNode.coreMesh.material as THREE.MeshPhysicalMaterial).color.setHex(0xf59e0b);
+
+      const nearest = this.findNearestUserNode(bassPos);
+      if (nearest) {
+        this.loomEngine.createChronoString(bassNode, nearest);
+      }
+    }
+  }
+
+  /**
+   * Per-frame update loop for Aria's autonomous state machine & motion
+   */
+  public update(deltaTime: number): void {
+    const time = performance.now() * 0.001;
+
+    // 1. Counter-Rotating Rings animation
+    let ringSpeedMultiplier = 1.0;
+    if (this.currentAnim === 'FOCUSED_WEAVE') ringSpeedMultiplier = 3.2;
+
+    this.ring1.rotation.x += 0.025 * ringSpeedMultiplier;
+    this.ring1.rotation.y += 0.012 * ringSpeedMultiplier;
+    this.ring2.rotation.y -= 0.035 * ringSpeedMultiplier;
+    this.ring2.rotation.z += 0.018 * ringSpeedMultiplier;
+    this.ring3.rotation.z += 0.022 * ringSpeedMultiplier;
+    this.ring3.rotation.x -= 0.015 * ringSpeedMultiplier;
+
+    // 2. Core Breathing Pulse & Light
+    const breath = 1.0 + Math.sin(time * 3.0) * 0.08;
+    this.coreMesh.scale.setScalar(breath);
+    this.coreGlowLight.intensity =
+      this.currentAnim === 'FOCUSED_WEAVE'
+        ? 3.2 + Math.sin(time * 10.0) * 0.8
+        : 1.6 + Math.sin(time * 4.0) * 0.4;
+
+    // 2b. High-Dynamic Neon Glow Halos Breathing & Mode Chromatic Tint
+    const haloPulse = Math.sin(time * 3.5) * 0.018;
+    this.innerAuraSprite.scale.setScalar(0.16 + haloPulse);
+    this.outerHaloSprite.scale.setScalar(0.28 + haloPulse * 1.6);
+
+    const innerMat = this.innerAuraSprite.material as THREE.SpriteMaterial;
+    const outerMat = this.outerHaloSprite.material as THREE.SpriteMaterial;
+
+    if (this.state === 'LISTENING_VOICE') {
+      innerMat.color.setHex(0x10b981);
+      outerMat.color.setHex(0x34d399);
+      innerMat.opacity = 0.90 + Math.sin(time * 8) * 0.1;
+      outerMat.opacity = 0.55 + Math.sin(time * 6) * 0.15;
+    } else if (this.state === 'CALL_AND_RESPONSE') {
+      innerMat.color.setHex(0x00f0ff);
+      outerMat.color.setHex(0x38bdf8);
+
+// [Chrono-Loom Milestone 17/25] feat(aria): cycle Aria companion modes on fist-bump: CO-CREATE -> RHYTHM BOOST -> ZEN
