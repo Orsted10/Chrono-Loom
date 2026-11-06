@@ -1060,5 +1060,67 @@ export class AgentAria {
     } else if (this.state === 'CALL_AND_RESPONSE') {
       innerMat.color.setHex(0x00f0ff);
       outerMat.color.setHex(0x38bdf8);
+      innerMat.opacity = 0.88 + Math.sin(time * 6) * 0.12;
+      outerMat.opacity = 0.50 + Math.sin(time * 5) * 0.12;
+    } else if (this.mode === 'CO-CREATE') {
+      innerMat.color.setHex(0x00f0ff);
+      outerMat.color.setHex(0xa855f7);
+      innerMat.opacity = 0.72 + Math.sin(time * 4) * 0.12;
+      outerMat.opacity = 0.36 + Math.sin(time * 3) * 0.08;
+    } else if (this.mode === 'RHYTHM_BOOST') {
+      innerMat.color.setHex(0xf59e0b);
+      outerMat.color.setHex(0xf59e0b);
+      innerMat.opacity = 0.82 + Math.sin(time * 6) * 0.15;
+      outerMat.opacity = 0.45 + Math.sin(time * 4.5) * 0.1;
+    } else {
+      // ZEN_SOLO
+      innerMat.color.setHex(0xa855f7);
+      outerMat.color.setHex(0x38bdf8);
+      innerMat.opacity = 0.60 + Math.sin(time * 2) * 0.1;
+      outerMat.opacity = 0.30 + Math.sin(time * 1.5) * 0.06;
+    }
 
-// [Chrono-Loom Milestone 17/25] feat(aria): cycle Aria companion modes on fist-bump: CO-CREATE -> RHYTHM BOOST -> ZEN
+    // 3. Update 3D Emotional Animations
+    this.updateEmotionalAnimations(deltaTime, time);
+
+    // 4. Update Laser Beam Filaments
+    this.updateLaserFilaments(deltaTime, time);
+
+    // 5. Check Interactive Hand Gesture: Fist-Bump or Pinch with Aria
+    this.checkHandInteractions();
+
+    // 6. State Machine Execution
+    this.executeStateMachine(deltaTime, time);
+  }
+
+  /**
+   * Updates 3D Emotional Animations (Head Tilt, Barrel Roll, Focused Weave, Cleansing Wave)
+   */
+  private updateEmotionalAnimations(deltaTime: number, time: number): void {
+    if (this.currentAnim === 'NONE') {
+      // Return gently to upright orientation
+      this.ariaGroup.rotation.z = THREE.MathUtils.lerp(this.ariaGroup.rotation.z, 0, deltaTime * 6);
+      this.ariaGroup.rotation.x = THREE.MathUtils.lerp(this.ariaGroup.rotation.x, 0, deltaTime * 6);
+      return;
+    }
+
+    this.animTimer += deltaTime;
+    const progress = Math.min(1.0, this.animTimer / this.animDuration);
+
+    switch (this.currentAnim) {
+      case 'CURIOUS_TILT': {
+        // Expressive 25 degree head-tilt (0.44 rad) with curious forward lean
+        const tiltAngle = Math.sin(progress * Math.PI) * 0.44;
+        const pitchAngle = Math.sin(progress * Math.PI) * 0.14;
+        this.ariaGroup.rotation.z = tiltAngle;
+        this.ariaGroup.rotation.x = pitchAngle;
+        break;
+      }
+
+      case 'JOYFUL_BARREL_ROLL': {
+        // Continuous 360 degree spin around Z-axis with energetic vertical hop
+        const rollAngle = progress * Math.PI * 2;
+        this.ariaGroup.rotation.z = rollAngle;
+        this.ariaGroup.position.y += Math.sin(progress * Math.PI) * 0.003;
+
+// [Chrono-Loom Milestone 18/25] feat(aria): play expressive sci-fi vocal chirp in SpatialSynth on mode switch
