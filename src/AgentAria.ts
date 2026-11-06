@@ -747,5 +747,68 @@ export class AgentAria {
         intensity: 1.35,
         hasTriggered: false,
         targetPoint: p1.position.clone()
+      },
+      {
+        frequency: note3,
+        delaySec: flightTime + avgIOI * 2,
+        duration: 1.2,
+        intensity: 1.35,
+        hasTriggered: false,
+        targetPoint: p2.position.clone()
+      },
+      {
+        frequency: note4,
+        delaySec: flightTime + avgIOI * 3,
+        duration: 1.6,
+        intensity: 1.45,
+        hasTriggered: false,
+        targetPoint: p3.position.clone()
+      }
+    ];
 
-// [Chrono-Loom Milestone 12/25] feat(aria): track user's musical density and detect empty harmonic sweet-spots
+    this.callResponseTimer = 0;
+    this.callResponsePhase = 'FLYING_TO_RESPONSE';
+    this.state = 'CALL_AND_RESPONSE';
+
+    // Aria singing formant vocalization
+    this.spatialSynth.playVocalFormantChirp('CALL_RESPONSE', this.ariaGroup.position, 1.2);
+    this.triggerEmotionalAnim('FOCUSED_WEAVE', flightTime + avgIOI * 4);
+
+    this.loomEngine.showHolographicToast(
+      '🎼 ARIA CALL-AND-RESPONSE!',
+      `Weaving ${direction} counter-melody (${this.observedBPM} BPM)`,
+      3.2
+    );
+    this.updateSpatialBadge();
+
+    console.log(
+      `[AgentAria] Initiated Call-and-Response! IOI: ${avgIOI.toFixed(2)}s (${this.observedBPM} BPM), notes: [${note1.toFixed(1)}, ${note2.toFixed(1)}, ${note3.toFixed(1)}, ${note4.toFixed(1)}] Hz`
+    );
+  }
+
+  /**
+   * Snaps a frequency to the nearest available note in a given scale array
+   */
+  private snapToScale(freq: number, scaleFreqs: number[]): number {
+    let closest = scaleFreqs[0];
+    let minDiff = 99999;
+    for (const f of scaleFreqs) {
+      const diff = Math.abs(f - freq);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = f;
+      }
+    }
+    return closest;
+  }
+
+  /**
+   * Triggers an expressive 3D emotional animation
+   */
+  public triggerEmotionalAnim(anim: AriaEmotionalAnim, duration = 1.0): void {
+    this.currentAnim = anim;
+    this.animDuration = duration;
+    this.animTimer = 0.0;
+  }
+
+// [Chrono-Loom Milestone 13/25] feat(aria): autonomously fly Aria to open space and spawn complementary AI node
