@@ -622,5 +622,68 @@ export class AgentAria {
     return false;
   }
 
+  /**
+   * Records a user's tactile pluck event for real-time phrase analysis
+   */
+  public recordUserPluck(
+    stringId: string,
+    pos: THREE.Vector3,
+    vel: number,
+    freq: number
+  ): void {
+    const now = performance.now() * 0.001;
 
-// [Chrono-Loom Milestone 10/25] style(aria): add golden particle slipstream trailing Aria during flight
+    // Prune plucks older than 5.5s
+    this.userPlucks = this.userPlucks.filter((p) => now - p.time < 5.5);
+
+    this.userPlucks.push({
+      time: now,
+      frequency: freq || 440,
+      position: pos.clone(),
+      velocity: vel,
+      stringId
+    });
+
+    // Need at least 4 notes for a melodic phrase
+    if (this.userPlucks.length >= 4) {
+      const recent4 = this.userPlucks.slice(-4);
+      const span = recent4[3].time - recent4[0].time;
+
+      // Check if user played 4 notes within 5.0 seconds
+      if (
+        span <= 5.0 &&
+        now - this.lastCallResponseTime > 6.0 &&
+        this.state !== 'CALL_AND_RESPONSE' &&
+        this.state !== 'LISTENING_VOICE'
+      ) {
+        this.lastCallResponseTime = now;
+        this.initiateCallAndResponse(recent4);
+      }
+    }
+  }
+
+  /**
+   * Real-Time Musical Phrase Analyzer:
+   * Detects rhythmic density (average IOI) and melodic interval tension,
+   * flies to a complementary spatial sweet-spot, and weaves a 2-bar counter-melody.
+   */
+  public initiateCallAndResponse(recent4: UserPluckRecord[]): void {
+    const p0 = recent4[0];
+    const p1 = recent4[1];
+    const p2 = recent4[2];
+    const p3 = recent4[3];
+
+    // 1. Compute Rhythmic Density (Average Inter-Onset Interval)
+    const avgIOI = Math.max(0.24, Math.min(0.65, (p3.time - p0.time) / 3));
+    this.observedBPM = Math.round(60 / avgIOI);
+
+    // 2. Compute Melodic Contour & Interval Tension
+    const isAscending = p3.frequency > p0.frequency;
+    const isDescending = p3.frequency < p0.frequency;
+    const direction = isAscending ? 'ASCENDING' : isDescending ? 'DESCENDING' : 'ARCH';
+
+    // 3. Generate 4 complementary counter-melody response frequencies
+    const freqs = this.spatialSynth.activeScaleFrequencies || [
+      261.63, 293.66, 329.63, 369.99, 392.0, 440.0, 493.88, 523.25
+
+// [Chrono-Loom Milestone 11/25] feat(aria): implement real-time plucking tempo analyzer in Agent Aria
