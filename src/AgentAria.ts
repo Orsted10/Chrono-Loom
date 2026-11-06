@@ -1185,5 +1185,67 @@ export class AgentAria {
           posAttr.needsUpdate = true;
 
           const pulseOpacity = (0.7 + Math.sin(time * 24.0) * 0.28) * beam.intensity;
+          (beam.mesh.material as THREE.MeshBasicMaterial).opacity = pulseOpacity;
+          (beam.line.material as THREE.LineBasicMaterial).opacity = pulseOpacity * 0.9;
+        }
+      } else {
+        beam.intensity = Math.max(0.0, beam.intensity - deltaTime * 4.0);
+        (beam.mesh.material as THREE.MeshBasicMaterial).opacity = beam.intensity * 0.7;
+        (beam.line.material as THREE.LineBasicMaterial).opacity = beam.intensity * 0.9;
+      }
+    }
+  }
 
-// [Chrono-Loom Milestone 19/25] feat(aria): render floating 3D mode badge above Aria's head crest
+  /**
+   * Checks if user reaches out to Fist-Bump or Pinch Aria
+   */
+  private checkHandInteractions(): void {
+    const leftTele = this.handInputManager.getTelemetry('left');
+    const rightTele = this.handInputManager.getTelemetry('right');
+    const ariaPos = this.ariaGroup.position;
+
+    // Check right hand interaction
+    if (rightTele.isTracked) {
+      const dIndex = rightTele.indexTipPosition.distanceTo(ariaPos);
+      const dWrist = rightTele.wristPosition.distanceTo(ariaPos);
+      if (dIndex < 0.075 || dWrist < 0.09 || (rightTele.isPinching && dIndex < 0.085)) {
+        this.cycleAIMode();
+        return;
+      }
+    }
+
+    // Check left hand interaction
+    if (leftTele.isTracked) {
+      const dIndex = leftTele.indexTipPosition.distanceTo(ariaPos);
+      const dWrist = leftTele.wristPosition.distanceTo(ariaPos);
+      if (dIndex < 0.075 || dWrist < 0.09 || (leftTele.isPinching && dIndex < 0.085)) {
+        this.cycleAIMode();
+        return;
+      }
+    }
+  }
+
+  /**
+   * Autonomous State Machine
+   */
+  private executeStateMachine(deltaTime: number, time: number): void {
+    const activeNodes = this.loomEngine.nodes;
+
+    switch (this.state) {
+      case 'OBSERVING': {
+        // Natural lifelike hovering around home position
+        const hoverOffset = new THREE.Vector3(
+          Math.sin(time * 1.2) * 0.015,
+          Math.sin(time * 2.0) * 0.012,
+          Math.cos(time * 1.5) * 0.01
+        );
+        this.ariaGroup.position.copy(this.homePosition).add(hoverOffset);
+
+        // Core gently rotates to face active hand
+        const rightTele = this.handInputManager.getTelemetry('right');
+        if (rightTele.isTracked) {
+          this.coreMesh.lookAt(rightTele.indexTipPosition);
+        }
+
+
+// [Chrono-Loom Milestone 20/25] test(aria): verify non-intrusive flight trajectories avoiding user's line of sight
