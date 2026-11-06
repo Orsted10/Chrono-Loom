@@ -811,4 +811,66 @@ export class AgentAria {
     this.animTimer = 0.0;
   }
 
-// [Chrono-Loom Milestone 13/25] feat(aria): autonomously fly Aria to open space and spawn complementary AI node
+  /**
+   * Builds the 3D billboard canvas badge displaying Aria's status & AI Mode
+   */
+  private createSpatialBadge(): {
+    sprite: THREE.Sprite;
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+  } {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    const spriteMat = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.95,
+      depthTest: false
+    });
+
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(0.24, 0.12, 1);
+    return { sprite, canvas, ctx };
+  }
+
+  /**
+   * Generates procedural radial glow aura texture for high-dynamic additive halos
+   */
+  private createAuraTexture(): THREE.CanvasTexture {
+    if (!this.auraTexture) {
+      const size = 128;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d')!;
+
+      const center = size / 2;
+      const gradient = ctx.createRadialGradient(center, center, 2, center, center, center);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.85)');
+      gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
+      gradient.addColorStop(0.8, 'rgba(255, 255, 255, 0.08)');
+      gradient.addColorStop(1.0, 'rgba(0, 0, 0, 0)');
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+
+      this.auraTexture = new THREE.CanvasTexture(canvas);
+      this.auraTexture.wrapS = THREE.ClampToEdgeWrapping;
+      this.auraTexture.wrapT = THREE.ClampToEdgeWrapping;
+    }
+    return this.auraTexture;
+  }
+
+  /**
+   * Refreshes the floating spatial text badge
+   */
+  public updateSpatialBadge(): void {
+    const ctx = this.badgeCtx;
+
+// [Chrono-Loom Milestone 14/25] feat(aria): tint Aria's AI nodes with signature royal purple and gold emissive glow
