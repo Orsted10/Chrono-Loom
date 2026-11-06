@@ -685,5 +685,67 @@ export class AgentAria {
     // 3. Generate 4 complementary counter-melody response frequencies
     const freqs = this.spatialSynth.activeScaleFrequencies || [
       261.63, 293.66, 329.63, 369.99, 392.0, 440.0, 493.88, 523.25
+    ];
 
-// [Chrono-Loom Milestone 11/25] feat(aria): implement real-time plucking tempo analyzer in Agent Aria
+    let note1 = p3.frequency;
+    let note2 = p3.frequency;
+    let note3 = p3.frequency;
+    let note4 = p0.frequency;
+
+    if (isAscending) {
+      // User soared up -> Aria weaves a descending counter-melody resolving to fifth
+      note1 = this.snapToScale(p3.frequency * 1.5, freqs);
+      note2 = this.snapToScale(p3.frequency * 1.333, freqs);
+      note3 = this.snapToScale(p3.frequency * 1.125, freqs);
+      note4 = this.snapToScale(p0.frequency * 2.0, freqs);
+    } else if (isDescending) {
+      // User went low -> Aria responds with an ascending uplifting phrase
+      note1 = this.snapToScale(p3.frequency * 0.75, freqs);
+      note2 = this.snapToScale(p3.frequency * 1.0, freqs);
+      note3 = this.snapToScale(p3.frequency * 1.25, freqs);
+      note4 = this.snapToScale(p3.frequency * 1.5, freqs);
+    } else {
+      // Arch/Oscillating -> Aria plays complementary triad arpeggio
+      note1 = this.snapToScale(p3.frequency * 1.2, freqs);
+      note2 = this.snapToScale(p3.frequency * 1.5, freqs);
+      note3 = this.snapToScale(p3.frequency * 1.8, freqs);
+      note4 = this.snapToScale(p3.frequency * 2.0, freqs);
+    }
+
+    // 4. Determine Complementary Spatial Sweet-Spot
+    const center = new THREE.Vector3();
+    for (const p of recent4) center.add(p.position);
+    center.multiplyScalar(0.25);
+
+    // Complementary position opposite user's plucks within seated arc (< 0.55m)
+    const targetPos = new THREE.Vector3(
+      -center.x * 0.8,
+      Math.min(1.36, Math.max(1.10, center.y + 0.08)),
+      Math.min(-0.35, Math.max(-0.52, center.z))
+    );
+
+    this.callResponseOrigin.copy(this.ariaGroup.position);
+    this.callResponseTarget.copy(targetPos);
+    this.targetFlightPosition.copy(targetPos);
+    this.flightProgress = 0.0;
+
+    // 5. Construct 2-bar timed counter-melody schedule
+    const flightTime = 0.75;
+    this.callResponseSequence = [
+      {
+        frequency: note1,
+        delaySec: flightTime,
+        duration: 1.2,
+        intensity: 1.4,
+        hasTriggered: false,
+        targetPoint: p0.position.clone()
+      },
+      {
+        frequency: note2,
+        delaySec: flightTime + avgIOI,
+        duration: 1.2,
+        intensity: 1.35,
+        hasTriggered: false,
+        targetPoint: p1.position.clone()
+
+// [Chrono-Loom Milestone 12/25] feat(aria): track user's musical density and detect empty harmonic sweet-spots
