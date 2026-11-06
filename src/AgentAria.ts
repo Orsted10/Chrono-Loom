@@ -1123,4 +1123,67 @@ export class AgentAria {
         this.ariaGroup.rotation.z = rollAngle;
         this.ariaGroup.position.y += Math.sin(progress * Math.PI) * 0.003;
 
-// [Chrono-Loom Milestone 18/25] feat(aria): play expressive sci-fi vocal chirp in SpatialSynth on mode switch
+        // Sparkling golden particles
+        if (Math.random() < 0.35) {
+          this.loomEngine.spawnParticleBurst(
+            this.ariaGroup.position,
+            2,
+            new THREE.Color(0xffd700),
+            0.04
+          );
+        }
+        break;
+      }
+
+      case 'FOCUSED_WEAVE': {
+        // Rings spin rapidly, slight pulsating scale
+        const scalePulse = 1.0 + Math.sin(this.animTimer * 12.0) * 0.06;
+        this.ariaGroup.scale.setScalar(scalePulse);
+        break;
+      }
+
+      case 'CLEANSING_WAVE': {
+        // Concentric expansion and smooth relaxation
+        const ringScale = 1.0 + Math.sin(progress * Math.PI) * 0.45;
+        this.ring1.scale.setScalar(ringScale);
+        this.ring2.scale.setScalar(ringScale);
+        this.ring3.scale.setScalar(ringScale);
+        break;
+      }
+    }
+
+    if (progress >= 1.0) {
+      this.currentAnim = 'NONE';
+      this.ring1.scale.setScalar(1);
+      this.ring2.scale.setScalar(1);
+      this.ring3.scale.setScalar(1);
+      this.ariaGroup.scale.setScalar(1);
+    }
+  }
+
+  /**
+   * Updates Laser Beam Filaments connecting Aria to target nodes
+   */
+  private updateLaserFilaments(deltaTime: number, time: number): void {
+    const ariaWorldPos = this.ariaGroup.position;
+
+    for (const beam of this.laserBeams) {
+      if (beam.active) {
+        beam.intensity = Math.min(1.0, beam.intensity + deltaTime * 5.0);
+        const dist = ariaWorldPos.distanceTo(beam.target);
+
+        if (dist > 0.02) {
+          const midPoint = new THREE.Vector3().addVectors(ariaWorldPos, beam.target).multiplyScalar(0.5);
+          beam.mesh.position.copy(midPoint);
+          beam.mesh.scale.set(1, 1, dist);
+          beam.mesh.lookAt(beam.target);
+
+          // Update line endpoints
+          const posAttr = beam.line.geometry.getAttribute('position') as THREE.BufferAttribute;
+          posAttr.setXYZ(0, ariaWorldPos.x, ariaWorldPos.y, ariaWorldPos.z);
+          posAttr.setXYZ(1, beam.target.x, beam.target.y, beam.target.z);
+          posAttr.needsUpdate = true;
+
+          const pulseOpacity = (0.7 + Math.sin(time * 24.0) * 0.28) * beam.intensity;
+
+// [Chrono-Loom Milestone 19/25] feat(aria): render floating 3D mode badge above Aria's head crest
