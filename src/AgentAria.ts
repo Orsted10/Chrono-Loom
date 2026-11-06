@@ -872,5 +872,68 @@ export class AgentAria {
    */
   public updateSpatialBadge(): void {
     const ctx = this.badgeCtx;
+    const canvas = this.badgeCanvas;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-// [Chrono-Loom Milestone 14/25] feat(aria): tint Aria's AI nodes with signature royal purple and gold emissive glow
+    // Glass pill background
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.strokeStyle =
+      this.state === 'CALL_AND_RESPONSE'
+        ? '#38bdf8'
+        : this.state === 'LISTENING_VOICE'
+        ? '#10b981'
+        : this.mode === 'CO-CREATE'
+        ? '#00f0ff'
+        : this.mode === 'RHYTHM_BOOST'
+        ? '#f59e0b'
+        : '#a855f7';
+    ctx.lineWidth = 5;
+    this.drawRoundedRect(ctx, 20, 20, 472, 216, 28);
+    ctx.fill();
+    ctx.stroke();
+
+    // Title
+    ctx.font = 'bold 30px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText('ARIA // SPATIAL AI', 256, 68);
+
+    // AI Mode / Voice Pill
+    ctx.font = 'bold 26px "JetBrains Mono", monospace';
+    if (this.state === 'LISTENING_VOICE') {
+      ctx.fillStyle = '#34d399';
+      ctx.fillText('● [LISTENING TO VOICE...]', 256, 120);
+    } else if (this.state === 'CALL_AND_RESPONSE') {
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText('[CALL & RESPONSE ACTIVE]', 256, 120);
+    } else {
+      ctx.fillStyle =
+        this.mode === 'CO-CREATE'
+          ? '#00f0ff'
+          : this.mode === 'RHYTHM_BOOST'
+          ? '#fbbf24'
+          : '#c084fc';
+      ctx.fillText(`[MODE: ${this.mode.replace('_', ' ')}]`, 256, 120);
+    }
+
+    // State & Tempo readout
+    ctx.font = '22px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#94a3b8';
+    let stateText = `${this.state} (${this.observedBPM} BPM)`;
+    if (this.state === 'HARMONIZING') stateText = 'HARMONIZING SPACE...';
+    if (this.state === 'WEAVING') stateText = 'WEAVING COUNTER-MELODY';
+    if (this.state === 'CALL_AND_RESPONSE') stateText = `SINGING COUNTERPOINT (${this.observedBPM} BPM)`;
+    if (this.state === 'LISTENING_VOICE') stateText = 'SPEAK INTENT ("FASTER", "BASSLINE")';
+    if (this.state === 'CELEBRATING') stateText = 'CELEBRATING HARMONY!';
+    ctx.fillText(stateText, 256, 172);
+
+    // Interaction hint
+    ctx.font = '16px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillText('POKE TO CYCLE | KEY V / [TALK] TO SPEAK', 256, 212);
+
+    (this.badgeSprite.material.map as THREE.CanvasTexture).needsUpdate = true;
+  }
+
+
+// [Chrono-Loom Milestone 15/25] feat(aria): weave counter-melody strings connecting AI nodes to user's sculpture
