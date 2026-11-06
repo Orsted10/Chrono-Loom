@@ -935,5 +935,67 @@ export class AgentAria {
     (this.badgeSprite.material.map as THREE.CanvasTexture).needsUpdate = true;
   }
 
+  private drawRoundedRect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number
+  ) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y + w, x, y, r);
+    ctx.closePath();
+  }
 
-// [Chrono-Loom Milestone 15/25] feat(aria): weave counter-melody strings connecting AI nodes to user's sculpture
+  /**
+   * Cycles Aria's AI Mode upon Fist-Bump or Pinch
+   */
+  public cycleAIMode(): void {
+    const now = performance.now();
+    if (now - this.lastFistBumpTime < 500) return; // Debounce
+    this.lastFistBumpTime = now;
+
+    if (this.mode === 'CO-CREATE') {
+      this.mode = 'RHYTHM_BOOST';
+      this.applyRhythmBoostMode();
+    } else if (this.mode === 'RHYTHM_BOOST') {
+      this.mode = 'ZEN_SOLO';
+    } else {
+      this.mode = 'CO-CREATE';
+    }
+
+    console.log(`[AgentAria] Mode cycled to: ${this.mode}`);
+
+    // Formant vocalization affirmative chirp
+    this.spatialSynth.playVocalFormantChirp('AFFIRMATIVE', this.ariaGroup.position, 1.2);
+    this.triggerEmotionalAnim('JOYFUL_BARREL_ROLL', 0.7);
+
+    // Particle burst of violet/gold sparks & floor cymatic wave
+    this.loomEngine.spawnParticleBurst(
+      this.ariaGroup.position,
+      24,
+      new THREE.Color(0xa855f7),
+      0.07
+    );
+    this.sceneManager.triggerCymaticPulse(
+      this.ariaGroup.position,
+      new THREE.Color(
+        this.mode === 'CO-CREATE'
+          ? 0x00f0ff
+          : this.mode === 'RHYTHM_BOOST'
+          ? 0xf59e0b
+          : 0xa855f7
+      ),
+      1.3
+    );
+
+    this.updateSpatialBadge();
+  }
+
+
+// [Chrono-Loom Milestone 16/25] feat(aria): implement fist-bump gesture detection (< 0.075m reach to Aria)
