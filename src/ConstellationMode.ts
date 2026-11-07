@@ -125,5 +125,48 @@ export class ConstellationMode {
         freq: 329.63, // E4
         baseColor: new THREE.Color(0x00f0ff), // Cyan
         energizedColor: new THREE.Color(0x34d399) // Emerald
+      },
+      {
+        id: 'ring_2',
+        pos: new THREE.Vector3(0.00, 1.28, -0.46),
+        freq: 440.00, // A4
+        baseColor: new THREE.Color(0xa855f7), // Magenta
+        energizedColor: new THREE.Color(0xfbbf24) // Gold
+      },
+      {
+        id: 'ring_3',
+        pos: new THREE.Vector3(0.18, 1.13, -0.43),
+        freq: 523.25, // C5
+        baseColor: new THREE.Color(0xf59e0b), // Amber
+        energizedColor: new THREE.Color(0x00ff88) // Lime
+      }
+    ];
 
-// [Chrono-Loom Milestone 3/17] feat(constellation): spawn 3 floating Target Resonance Rings in 3D comfort zone
+    for (const config of ringConfigs) {
+      const group = new THREE.Group();
+      group.position.copy(config.pos);
+
+      // Torus Ring Mesh
+      const torusGeo = new THREE.TorusGeometry(0.042, 0.0035, 16, 48);
+      const torusMat = new THREE.MeshStandardMaterial({
+        color: config.baseColor,
+        emissive: config.baseColor,
+        emissiveIntensity: 0.65,
+        roughness: 0.2,
+        metalness: 0.4,
+        transparent: true,
+        opacity: 0.88
+      });
+      const torusMesh = new THREE.Mesh(torusGeo, torusMat);
+      group.add(torusMesh);
+
+      // Outer concentric aura ring
+      const auraGeo = new THREE.RingGeometry(0.046, 0.052, 32);
+      const auraMat = new THREE.MeshBasicMaterial({
+        color: config.baseColor,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.45,
+        blending: THREE.AdditiveBlending
+
+// [Chrono-Loom Milestone 4/17] feat(constellation): design Target Rings with spinning golden runic markers
