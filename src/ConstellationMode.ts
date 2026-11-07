@@ -339,5 +339,47 @@ export class ConstellationMode {
     }
 
     // 2. Triumphant Spatial Chord Progression (C4 -> E4 -> G4 -> B4 -> C5)
+    const victoryNotes = [261.63, 329.63, 392.00, 493.88, 523.25];
+    victoryNotes.forEach((freq, idx) => {
+      setTimeout(() => {
+        this.spatialSynth.playSpatialNote({
+          frequency: freq,
+          position: centerPos,
+          intensity: coopActive ? 1.8 : 1.5,
+          duration: 2.2
+        });
+        if (coopActive) {
+          // Dual voice harmony (Octave + 5th overtone)
+          this.spatialSynth.playSpatialNote({
+            frequency: freq * 1.5,
+            position: new THREE.Vector3(centerPos.x + (idx % 2 === 0 ? 0.1 : -0.1), centerPos.y + 0.05, centerPos.z),
+            intensity: 1.2,
+            duration: 1.8
+          });
+        }
+      }, idx * 150);
+    });
 
-// [Chrono-Loom Milestone 8/17] feat(constellation): play triumphant spatial chord progression on challenge completion
+    // 3. Display 3D Holographic Victory Banner
+    this.spawnVictoryBanner(centerPos, coopActive);
+
+    // 4. Signal Aria to enter joyful CELEBRATING flight dance!
+    this.agentAria.triggerCelebrating();
+
+    // 5. Notify multiplayer peer if not remote triggered
+    if (!this.isApplyingRemote && coopActive) {
+      this.onHarmonizedCoop?.();
+    }
+  }
+
+  /**
+   * Spawns radiant 3D holographic victory billboard
+   */
+  private spawnVictoryBanner(pos: THREE.Vector3, isCoop: boolean = false): void {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+
+// [Chrono-Loom Milestone 9/17] feat(constellation): trigger Aria's joyful celebratory orbital barrel-roll dance
