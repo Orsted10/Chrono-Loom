@@ -211,5 +211,47 @@ export class ConstellationMode {
    * Preview chime: periodically plays the target sequence (E4 -> A4 -> C5)
    */
   private playPreviewSequence(): void {
+    this.targetRings.forEach((ring, idx) => {
+      setTimeout(() => {
+        if (!this.isHarmonized) {
+          this.spatialSynth.playSpatialNote({
+            frequency: ring.targetFrequency,
+            position: ring.position,
+            intensity: 0.85,
+            duration: 0.9
+          });
+          // Ring brief pulse
+          ring.glowLight.intensity = 2.0;
+        }
+      }, idx * 320);
+    });
+  }
 
-// [Chrono-Loom Milestone 5/17] feat(constellation): detect when user kinetic pulses pass through Target Rings
+  /**
+   * Checks if kinetic Chrono-Pulses are passing through target rings
+   */
+  private checkPulseRingIntersections(): void {
+    if (this.isHarmonized || this.currentMode !== 'DAILY_CONSTELLATION') return;
+
+    for (const pulse of this.loomEngine.pulses.values()) {
+      const pulsePos = pulse.meshGroup.position;
+
+      for (const ring of this.targetRings) {
+        if (!ring.isEnergized) {
+          const dist = pulsePos.distanceTo(ring.position);
+
+          // Pulse passes through ring aperture (< 45mm)
+          if (dist < 0.045) {
+            this.energizeRing(ring, pulse);
+          }
+        }
+      }
+    }
+
+    // Check victory condition: all 3 rings energized!
+    const allEnergized = this.targetRings.every((r) => r.isEnergized);
+    if (allEnergized && !this.isHarmonized && this.targetRings.length === 3) {
+      this.triggerConstellationHarmonized(this.isCoopMultiplayer);
+    }
+
+// [Chrono-Loom Milestone 6/17] feat(constellation): illuminate rings with neon blue activation pulse on hit
