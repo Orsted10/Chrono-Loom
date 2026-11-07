@@ -253,5 +253,48 @@ export class ConstellationMode {
     if (allEnergized && !this.isHarmonized && this.targetRings.length === 3) {
       this.triggerConstellationHarmonized(this.isCoopMultiplayer);
     }
+  }
 
-// [Chrono-Loom Milestone 6/17] feat(constellation): illuminate rings with neon blue activation pulse on hit
+  /**
+   * Energizes a single Target Resonance Ring
+   */
+  private energizeRing(ring: TargetResonanceRing, pulse: any): void {
+    ring.isEnergized = true;
+    ring.energizeTime = performance.now();
+
+    // Turn vibrant energized color
+    const mat = ring.torusMesh.material as THREE.MeshStandardMaterial;
+    mat.color.copy(ring.energizedColor);
+    mat.emissive.copy(ring.energizedColor);
+    mat.emissiveIntensity = 1.2;
+    ring.glowLight.color.copy(ring.energizedColor);
+    ring.glowLight.intensity = 2.4;
+
+    // Resonant spatial tone
+    this.spatialSynth.playSpatialNote({
+      frequency: ring.targetFrequency,
+      position: ring.position,
+      intensity: 1.4,
+      duration: 1.4
+    });
+
+    // Particle burst at ring center & visual haptic sub-bass wave
+    this.loomEngine.spawnParticleBurst(ring.position, 18, ring.energizedColor, 0.06);
+    this.accessibilityManager?.triggerVisualHapticWave(ring.position, ring.targetFrequency, 1.6);
+
+    if (!this.isApplyingRemote) {
+      this.onRingHit?.(ring.id);
+    }
+
+    console.log(`[ConstellationMode] Ring [${ring.id}] ENERGIZED! (${ring.targetFrequency.toFixed(1)}Hz)`);
+  }
+
+  /**
+   * Phase 11: Remote Multiplayer Ring Energize
+   */
+  public applyRemoteRingHit(ringId: string): void {
+    const ring = this.targetRings.find((r) => r.id === ringId);
+    if (ring && !ring.isEnergized) {
+      this.isApplyingRemote = true;
+
+// [Chrono-Loom Milestone 7/17] feat(constellation): trigger 120-particle supernova fireworks when puzzle is solved
