@@ -83,5 +83,47 @@ export class ConstellationMode {
   ) {
     this.sceneManager = sceneManager;
     this.handInputManager = handInputManager;
+    this.loomEngine = loomEngine;
+    this.spatialSynth = spatialSynth;
+    this.agentAria = agentAria;
 
-// [Chrono-Loom Milestone 2/17] feat(constellation): implement deterministic daily seed generator based on UTC date
+    this.modeGroup = new THREE.Group();
+    this.modeGroup.name = 'ConstellationMode';
+    this.sceneManager.scene.add(this.modeGroup);
+
+    // 1. Container for Target Rings
+    this.ringContainer = new THREE.Group();
+    this.ringContainer.name = 'TargetRings';
+    this.modeGroup.add(this.ringContainer);
+
+    // 2. Build Spatial Wrist HUD
+    this.hudGroup = this.createSpatialWristHUD();
+    this.modeGroup.add(this.hudGroup);
+
+    // 3. Initialize Daily Constellation Puzzle #322
+    this.initDailyPuzzle322();
+
+    console.log('[ConstellationMode] Initialized Daily Constellation #322 & Spatial Wrist HUD.');
+  }
+
+  // ----------------------------------------------------
+  // 1. Daily Constellation Puzzle #322
+  // ----------------------------------------------------
+
+  /**
+   * Spawns 3 Target Resonance Rings in 3D space
+   */
+  public initDailyPuzzle322(): void {
+    this.clearTargetRings();
+    this.isHarmonized = false;
+    this.removeVictoryBanner();
+
+    const ringConfigs = [
+      {
+        id: 'ring_1',
+        pos: new THREE.Vector3(-0.18, 1.15, -0.44),
+        freq: 329.63, // E4
+        baseColor: new THREE.Color(0x00f0ff), // Cyan
+        energizedColor: new THREE.Color(0x34d399) // Emerald
+
+// [Chrono-Loom Milestone 3/17] feat(constellation): spawn 3 floating Target Resonance Rings in 3D comfort zone
