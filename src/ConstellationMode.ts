@@ -40,5 +40,48 @@ export class ConstellationMode {
   private isApplyingRemote = false;
 
   // Phase 12: Scale Presets Wrist HUD Callback
+  public onScaleCycle?: () => void;
 
-// [Chrono-Loom Milestone 1/17] feat(constellation): create ConstellationMode.ts for Daily Challenge puzzles
+  // Accessibility Manager reference
+  public accessibilityManager: any = null;
+
+  public setAccessibilityManager(a11y: any): void {
+    this.accessibilityManager = a11y;
+  }
+
+  // Target Resonance Rings
+  public targetRings: TargetResonanceRing[] = [];
+  private ringContainer: THREE.Group;
+  private previewChimeTimer = 0;
+
+  // Spatial Wrist HUD
+  private hudGroup: THREE.Group;
+  private defaultHudPos = new THREE.Vector3(-0.38, 1.35, -0.48);
+  private buttons: {
+    id: string;
+    mesh: THREE.Mesh;
+    labelSprite: THREE.Sprite;
+    action: () => void;
+    baseColor: number;
+    hoverColor: number;
+  }[] = [];
+
+  // Victory Celebration State
+  public isHarmonized = false;
+  private victoryBanner: THREE.Sprite | null = null;
+  private victoryTimer = 0;
+
+  // Touch poke cooldown
+  private lastButtonPressTime = 0;
+
+  constructor(
+    sceneManager: SceneManager,
+    handInputManager: HandInputManager,
+    loomEngine: LoomEngine,
+    spatialSynth: SpatialSynth,
+    agentAria: AgentAria
+  ) {
+    this.sceneManager = sceneManager;
+    this.handInputManager = handInputManager;
+
+// [Chrono-Loom Milestone 2/17] feat(constellation): implement deterministic daily seed generator based on UTC date
