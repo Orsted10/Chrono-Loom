@@ -65,5 +65,19 @@
 
 ---
 
+## Quickstart & Local Development
 
-<!-- [Chrono-Loom Milestone 5/9] docs(pulses): document clockwork looping mechanics in README.md -->
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Run Local Dev Server
+```bash
+npm run dev
+```
+- Open [http://localhost:5173](http://localhost:5173) on Desktop.
+- Open `http://<YOUR-LOCAL-IP>:5173` on Meta Quest Browser and click **ENTER VR**.
+
+
+<!-- [Chrono-Loom Milestone 6/9] docs(constellation): document Daily Constellation retention loop in README.md -->
