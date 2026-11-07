@@ -296,5 +296,48 @@ export class ConstellationMode {
     const ring = this.targetRings.find((r) => r.id === ringId);
     if (ring && !ring.isEnergized) {
       this.isApplyingRemote = true;
+      this.energizeRing(ring, null);
+      this.isApplyingRemote = false;
 
-// [Chrono-Loom Milestone 7/17] feat(constellation): trigger 120-particle supernova fireworks when puzzle is solved
+      const allEnergized = this.targetRings.every((r) => r.isEnergized);
+      if (allEnergized && !this.isHarmonized && this.targetRings.length === 3) {
+        this.triggerConstellationHarmonized(true);
+      }
+    }
+  }
+
+  /**
+   * Phase 11: Remote Multiplayer Supernova
+   */
+  public applyRemoteHarmonizedCoop(): void {
+    if (!this.isHarmonized) {
+      this.isApplyingRemote = true;
+      this.triggerConstellationHarmonized(true);
+      this.isApplyingRemote = false;
+    }
+  }
+
+  /**
+   * Victory Celebration: Massive celebratory supernova & chord progression
+   * In Cooperative Mode: Doubles particle supernova intensity (240 gold + 120 purple + 80 cyan)!
+   */
+  public triggerConstellationHarmonized(isCoop: boolean = false): void {
+    this.isHarmonized = true;
+    const coopActive = isCoop || this.isCoopMultiplayer;
+    console.log(`[ConstellationMode] CONSTELLATION HARMONIZED! (Co-op: ${coopActive}) Triggering Supernova & Triumphant Progression.`);
+
+    const centerPos = new THREE.Vector3(0, 1.22, -0.45);
+
+    // 1. Massive Particle Supernova: Doubled intensity in Co-op mode!
+    const goldCount = coopActive ? 240 : 120;
+    const purpleCount = coopActive ? 120 : 60;
+    this.loomEngine.spawnParticleBurst(centerPos, goldCount, new THREE.Color(0xffd700), coopActive ? 0.15 : 0.12);
+    this.loomEngine.spawnParticleBurst(centerPos, purpleCount, new THREE.Color(0xa855f7), coopActive ? 0.12 : 0.09);
+    if (coopActive) {
+      this.loomEngine.spawnParticleBurst(centerPos, 80, new THREE.Color(0x00f0ff), 0.14);
+      this.sceneManager.triggerCymaticPulse(centerPos, new THREE.Color(0xffd700), 2.2);
+    }
+
+    // 2. Triumphant Spatial Chord Progression (C4 -> E4 -> G4 -> B4 -> C5)
+
+// [Chrono-Loom Milestone 8/17] feat(constellation): play triumphant spatial chord progression on challenge completion
