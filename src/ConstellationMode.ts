@@ -168,5 +168,48 @@ export class ConstellationMode {
         transparent: true,
         opacity: 0.45,
         blending: THREE.AdditiveBlending
+      });
+      const auraMesh = new THREE.Mesh(auraGeo, auraMat);
+      group.add(auraMesh);
 
-// [Chrono-Loom Milestone 4/17] feat(constellation): design Target Rings with spinning golden runic markers
+      // Core point light
+      const glowLight = new THREE.PointLight(config.baseColor, 1.2, 0.35);
+      group.add(glowLight);
+
+      this.ringContainer.add(group);
+
+      this.targetRings.push({
+        id: config.id,
+        position: config.pos,
+        meshGroup: group,
+        torusMesh,
+        glowLight,
+        targetFrequency: config.freq,
+        baseColor: config.baseColor,
+        energizedColor: config.energizedColor,
+        isEnergized: false,
+        energizeTime: 0
+      });
+    }
+
+    console.log('[ConstellationMode] Spawned 3 Target Resonance Rings for Constellation #322.');
+  }
+
+  /**
+   * Cleans up all rings
+   */
+  private clearTargetRings(): void {
+    for (const ring of this.targetRings) {
+      this.ringContainer.remove(ring.meshGroup);
+      ring.torusMesh.geometry.dispose();
+      (ring.torusMesh.material as THREE.Material).dispose();
+    }
+    this.targetRings = [];
+  }
+
+  /**
+   * Preview chime: periodically plays the target sequence (E4 -> A4 -> C5)
+   */
+  private playPreviewSequence(): void {
+
+// [Chrono-Loom Milestone 5/17] feat(constellation): detect when user kinetic pulses pass through Target Rings
