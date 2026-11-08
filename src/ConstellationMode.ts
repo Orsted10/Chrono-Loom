@@ -595,5 +595,47 @@ export class ConstellationMode {
     });
   }
 
+  private drawRoundedRect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number
+  ) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y + w, x, y, r);
+    ctx.closePath();
+  }
 
-// [Chrono-Loom Milestone 14/17] feat(wrist): play haptic click chirp in SpatialSynth on button touch
+  /**
+   * Evaluates hand fingertip touches on HUD buttons
+   */
+  private checkButtonTouches(): void {
+    const rightTele = this.handInputManager.getTelemetry('right');
+    if (!rightTele.isTracked) return;
+
+    const fingerPos = rightTele.indexTipPosition;
+    const now = performance.now();
+
+    for (const btn of this.buttons) {
+      const btnWorld = new THREE.Vector3();
+      btn.mesh.getWorldPosition(btnWorld);
+      const d = fingerPos.distanceTo(btnWorld);
+
+      // Poke threshold: 30mm
+      if (d < 0.035 && now - this.lastButtonPressTime > 400) {
+        this.lastButtonPressTime = now;
+        (btn.mesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.0;
+        setTimeout(() => {
+          (btn.mesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.45;
+        }, 180);
+        btn.action();
+        break;
+      }
+
+// [Chrono-Loom Milestone 15/17] feat(wrist): orient wrist HUD towards player eye position when wrist is turned
