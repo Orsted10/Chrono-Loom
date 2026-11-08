@@ -552,5 +552,48 @@ export class ConstellationMode {
       group.add(labelSprite);
 
       this.buttons.push({
+        id: b.id,
+        mesh: btnMesh,
+        labelSprite,
+        action: b.action,
+        baseColor: b.baseColor,
+        hoverColor: b.hoverColor
+      });
+    }
 
-// [Chrono-Loom Milestone 13/17] feat(wrist): implement index-finger direct touch trigger on wrist buttons
+    return group;
+  }
+
+  private createButtonLabelSprite(mainText: string, subText: string): THREE.Sprite {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d')!;
+
+    ctx.font = 'bold 36px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(mainText, 256, 52);
+
+    ctx.font = '22px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(subText, 256, 96);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(0.26, 0.065, 1);
+    return sprite;
+  }
+
+  private playButtonAudioChime(freq: number): void {
+    this.spatialSynth.playSpatialNote({
+      frequency: freq,
+      position: this.hudGroup.position,
+      intensity: 1.2,
+      duration: 0.35
+    });
+  }
+
+
+// [Chrono-Loom Milestone 14/17] feat(wrist): play haptic click chirp in SpatialSynth on button touch
