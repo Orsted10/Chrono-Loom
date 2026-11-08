@@ -509,5 +509,48 @@ export class ConstellationMode {
         yOffset: -0.058,
         baseColor: 0x059669,
         hoverColor: 0x10b981,
+        action: () => {
+          const enabled = this.accessibilityManager?.toggleAccessibilitySuite() ?? false;
+          this.playButtonAudioChime(enabled ? 523.25 : 329.63);
+        }
+      },
+      {
+        id: 'btn_reset',
+        label: 'CLEAR & RESET',
+        sub: 'Restore Seed Orb',
+        yOffset: -0.115,
+        baseColor: 0xb45309,
+        hoverColor: 0xf59e0b,
+        action: () => {
+          this.loomEngine.resetLoom();
+          this.agentAria.reset();
+          if (this.currentMode === 'DAILY_CONSTELLATION') {
+            this.initDailyPuzzle322();
+          }
+          this.playButtonAudioChime(329.63);
+        }
+      }
+    ];
 
-// [Chrono-Loom Milestone 12/17] feat(wrist): add interactive pokeable 3D buttons for Aria mode and HUD toggles
+    for (const b of buttonData) {
+      // 3D Button Box
+      const btnGeo = new THREE.BoxGeometry(0.28, 0.045, 0.012);
+      const btnMat = new THREE.MeshStandardMaterial({
+        color: b.baseColor,
+        emissive: b.baseColor,
+        emissiveIntensity: 0.45,
+        roughness: 0.3,
+        metalness: 0.5
+      });
+      const btnMesh = new THREE.Mesh(btnGeo, btnMat);
+      btnMesh.position.set(0, b.yOffset, 0.008);
+      group.add(btnMesh);
+
+      // Label sprite
+      const labelSprite = this.createButtonLabelSprite(b.label, b.sub);
+      labelSprite.position.set(0, b.yOffset, 0.018);
+      group.add(labelSprite);
+
+      this.buttons.push({
+
+// [Chrono-Loom Milestone 13/17] feat(wrist): implement index-finger direct touch trigger on wrist buttons
