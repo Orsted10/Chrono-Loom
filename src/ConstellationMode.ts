@@ -680,5 +680,48 @@ export class ConstellationMode {
     if (this.currentMode === 'DAILY_CONSTELLATION' && !this.isHarmonized) {
       this.previewChimeTimer += deltaTime;
       if (this.previewChimeTimer >= 6.5) {
+        this.previewChimeTimer = 0;
+        this.playPreviewSequence();
+      }
+    }
 
-// [Chrono-Loom Milestone 16/17] perf(wrist): hide wrist HUD when wrist is turned away from camera
+    // 4. Check Kinetic Pulses passing through rings
+    this.checkPulseRingIntersections();
+
+    // 5. Check tactile finger pokes on Wrist HUD
+    this.checkButtonTouches();
+
+    // 6. Floating Victory Banner bob
+    if (this.victoryBanner) {
+      this.victoryBanner.position.y = 1.38 + Math.sin(time * 2.5) * 0.012;
+    }
+
+    // 7. Compact Seated Workspace lerp for Target Resonance Rings
+    if (this.accessibilityManager) {
+      const targetZ = this.accessibilityManager.isWorkspaceCompact ? 0.15 : 0.0;
+      const targetScale = this.accessibilityManager.isWorkspaceCompact ? 0.72 : 1.0;
+      this.ringContainer.position.z = THREE.MathUtils.lerp(this.ringContainer.position.z, targetZ, 0.12);
+      this.ringContainer.scale.setScalar(THREE.MathUtils.lerp(this.ringContainer.scale.x, targetScale, 0.12));
+    }
+  }
+
+  /**
+   * Status readout for UI HUD
+   */
+  public getStatusSummary(): {
+    currentMode: GameMode;
+    ringsEnergized: number;
+    totalRings: number;
+    isHarmonized: boolean;
+  } {
+    const energizedCount = this.targetRings.filter((r) => r.isEnergized).length;
+    return {
+      currentMode: this.currentMode,
+      ringsEnergized: energizedCount,
+      totalRings: this.targetRings.length,
+      isHarmonized: this.isHarmonized
+    };
+  }
+}
+
+// [Chrono-Loom Milestone 17/17] test(wrist): verify poke button collision reliability in WebXR session
