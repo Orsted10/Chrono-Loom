@@ -424,5 +424,48 @@ export class ConstellationMode {
 
   private removeVictoryBanner(): void {
     if (this.victoryBanner) {
+      this.modeGroup.remove(this.victoryBanner);
+      (this.victoryBanner.material as THREE.Material).dispose();
+      this.victoryBanner = null;
+    }
+  }
 
-// [Chrono-Loom Milestone 10/17] feat(wrist): build 3D floating Wrist HUD attached to user's left wrist joint
+  // ----------------------------------------------------
+  // 2. Spatial Wrist HUD
+  // ----------------------------------------------------
+
+  /**
+   * Builds the tactile floating Wrist HUD with 3 big interactive buttons
+   */
+  private createSpatialWristHUD(): THREE.Group {
+    const group = new THREE.Group();
+    group.name = 'SpatialWristHUD';
+    group.position.copy(this.defaultHudPos);
+
+    // Background glass plate
+    const plateGeo = new THREE.PlaneGeometry(0.32, 0.35);
+    const plateMat = new THREE.MeshBasicMaterial({
+      color: 0x07182d,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide
+    });
+    const plate = new THREE.Mesh(plateGeo, plateMat);
+    group.add(plate);
+
+    // Glowing border outline
+    const edgesGeo = new THREE.EdgesGeometry(plateGeo);
+    const glowLine = new THREE.LineSegments(
+      edgesGeo,
+      new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.75 })
+    );
+    group.add(glowLine);
+
+    // Tactile Buttons Configuration (5 Buttons including Scale Presets & Accessibility)
+    const buttonData = [
+      {
+        id: 'btn_puzzle',
+        label: 'DAILY PUZZLE #322',
+        sub: '3-Ring Harmonic Challenge',
+
+// [Chrono-Loom Milestone 11/17] feat(wrist): display live Daily Constellation progress (e.g. Constellation #322)
