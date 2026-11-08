@@ -467,5 +467,47 @@ export class ConstellationMode {
         id: 'btn_puzzle',
         label: 'DAILY PUZZLE #322',
         sub: '3-Ring Harmonic Challenge',
+        yOffset: 0.115,
+        baseColor: 0x0284c7,
+        hoverColor: 0x00f0ff,
+        action: () => {
+          this.currentMode = 'DAILY_CONSTELLATION';
+          this.initDailyPuzzle322();
+          this.playButtonAudioChime(587.33);
+        }
+      },
+      {
+        id: 'btn_freeform',
+        label: 'FREEFORM LOOM',
+        sub: 'Open Creative Sculpting',
+        yOffset: 0.058,
+        baseColor: 0x7c3aed,
+        hoverColor: 0xa855f7,
+        action: () => {
+          this.currentMode = 'FREEFORM';
+          this.clearTargetRings();
+          this.removeVictoryBanner();
+          this.playButtonAudioChime(440.0);
+        }
+      },
+      {
+        id: 'btn_scale',
+        label: 'CYCLE SCALE [1-5]',
+        sub: 'Lydian / Hirajoshi / Yaman',
+        yOffset: 0.000,
+        baseColor: 0xc026d3,
+        hoverColor: 0xf43f5e,
+        action: () => {
+          this.onScaleCycle?.();
+          this.playButtonAudioChime(493.88);
+        }
+      },
+      {
+        id: 'btn_a11y',
+        label: 'ACCESSIBILITY: ON',
+        sub: '1-Hand Tether & Shapes',
+        yOffset: -0.058,
+        baseColor: 0x059669,
+        hoverColor: 0x10b981,
 
-// [Chrono-Loom Milestone 11/17] feat(wrist): display live Daily Constellation progress (e.g. Constellation #322)
+// [Chrono-Loom Milestone 12/17] feat(wrist): add interactive pokeable 3D buttons for Aria mode and HUD toggles
