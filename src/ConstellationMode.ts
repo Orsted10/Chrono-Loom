@@ -381,5 +381,48 @@ export class ConstellationMode {
     canvas.height = 256;
     const ctx = canvas.getContext('2d')!;
 
+    // Gold/Emerald border
+    ctx.fillStyle = 'rgba(7, 24, 45, 0.94)';
+    ctx.strokeStyle = isCoop ? '#f43f5e' : '#ffd700';
+    ctx.lineWidth = 8;
+    this.drawRoundedRect(ctx, 20, 20, 984, 216, 40);
+    ctx.fill();
+    ctx.stroke();
 
-// [Chrono-Loom Milestone 9/17] feat(constellation): trigger Aria's joyful celebratory orbital barrel-roll dance
+    // Glow banner
+    ctx.shadowColor = isCoop ? '#f43f5e' : '#00ff88';
+    ctx.shadowBlur = 25;
+
+    ctx.font = 'bold 50px "Space Grotesk", sans-serif';
+    ctx.fillStyle = isCoop ? '#ffd700' : '#ffd700';
+    ctx.textAlign = 'center';
+    ctx.fillText(isCoop ? '✨ CO-OP HARMONIZED! // DUAL SUPERNOVA' : 'CONSTELLATION HARMONIZED!', 512, 108);
+
+    ctx.font = 'bold 26px "JetBrains Mono", monospace';
+    ctx.fillStyle = isCoop ? '#fb7185' : '#34d399';
+    ctx.fillText(
+      isCoop
+        ? 'TWO WEAVERS RESONATING AS ONE // 30HZ P2P JAM'
+        : 'CHALLENGE #322 COMPLETE // META VR START 2026',
+      512,
+      172
+    );
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const mat = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.98,
+      depthTest: false
+    });
+
+    this.victoryBanner = new THREE.Sprite(mat);
+    this.victoryBanner.scale.set(isCoop ? 0.62 : 0.55, 0.14, 1);
+    this.victoryBanner.position.set(pos.x, pos.y + 0.16, pos.z);
+    this.modeGroup.add(this.victoryBanner);
+  }
+
+  private removeVictoryBanner(): void {
+    if (this.victoryBanner) {
+
+// [Chrono-Loom Milestone 10/17] feat(wrist): build 3D floating Wrist HUD attached to user's left wrist joint
