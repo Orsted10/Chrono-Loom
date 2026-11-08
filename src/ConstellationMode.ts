@@ -637,5 +637,48 @@ export class ConstellationMode {
         btn.action();
         break;
       }
+    }
+  }
 
-// [Chrono-Loom Milestone 15/17] feat(wrist): orient wrist HUD towards player eye position when wrist is turned
+  // ----------------------------------------------------
+  // Per-Frame Update Loop
+  // ----------------------------------------------------
+
+  public update(deltaTime: number): void {
+    const time = performance.now() * 0.001;
+
+    // 1. Position Wrist HUD: attach near Left Wrist if tracked, or float top-left
+    const leftTele = this.handInputManager.getTelemetry('left');
+    if (leftTele.isTracked && !this.handInputManager.isSimulatorActive) {
+      // Anchored to Left Wrist in VR
+      const wristPos = leftTele.wristPosition;
+      this.hudGroup.position.set(wristPos.x - 0.08, wristPos.y + 0.06, wristPos.z + 0.04);
+      this.hudGroup.lookAt(this.sceneManager.camera.position);
+    } else {
+      // Smoothly float at top-left ergonomic position
+      this.hudGroup.position.lerp(this.defaultHudPos, 0.1);
+      this.hudGroup.lookAt(this.sceneManager.camera.position);
+    }
+
+    // 2. Animate Target Resonance Rings
+    for (const ring of this.targetRings) {
+      ring.torusMesh.rotation.z += 0.015;
+      ring.torusMesh.rotation.y += 0.008;
+
+      if (ring.isEnergized) {
+        // Glowing energized pulse
+        const p = Math.sin(time * 6.0) * 0.3;
+        ring.glowLight.intensity = 1.8 + p;
+      } else {
+        // Subtle ambient ring glow
+        const p = Math.sin(time * 2.5) * 0.15;
+        ring.glowLight.intensity = 1.0 + p;
+      }
+    }
+
+    // 3. Periodic preview chime in puzzle mode (every 6 seconds)
+    if (this.currentMode === 'DAILY_CONSTELLATION' && !this.isHarmonized) {
+      this.previewChimeTimer += deltaTime;
+      if (this.previewChimeTimer >= 6.5) {
+
+// [Chrono-Loom Milestone 16/17] perf(wrist): hide wrist HUD when wrist is turned away from camera
