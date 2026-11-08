@@ -786,4 +786,162 @@ class ChronoLoomApp {
       }
     }
 
-// [Chrono-Loom Milestone 5/6] refactor(main): integrate LoomEngine update and render calls in main.ts
+    // Live On-Screen Telemetry Bar for Demo Recording
+    if (this.isDemoTelemetryVisible) {
+      if (this.demoHandTrackingEl) {
+        if (this.demoDirector.isPlaying) {
+          const actShort = this.demoDirector.currentAct.split(':')[0] || 'SHOWCASE';
+          this.demoHandTrackingEl.textContent = `🎬 ${actShort} (${this.demoDirector.elapsedTime.toFixed(1)}s / 45s)`;
+        } else {
+          const leftState = left.isPinching ? 'PINCH' : left.isTracked ? 'TRACKED' : 'STANDBY';
+          const rightState = right.isPinching ? 'PINCH' : right.isTracked ? 'TRACKED' : 'STANDBY';
+          const confidence = (left.isTracked || right.isTracked) ? '99.4%' : 'OFFLINE';
+          this.demoHandTrackingEl.textContent = `ACTIVE (L: ${leftState} | R: ${rightState} | Conf: ${confidence})`;
+        }
+      }
+
+      if (this.demoSeatedRadiusEl) {
+        // Compute max distance of active hand or nodes from user seated position (0, 1.2, 0)
+        let maxReach = this.accessibilityManager.isWorkspaceCompact ? 0.32 : 0.45;
+        if (right.isTracked) {
+          const reach = right.indexTipPosition.distanceTo(new THREE.Vector3(0, 1.2, 0));
+          maxReach = Math.max(maxReach, reach);
+        }
+        const reachLimit = this.accessibilityManager.isWorkspaceCompact
+          ? '< 0.35m (Compact Micro-Radius [C])'
+          : '< 0.55m (Airplane Seat Compliant)';
+        this.demoSeatedRadiusEl.textContent = `${maxReach.toFixed(2)}m ${reachLimit}`;
+      }
+
+      if (this.demoAriaStateEl) {
+        const a11yStatus = this.accessibilityManager.isAccessibilitySuiteEnabled ? 'A11y: ON' : 'A11y: OFF';
+        this.demoAriaStateEl.textContent = `[${this.agentAria.state} / ${this.agentAria.mode.replace('_', ' ')} | ${a11yStatus}]`;
+      }
+
+      if (this.demoAriaIntentEl) {
+        if (this.agentAria.isListening) {
+          this.demoAriaIntentEl.textContent = 'LISTENING... (Speak now)';
+          this.demoAriaIntentEl.style.color = '#34d399';
+        } else if (this.agentAria.lastVoiceIntent) {
+          this.demoAriaIntentEl.textContent = `${this.agentAria.lastVoiceIntent} ("${this.agentAria.lastVoiceTranscript.slice(0, 18)}")`;
+          this.demoAriaIntentEl.style.color = '#c084fc';
+        } else {
+          this.demoAriaIntentEl.textContent = 'IDLE (Voice Key [V])';
+          this.demoAriaIntentEl.style.color = '#94a3b8';
+        }
+      }
+
+      if (this.demoA11yStatusEl) {
+        if (!a11ySummary.suiteEnabled) {
+          this.demoA11yStatusEl.textContent = 'OFF';
+          this.demoA11yStatusEl.style.color = '#94a3b8';
+        } else if (a11ySummary.hasLatchedTether) {
+          this.demoA11yStatusEl.textContent = 'TETHER LATCHED [PINCH TO WEAVE]';
+          this.demoA11yStatusEl.style.color = '#fbbf24';
+        } else if (a11ySummary.focusedNodeId) {
+          this.demoA11yStatusEl.textContent = `MAGNETIC SNAP: Node [${a11ySummary.focusedNodeId}]`;
+          this.demoA11yStatusEl.style.color = '#00f0ff';
+        } else {
+          this.demoA11yStatusEl.textContent = a11ySummary.isCompact
+            ? 'ON (Compact 0.35m + Gaze Reticle)'
+            : 'ON (1-Hand Tether + Haptic Waves)';
+          this.demoA11yStatusEl.style.color = '#34d399';
+        }
+      }
+
+      if (this.demoMultiplayerEl) {
+        if (this.multiplayerSync.isConnected) {
+          this.demoMultiplayerEl.textContent = `CONNECTED (${this.multiplayerSync.pingMs}ms | 30Hz P2P)`;
+          this.demoMultiplayerEl.style.color = '#34d399';
+        } else if (this.multiplayerSync.connectionState === 'WAITING_PEER') {
+          this.demoMultiplayerEl.textContent = 'HOSTING (WAITING PEER)';
+          this.demoMultiplayerEl.style.color = '#fbbf24';
+        } else {
+          this.demoMultiplayerEl.textContent = 'SOLO (WebRTC Ready [J])';
+          this.demoMultiplayerEl.style.color = '#fb7185';
+        }
+      }
+
+      if (this.demoScaleStatusEl) {
+        this.demoScaleStatusEl.textContent = `${this.euclideanEngine.activeScale.shortName} (Key [${this.euclideanEngine.activeScaleIndex + 1}])`;
+        this.demoScaleStatusEl.style.color = `#${this.euclideanEngine.activeScale.palette.accentColor.getHexString()}`;
+      }
+
+      if (this.demoGpuShadersEl) {
+        const ribbonCount = this.loomEngine.ribbonTrailPool.instancedMesh.count;
+        this.demoGpuShadersEl.textContent = `Quantum Strings // ${ribbonCount} Ribbons (1-DC)`;
+      }
+
+      if (this.demoPolyrhythmEl) {
+        const bpm = this.loomEngine.globalBPM;
+        const mrStatus = this.mrSurfaceManager.isRoomScanEnabled
+          ? `MR Scan: ${this.mrSurfaceManager.surfaces.size} Surfaces`
+          : 'MR Scan: OFF';
+        let anchoredCount = 0;
+        for (const n of this.loomEngine.nodes.values()) {
+          if (n.isSurfaceAnchored) anchoredCount++;
+        }
+        const anchorStr = anchoredCount > 0 ? ` | Anchored: ${anchoredCount}` : '';
+        const conductorStr = this.handInputManager.isConductorActive ? ' [CONDUCTOR ⚡]' : '';
+        this.demoPolyrhythmEl.textContent = `${loomStatus.nodeCount} Nodes | ${loomStatus.stringCount} Strings | ${bpm} BPM${conductorStr} | ${mrStatus}${anchorStr}`;
+      }
+    }
+  }
+
+  /**
+   * Main animation loop per WebXR / requestAnimationFrame
+   */
+  private animate(timestamp: number, frame?: XRFrame): void {
+    const deltaTime = Math.min(this.clock.getDelta(), 0.1);
+    const elapsedTime = this.clock.getElapsedTime();
+
+    // 1. Update scene and ambient particles
+    this.sceneManager.update(deltaTime);
+
+    // 2. Update hands & pinch detection
+    this.handInputManager.update(deltaTime);
+
+    // 3. Update 3D HRTF Web Audio listener position and orientation
+    this.loomEngine.spatialSynth.updateListener(this.sceneManager.camera);
+
+    // 4. Update Spatial Loom Engine (Seed Orb, Nodes, ChronoStrings, Plucking & Kinetic Pulses)
+    this.loomEngine.update(deltaTime);
+
+    // 5. Update Phase 4: Agent Aria (Autonomous AI State Machine & Weaving)
+    this.agentAria.update(deltaTime);
+
+    // 6. Update Phase 4: Daily Constellation Challenge & Wrist HUD
+    this.constellationMode.update(deltaTime);
+
+    // 6.5. Update Phase 7: Accessibility Manager (One-Handed Tether, Gaze Reticle, Sub-Bass Waves)
+    this.accessibilityManager.update(deltaTime);
+
+    // 6.6. Update Phase 8: Demo Director (Cinematic Auto-Showcase)
+    this.demoDirector.update(deltaTime);
+
+    // 6.7. Update Phase 9: MR Surface Manager (WebXR Plane Detection & Room Acoustics)
+    this.mrSurfaceManager.update(deltaTime, frame);
+
+    // 6.8. Update Phase 11: Multiplayer Sync (Ghost Avatar Lerp & 30Hz Heartbeat)
+    this.multiplayerSync.update(deltaTime);
+
+    // 6.9. Update Phase 12: Euclidean Polyrhythms & Scale Pitch Morphs
+    this.euclideanEngine.update(deltaTime);
+
+    // 7. Update visual spark particles
+    this.updateTemporalEffects(deltaTime, elapsedTime);
+
+    // 8. Update HUD
+    this.updateHUD();
+
+    // 9. Render Scene
+    this.sceneManager.render();
+  }
+}
+
+// Instantiate on DOM load
+window.addEventListener('DOMContentLoaded', () => {
+  new ChronoLoomApp();
+});
+
+// [Chrono-Loom Milestone 6/6] refactor(main): synchronize wrist HUD state with 2D desktop HUD buttons
