@@ -281,4 +281,45 @@ export class AccessibilityManager {
     }
   }
 
-// [Chrono-Loom Milestone 7/19] feat(a11y): cast soft 0.11m magnetic reticle cone from camera gaze vector
+  // ----------------------------------------------------
+  // 2. Virtual Anchor Tether (One-Handed Weaving)
+  // ----------------------------------------------------
+
+  /**
+   * Builds the glowing visual tether line and floating status badge
+   */
+  private createVirtualAnchorTether(): {
+    group: THREE.Group;
+    line: THREE.Line;
+    prompt: THREE.Sprite;
+  } {
+    const group = new THREE.Group();
+    group.name = 'VirtualAnchorTether';
+    group.visible = false;
+
+    // Segmented glowing electric line
+    const numPts = 16;
+    const pts: THREE.Vector3[] = [];
+    for (let i = 0; i < numPts; i++) pts.push(new THREE.Vector3(0, 0, 0));
+
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const lineMat = new THREE.LineBasicMaterial({
+      color: 0xffd700,
+      linewidth: 3,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending
+    });
+    const line = new THREE.Line(lineGeo, lineMat);
+    group.add(line);
+
+    // Floating tether instructions sprite
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+    ctx.strokeStyle = '#ffd700';
+
+// [Chrono-Loom Milestone 8/19] feat(a11y): automatically snap target node to center of magnetic reticle
