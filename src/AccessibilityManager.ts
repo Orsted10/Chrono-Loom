@@ -79,4 +79,45 @@ export class AccessibilityManager {
   private loomEngine: LoomEngine;
   private spatialSynth: SpatialSynth;
 
-// [Chrono-Loom Milestone 2/19] feat(a11y): implement One-Handed Complete Playability mode for limited mobility
+  // Master Accessibility Flags
+  public isAccessibilitySuiteEnabled = true;
+  public isGazeAssistEnabled = true;
+  public isOneHandedModeActive = true;
+  public isShapeSynesthesiaEnabled = true;
+
+  // Ergonomic Seated Auto-Bring Workspace State
+  public isWorkspaceCompact = false;
+  private currentZOffset = 0.0;
+  private targetZOffset = 0.0;
+  private currentScale = 1.0;
+  private targetScale = 1.0;
+  private readonly COMPACT_Z_OFFSET = 0.15; // Shifts center from z = -0.45m to z = -0.30m
+  private readonly COMPACT_SCALE = 0.72;    // Shrinks workspace to 0.35m micro-radius
+
+  // Magnetic Gaze / Proximity Assist
+  public focusedNode: HarmonicNode | null = null;
+  private magneticReticle: THREE.Group;
+  private reticleMaterial: THREE.MeshBasicMaterial;
+
+  // Virtual Anchor Tether for One-Handed Weaving
+  public latchedAnchorNode: HarmonicNode | null = null;
+  private tetherGroup: THREE.Group;
+  private tetherLine: THREE.Line;
+  private tetherPromptSprite: THREE.Sprite;
+  private lastTetherActionTime = 0;
+
+  // Visual Haptic Sub-Bass Waveform Ripple Pool (Deaf / Hard-of-Hearing)
+  private hapticWavePool: VisualHapticWave[] = [];
+  private hapticContainer: THREE.Group;
+  private readonly MAX_HAPTIC_WAVES = 12;
+
+  // Reusable vectors for zero-garbage performance
+  private _v1 = new THREE.Vector3();
+  private _v2 = new THREE.Vector3();
+  private _v3 = new THREE.Vector3();
+
+  constructor(
+    sceneManager: SceneManager,
+    handInputManager: HandInputManager,
+
+// [Chrono-Loom Milestone 3/19] feat(a11y): add Virtual Anchor Tether: pinch node once to latch electric tether
