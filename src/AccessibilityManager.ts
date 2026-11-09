@@ -321,5 +321,45 @@ export class AccessibilityManager {
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
     ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 6;
+    const x = 30, y = 30, w = 964, h = 196, r = 32;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y + w, x, y, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
 
-// [Chrono-Loom Milestone 8/19] feat(a11y): automatically snap target node to center of magnetic reticle
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 18;
+
+    ctx.font = 'bold 36px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText('VIRTUAL ANCHOR TETHER ACTIVE [1-HANDED MODE]', 512, 105);
+
+    ctx.font = 'bold 24px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#fde047';
+    ctx.fillText('PINCH ANOTHER NODE TO WEAVE // PINCH SPACE TO SPAWN', 512, 160);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const promptMat = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.95,
+      depthTest: false
+    });
+    const prompt = new THREE.Sprite(promptMat);
+    prompt.scale.set(0.38, 0.095, 1);
+    group.add(prompt);
+
+    return { group, line, prompt };
+  }
+
+  /**
+   * One-Handed Tether Pinch Interceptor:
+
+// [Chrono-Loom Milestone 9/19] style(a11y): render glowing targeting brackets around gaze-selected node
