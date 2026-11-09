@@ -200,5 +200,45 @@ export class AccessibilityManager {
 
     group.add(createBracket(1, 1));
     group.add(createBracket(-1, 1));
+    group.add(createBracket(1, -1));
+    group.add(createBracket(-1, -1));
 
-// [Chrono-Loom Milestone 5/19] feat(a11y): render undulating electric lightning beam for active virtual tether
+    return { group, material: ringMat };
+  }
+
+  /**
+   * Updates gaze cone raycast and hand proximity to locate focused node
+   */
+  private updateMagneticFocus(): void {
+    if (!this.isAccessibilitySuiteEnabled || !this.isGazeAssistEnabled) {
+      this.focusedNode = null;
+      this.magneticReticle.visible = false;
+      return;
+    }
+
+    const camera = this.sceneManager.camera;
+    const camPos = this._v1.setFromMatrixPosition(camera.matrixWorld);
+    const camDir = this._v2.set(0, 0, -1).applyQuaternion(camera.quaternion).normalize();
+
+    let bestNode: HarmonicNode | null = null;
+    let bestScore = -999; // Higher is better alignment
+
+    const leftTele = this.handInputManager.getTelemetry('left');
+    const rightTele = this.handInputManager.getTelemetry('right');
+    const activeHandPos = rightTele.isTracked
+      ? rightTele.indexTipPosition
+      : leftTele.isTracked
+      ? leftTele.indexTipPosition
+      : null;
+
+    for (const node of this.loomEngine.nodes.values()) {
+      const nodePos = node.position;
+
+      // 1. Hand proximity check (< 0.11m magnetic snap zone)
+      if (activeHandPos) {
+        const handDist = activeHandPos.distanceTo(nodePos);
+        if (handDist < 0.11) {
+          // Priority to hand proximity
+          const score = 100 - handDist * 100;
+
+// [Chrono-Loom Milestone 6/19] feat(a11y): add Magnetic Gaze & Proximity Assist toggle for motor tremor relief
