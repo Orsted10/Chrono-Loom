@@ -240,5 +240,45 @@ export class AccessibilityManager {
         if (handDist < 0.11) {
           // Priority to hand proximity
           const score = 100 - handDist * 100;
+          if (score > bestScore) {
+            bestScore = score;
+            bestNode = node;
+          }
+          continue;
+        }
+      }
 
-// [Chrono-Loom Milestone 6/19] feat(a11y): add Magnetic Gaze & Proximity Assist toggle for motor tremor relief
+      // 2. Gaze alignment check
+      const toNode = this._v3.subVectors(nodePos, camPos);
+      const dist = toNode.length();
+      if (dist < 1.2 && dist > 0.1) {
+        toNode.normalize();
+        const dot = camDir.dot(toNode); // Cosine of angle
+        // Within ~18 degrees cone (dot > 0.95)
+        if (dot > 0.95) {
+          const score = dot * 50 - dist * 5;
+          if (score > bestScore) {
+            bestScore = score;
+            bestNode = node;
+          }
+        }
+      }
+    }
+
+    this.focusedNode = bestNode;
+
+    if (this.focusedNode) {
+      this.magneticReticle.visible = true;
+      this.magneticReticle.position.copy(this.focusedNode.position);
+      this.magneticReticle.lookAt(camPos);
+      this.magneticReticle.rotation.z += 0.015;
+
+      // Glow pulsing
+      const pulse = 0.75 + Math.sin(performance.now() * 0.008) * 0.25;
+      this.reticleMaterial.opacity = pulse;
+    } else {
+      this.magneticReticle.visible = false;
+    }
+  }
+
+// [Chrono-Loom Milestone 7/19] feat(a11y): cast soft 0.11m magnetic reticle cone from camera gaze vector
