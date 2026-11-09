@@ -119,5 +119,45 @@ export class AccessibilityManager {
   constructor(
     sceneManager: SceneManager,
     handInputManager: HandInputManager,
+    loomEngine: LoomEngine,
+    spatialSynth: SpatialSynth
+  ) {
+    this.sceneManager = sceneManager;
+    this.handInputManager = handInputManager;
+    this.loomEngine = loomEngine;
+    this.spatialSynth = spatialSynth;
 
-// [Chrono-Loom Milestone 3/19] feat(a11y): add Virtual Anchor Tether: pinch node once to latch electric tether
+    // 1. Magnetic Snap Reticle
+    const { group: reticleGroup, material: reticleMat } = this.createMagneticReticle();
+    this.magneticReticle = reticleGroup;
+    this.reticleMaterial = reticleMat;
+    this.sceneManager.scene.add(this.magneticReticle);
+
+    // 2. Virtual Anchor Tether (One-Handed Weaving)
+    const { group: tetherGrp, line: tetherLn, prompt: tetherPr } = this.createVirtualAnchorTether();
+    this.tetherGroup = tetherGrp;
+    this.tetherLine = tetherLn;
+    this.tetherPromptSprite = tetherPr;
+    this.sceneManager.scene.add(this.tetherGroup);
+
+    // 3. Visual Haptic Sub-Bass Waveform Pool
+    this.hapticContainer = new THREE.Group();
+    this.hapticContainer.name = 'VisualHapticRings';
+    this.sceneManager.scene.add(this.hapticContainer);
+    this.initHapticWavePool(this.MAX_HAPTIC_WAVES);
+
+    console.log('[AccessibilityManager] Initialized. Suite: ACTIVE (1-Hand Tether + Gaze Snap + Haptic Waves).');
+  }
+
+  // ----------------------------------------------------
+  // 1. Magnetic Gaze & Proximity Assist
+  // ----------------------------------------------------
+
+  /**
+   * Builds high-contrast magnetic reticle that snaps around focused nodes
+   */
+  private createMagneticReticle(): {
+    group: THREE.Group;
+    material: THREE.MeshBasicMaterial;
+
+// [Chrono-Loom Milestone 4/19] feat(a11y): stretch tether to target node and pinch again to complete weave
