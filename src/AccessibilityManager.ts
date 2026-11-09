@@ -361,5 +361,46 @@ export class AccessibilityManager {
 
   /**
    * One-Handed Tether Pinch Interceptor:
+   * Called by HandInputManager/LoomEngine on pinch start.
+   * Returns true if the pinch was handled by the Virtual Anchor Tether.
+   */
+  public handleOneHandedPinch(hand: Handedness, pinchPos: THREE.Vector3): boolean {
+    if (!this.isAccessibilitySuiteEnabled || !this.isOneHandedModeActive) {
+      return false;
+    }
 
-// [Chrono-Loom Milestone 9/19] style(a11y): render glowing targeting brackets around gaze-selected node
+    const now = performance.now();
+    if (now - this.lastTetherActionTime < 240) return false; // Debounce
+
+    // Check if pinch is targeting a node (or magnetically focused node)
+    const targetNode = this.focusedNode || this.findNearestNode(pinchPos, 0.095);
+
+    // Case A: No anchor latched yet
+    if (!this.latchedAnchorNode) {
+      if (targetNode) {
+        this.latchedAnchorNode = targetNode;
+        this.tetherGroup.visible = true;
+        this.lastTetherActionTime = now;
+
+        // Latch chime
+        this.spatialSynth.playSpatialNote({
+          frequency: 587.33,
+          position: targetNode.position,
+          intensity: 1.1,
+          duration: 0.4
+        });
+        this.loomEngine.spawnParticleBurst(targetNode.position, 12, new THREE.Color(0xffd700), 0.04);
+        console.log(`[Accessibility] Latched Virtual Anchor Tether on Node [${targetNode.id}].`);
+        return true;
+      }
+      return false;
+    }
+
+    // Case B: Anchor is already latched!
+    if (this.latchedAnchorNode) {
+      this.lastTetherActionTime = now;
+
+      // Sub-case B1: Pinched the same node -> Cancel / Release Tether
+      if (targetNode && targetNode.id === this.latchedAnchorNode.id) {
+
+// [Chrono-Loom Milestone 10/19] test(a11y): verify full weaving loop completed exclusively using single hand
