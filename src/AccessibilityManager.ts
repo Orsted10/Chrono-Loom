@@ -159,5 +159,46 @@ export class AccessibilityManager {
   private createMagneticReticle(): {
     group: THREE.Group;
     material: THREE.MeshBasicMaterial;
+  } {
+    const group = new THREE.Group();
+    group.name = 'MagneticReticle';
+    group.visible = false;
 
-// [Chrono-Loom Milestone 4/19] feat(a11y): stretch tether to target node and pinch again to complete weave
+    // Central target ring
+    const ringGeo = new THREE.RingGeometry(0.052, 0.058, 36);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    group.add(ring);
+
+    // 4 Corner Brackets
+    const bracketMat = new THREE.LineBasicMaterial({
+      color: 0xffd700,
+      linewidth: 2,
+      transparent: true,
+      opacity: 0.95
+    });
+
+    const bSize = 0.065;
+    const bLen = 0.018;
+
+    const createBracket = (sx: number, sy: number) => {
+      const pts = [
+        new THREE.Vector3(sx * (bSize - bLen), sy * bSize, 0),
+        new THREE.Vector3(sx * bSize, sy * bSize, 0),
+        new THREE.Vector3(sx * bSize, sy * (bSize - bLen), 0)
+      ];
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      return new THREE.Line(geo, bracketMat);
+    };
+
+    group.add(createBracket(1, 1));
+    group.add(createBracket(-1, 1));
+
+// [Chrono-Loom Milestone 5/19] feat(a11y): render undulating electric lightning beam for active virtual tether
