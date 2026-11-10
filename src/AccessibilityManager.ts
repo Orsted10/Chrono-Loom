@@ -402,5 +402,45 @@ export class AccessibilityManager {
 
       // Sub-case B1: Pinched the same node -> Cancel / Release Tether
       if (targetNode && targetNode.id === this.latchedAnchorNode.id) {
+        console.log('[Accessibility] Tether released / unlatched.');
+        this.releaseTether(false);
+        return true;
+      }
 
-// [Chrono-Loom Milestone 10/19] test(a11y): verify full weaving loop completed exclusively using single hand
+      // Sub-case B2: Pinched a different node -> WEAVE STRING!
+      if (targetNode && targetNode.id !== this.latchedAnchorNode.id) {
+        this.loomEngine.createChronoString(this.latchedAnchorNode, targetNode);
+        this.triggerVisualHapticWave(targetNode.position, targetNode.noteFrequency, 1.4);
+        this.releaseTether(true);
+        return true;
+      }
+
+      // Sub-case B3: Pinched empty comfort space -> SPAWN NODE & WEAVE STRING!
+      if (this.isWithinComfortBounds(pinchPos)) {
+        const newNode = this.loomEngine.spawnHarmonicNode(pinchPos);
+        this.loomEngine.createChronoString(this.latchedAnchorNode, newNode);
+        this.triggerVisualHapticWave(newNode.position, newNode.noteFrequency, 1.4);
+        this.releaseTether(true);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Releases active virtual anchor tether
+   */
+  public releaseTether(wasWeaveSuccessful: boolean): void {
+    if (wasWeaveSuccessful && this.latchedAnchorNode) {
+      this.spatialSynth.playSpatialNote({
+        frequency: 659.25,
+        position: this.latchedAnchorNode.position,
+        intensity: 1.2,
+        duration: 0.6
+      });
+    }
+    this.latchedAnchorNode = null;
+    this.tetherGroup.visible = false;
+
+// [Chrono-Loom Milestone 11/19] feat(a11y): implement Ergonomic Seated Auto-Bring ([PULL CLOSER] / Key C)
