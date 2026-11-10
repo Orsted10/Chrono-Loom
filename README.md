@@ -79,5 +79,18 @@ npm run dev
 - Open [http://localhost:5173](http://localhost:5173) on Desktop.
 - Open `http://<YOUR-LOCAL-IP>:5173` on Meta Quest Browser and click **ENTER VR**.
 
+### 3. Production Build
+```bash
+npm run build
+```
+Builds an optimized production bundle in `/dist` with Three.js vendor chunking and zero warnings.
 
-<!-- [Chrono-Loom Milestone 6/9] docs(constellation): document Daily Constellation retention loop in README.md -->
+---
+
+## Free HTTPS Deployment (For Competition Judges)
+
+WebXR requires a secure `https://` origin. Deploy the `/dist` folder for free in seconds:
+
+### Option A: Vercel (Instant HTTPS)
+
+<!-- [Chrono-Loom Milestone 7/9] docs(a11y): detail $25k Accessibility Forward Experience features in README.md -->
