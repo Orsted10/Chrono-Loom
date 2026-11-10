@@ -604,5 +604,45 @@ export class AccessibilityManager {
 
       this.hapticWavePool.push({
         mesh,
+        center: new THREE.Vector3(),
+        progress: 1.0,
+        speed: 1.6,
+        maxRadius: 0.32,
+        frequency: 261.63,
+        thickness: 0.02,
+        color: new THREE.Color(0x00f0ff),
+        active: false
+      });
+    }
+  }
 
-// [Chrono-Loom Milestone 15/19] feat(a11y): implement Shape-Coded Synesthesia for colorblind accessibility
+  /**
+   * Fires a crisp 3D visual haptic sub-bass ripple ring:
+   * Thickness reflects intensity; ripple speed reflects pitch frequency.
+   */
+  public triggerVisualHapticWave(pos: THREE.Vector3, frequency: number, intensity: number = 1.0): void {
+    if (!this.isAccessibilitySuiteEnabled) return;
+
+    let wave = this.hapticWavePool.find((w) => !w.active);
+    if (!wave) {
+      wave = this.hapticWavePool.reduce((p, c) => (c.progress > p.progress ? c : p));
+    }
+
+    const tierInfo = getPitchTierInfo(frequency);
+    const waveColor =
+      tierInfo.tier === 'BASS'
+        ? new THREE.Color(0xf59e0b) // Amber Gold for deep bass
+        : tierInfo.tier === 'MID'
+        ? new THREE.Color(0x00f0ff) // Cyan for mids
+        : new THREE.Color(0xd946ef); // Magenta/Violet for highs
+
+    wave.center.copy(pos);
+    wave.mesh.position.copy(pos);
+    wave.color.copy(waveColor);
+    (wave.mesh.material as THREE.MeshBasicMaterial).color.copy(waveColor);
+    wave.progress = 0.0;
+    wave.speed = 1.2 + (frequency / 600) * 0.8;
+    wave.maxRadius = 0.22 + intensity * 0.14;
+    wave.thickness = tierInfo.tier === 'BASS' ? 0.045 : tierInfo.tier === 'MID' ? 0.028 : 0.016;
+
+// [Chrono-Loom Milestone 16/19] feat(a11y): map Bass notes to Cubes, Mid notes to Octahedrons, High to Tetrahedrons
