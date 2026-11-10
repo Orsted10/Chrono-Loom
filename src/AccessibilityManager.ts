@@ -725,5 +725,46 @@ export class AccessibilityManager {
     for (const wave of this.hapticWavePool) {
       if (!wave.active) continue;
 
+      wave.progress += deltaTime * wave.speed;
+      if (wave.progress >= 1.0) {
+        wave.active = false;
+        wave.mesh.visible = false;
+        continue;
+      }
 
-// [Chrono-Loom Milestone 18/19] feat(a11y): implement Visual Haptic Sub-Bass Waveform Rings for Deaf players
+      // Expansion radius
+      const currentRadius = 0.03 + wave.progress * wave.maxRadius;
+      const scale = currentRadius / 0.038;
+      wave.mesh.scale.set(scale, scale, 1);
+
+      // Camera orientation (billboard ripple ring)
+      wave.mesh.lookAt(this.sceneManager.camera.position);
+
+      // Opacity fadeout with sinusoidal ripple pulse
+      const alpha = Math.sin((1.0 - wave.progress) * Math.PI);
+      const ripplePulse = 0.7 + Math.sin(wave.progress * 18.0) * 0.3;
+      (wave.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, alpha * ripplePulse * 0.85);
+    }
+  }
+
+  /**
+   * Status summary for HUD and demo telemetry
+   */
+  public getStatusSummary(): {
+    suiteEnabled: boolean;
+    isOneHanded: boolean;
+    isCompact: boolean;
+    hasLatchedTether: boolean;
+    focusedNodeId: string | null;
+  } {
+    return {
+      suiteEnabled: this.isAccessibilitySuiteEnabled,
+      isOneHanded: this.isOneHandedModeActive,
+      isCompact: this.isWorkspaceCompact,
+      hasLatchedTether: this.latchedAnchorNode !== null,
+      focusedNodeId: this.focusedNode ? this.focusedNode.id : null
+    };
+  }
+}
+
+// [Chrono-Loom Milestone 19/19] feat(a11y): render sinusoidal ripple rings with thickness proportional to note volume
