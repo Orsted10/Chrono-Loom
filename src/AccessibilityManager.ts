@@ -685,5 +685,45 @@ export class AccessibilityManager {
 
     // Apply to SceneManager Seated Comfort Arc
     this.sceneManager.comfortArcGroup.position.z = this.currentZOffset;
+    this.sceneManager.comfortArcGroup.scale.setScalar(this.currentScale);
 
-// [Chrono-Loom Milestone 17/19] feat(a11y): add high-contrast billboard note badges (C3, E4, G4, C5) on all nodes
+    // 2. Update Magnetic Gaze & Proximity Assist
+    this.updateMagneticFocus();
+
+    // 3. Update Virtual Anchor Tether (One-Handed Weaving)
+    if (this.latchedAnchorNode && this.tetherGroup.visible) {
+      const pA = this.latchedAnchorNode.position;
+
+      // Find active hand or fallback to cursor/gaze center
+      const rightTele = this.handInputManager.getTelemetry('right');
+      const leftTele = this.handInputManager.getTelemetry('left');
+      const pB = rightTele.isTracked
+        ? rightTele.indexTipPosition
+        : leftTele.isTracked
+        ? leftTele.indexTipPosition
+        : this._v1.set(0, 1.2, -0.45);
+
+      // Interpolate wavy electric tether line
+      const linePosAttr = this.tetherLine.geometry.attributes.position as THREE.BufferAttribute;
+      const numPts = linePosAttr.count;
+
+      for (let i = 0; i < numPts; i++) {
+        const s = i / (numPts - 1);
+        const waveDisp = Math.sin(time * 12 + s * Math.PI * 4) * 0.008 * Math.sin(Math.PI * s);
+        const pt = this._v2.lerpVectors(pA, pB, s);
+        pt.y += waveDisp;
+        linePosAttr.setXYZ(i, pt.x, pt.y, pt.z);
+      }
+      linePosAttr.needsUpdate = true;
+
+      // Position prompt badge between nodes
+      const mid = this._v3.addVectors(pA, pB).multiplyScalar(0.5);
+      this.tetherPromptSprite.position.set(mid.x, mid.y + 0.08, mid.z);
+    }
+
+    // 4. Update Visual Haptic Sub-Bass Waveform Rings
+    for (const wave of this.hapticWavePool) {
+      if (!wave.active) continue;
+
+
+// [Chrono-Loom Milestone 18/19] feat(a11y): implement Visual Haptic Sub-Bass Waveform Rings for Deaf players
