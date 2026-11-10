@@ -483,5 +483,45 @@ export class AccessibilityManager {
     // Audio chime confirmation
     this.spatialSynth.playSpatialNote({
       frequency: compact ? 523.25 : 392.00,
+      position: new THREE.Vector3(0, 1.2, -0.4),
+      intensity: 1.2,
+      duration: 0.6
+    });
 
-// [Chrono-Loom Milestone 12/19] feat(a11y): shift entire Loom and Comfort Arc closer (z = -0.45m to z = -0.30m)
+    console.log(`[Accessibility] Seated Workspace Auto-Bring: ${compact ? 'COMPACT (0.35m radius, z = -0.30m)' : 'NORMAL (0.55m radius, z = -0.45m)'}`);
+  }
+
+  // ----------------------------------------------------
+  // 4. Shape-Coded Synesthesia & Note Badges
+  // ----------------------------------------------------
+
+  /**
+   * Generates distinct 3D geometry matching the pitch tier
+   * (Cube = Bass, Octahedron = Mid, Tetrahedron = High)
+   */
+  public createShapeCodedGeometry(freq: number): {
+    coreGeo: THREE.BufferGeometry;
+    shellGeo: THREE.BufferGeometry;
+    tierInfo: PitchTierInfo;
+  } {
+    const tierInfo = getPitchTierInfo(freq);
+    let coreGeo: THREE.BufferGeometry;
+    let shellGeo: THREE.BufferGeometry;
+
+    if (tierInfo.tier === 'BASS') {
+      // Bass Tier: Robust cube with beveled edges
+      coreGeo = new THREE.BoxGeometry(0.046, 0.046, 0.046);
+      shellGeo = new THREE.BoxGeometry(0.056, 0.056, 0.056);
+    } else if (tierInfo.tier === 'MID') {
+      // Mid Tier: Crystalline Octahedron
+      coreGeo = new THREE.OctahedronGeometry(0.035, 1);
+      shellGeo = new THREE.OctahedronGeometry(0.043, 1);
+    } else {
+      // High Tier: Sharp Stellated Tetrahedron
+      coreGeo = new THREE.TetrahedronGeometry(0.040, 0);
+      shellGeo = new THREE.TetrahedronGeometry(0.048, 0);
+    }
+
+    return { coreGeo, shellGeo, tierInfo };
+
+// [Chrono-Loom Milestone 13/19] feat(a11y): scale workspace down to compact 0.35m micro-radius for wheelchair trays
