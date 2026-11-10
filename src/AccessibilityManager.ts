@@ -644,5 +644,46 @@ export class AccessibilityManager {
     wave.speed = 1.2 + (frequency / 600) * 0.8;
     wave.maxRadius = 0.22 + intensity * 0.14;
     wave.thickness = tierInfo.tier === 'BASS' ? 0.045 : tierInfo.tier === 'MID' ? 0.028 : 0.016;
+    wave.frequency = frequency;
+    wave.active = true;
+    wave.mesh.visible = true;
+  }
 
-// [Chrono-Loom Milestone 16/19] feat(a11y): map Bass notes to Cubes, Mid notes to Octahedrons, High to Tetrahedrons
+  /**
+   * Toggles master accessibility suite
+   */
+  public toggleAccessibilitySuite(): boolean {
+    this.isAccessibilitySuiteEnabled = !this.isAccessibilitySuiteEnabled;
+    this.magneticReticle.visible = false;
+    this.releaseTether(false);
+
+    // Toggle note badges visibility
+    for (const node of this.loomEngine.nodes.values()) {
+      if ((node as any).pitchLabelSprite) {
+        (node as any).pitchLabelSprite.visible = this.isAccessibilitySuiteEnabled;
+      }
+    }
+
+    console.log(`[Accessibility] Master Suite: ${this.isAccessibilitySuiteEnabled ? 'ENABLED' : 'DISABLED'}`);
+    return this.isAccessibilitySuiteEnabled;
+  }
+
+  // ----------------------------------------------------
+  // 6. Per-Frame Update
+  // ----------------------------------------------------
+
+  public update(deltaTime: number): void {
+    const time = performance.now() * 0.001;
+
+    // 1. Smoothly interpolate Ergonomic Auto-Bring workspace offset & scale
+    this.currentZOffset = THREE.MathUtils.lerp(this.currentZOffset, this.targetZOffset, 0.12);
+    this.currentScale = THREE.MathUtils.lerp(this.currentScale, this.targetScale, 0.12);
+
+    // Apply to Loom Engine group
+    this.loomEngine.loomGroup.position.z = this.currentZOffset;
+    this.loomEngine.loomGroup.scale.setScalar(this.currentScale);
+
+    // Apply to SceneManager Seated Comfort Arc
+    this.sceneManager.comfortArcGroup.position.z = this.currentZOffset;
+
+// [Chrono-Loom Milestone 17/19] feat(a11y): add high-contrast billboard note badges (C3, E4, G4, C5) on all nodes
