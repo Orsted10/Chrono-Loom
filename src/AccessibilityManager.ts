@@ -523,5 +523,45 @@ export class AccessibilityManager {
     }
 
     return { coreGeo, shellGeo, tierInfo };
+  }
 
-// [Chrono-Loom Milestone 13/19] feat(a11y): scale workspace down to compact 0.35m micro-radius for wheelchair trays
+  /**
+   * Builds high-contrast 3D pitch/note billboard label badge
+   * e.g. "C3 [BASS] // 130Hz" for colorblind/deaf accessibility
+   */
+  public createPitchLabelSprite(freq: number): THREE.Sprite {
+    const tierInfo = getPitchTierInfo(freq);
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 160;
+    const ctx = canvas.getContext('2d')!;
+
+    // Border styling based on tier
+    const borderColor =
+      tierInfo.tier === 'BASS' ? '#f59e0b' : tierInfo.tier === 'MID' ? '#00f0ff' : '#a855f7';
+    ctx.fillStyle = 'rgba(7, 24, 45, 0.90)';
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 5;
+
+    const x = 12, y = 12, w = 488, h = 136, r = 24;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y + w, x, y, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Text: Note Name + Pitch Tier + Frequency
+    ctx.font = 'bold 46px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${tierInfo.noteName} [${tierInfo.tier}]`, 256, 68);
+
+    ctx.font = 'bold 24px "JetBrains Mono", monospace';
+    ctx.fillStyle = borderColor;
+    ctx.fillText(`${Math.round(freq)} Hz // ${tierInfo.shapeName}`, 256, 114);
+
+// [Chrono-Loom Milestone 14/19] feat(a11y): add smooth 0.6s cubic-ease translation between distance modes
