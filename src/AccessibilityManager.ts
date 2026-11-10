@@ -442,5 +442,46 @@ export class AccessibilityManager {
     }
     this.latchedAnchorNode = null;
     this.tetherGroup.visible = false;
+  }
 
-// [Chrono-Loom Milestone 11/19] feat(a11y): implement Ergonomic Seated Auto-Bring ([PULL CLOSER] / Key C)
+  private isWithinComfortBounds(pos: THREE.Vector3): boolean {
+    const origin = this._v1.set(0, 1.2, -0.45);
+    return pos.distanceTo(origin) < 0.65 && pos.z <= -0.10 && pos.y >= 0.85 && pos.y <= 1.55;
+  }
+
+  private findNearestNode(pos: THREE.Vector3, maxDist: number = 0.08): HarmonicNode | null {
+    let nearest: HarmonicNode | null = null;
+    let minDist = maxDist;
+    for (const node of this.loomEngine.nodes.values()) {
+      const d = pos.distanceTo(node.position);
+      if (d < minDist) {
+        minDist = d;
+        nearest = node;
+      }
+    }
+    return nearest;
+  }
+
+  // ----------------------------------------------------
+  // 3. Ergonomic Seated Auto-Bring Workspace
+  // ----------------------------------------------------
+
+  /**
+   * Toggles the workspace closer to the user (from z = -0.45m to z = -0.30m)
+   * and compacts the radius for users with restricted arm mobility.
+   */
+  public toggleWorkspaceCompact(): boolean {
+    this.setWorkspaceCompact(!this.isWorkspaceCompact);
+    return this.isWorkspaceCompact;
+  }
+
+  public setWorkspaceCompact(compact: boolean): void {
+    this.isWorkspaceCompact = compact;
+    this.targetZOffset = compact ? this.COMPACT_Z_OFFSET : 0.0;
+    this.targetScale = compact ? this.COMPACT_SCALE : 1.0;
+
+    // Audio chime confirmation
+    this.spatialSynth.playSpatialNote({
+      frequency: compact ? 523.25 : 392.00,
+
+// [Chrono-Loom Milestone 12/19] feat(a11y): shift entire Loom and Comfort Arc closer (z = -0.45m to z = -0.30m)
