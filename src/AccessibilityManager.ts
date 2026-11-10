@@ -564,4 +564,45 @@ export class AccessibilityManager {
     ctx.fillStyle = borderColor;
     ctx.fillText(`${Math.round(freq)} Hz // ${tierInfo.shapeName}`, 256, 114);
 
-// [Chrono-Loom Milestone 14/19] feat(a11y): add smooth 0.6s cubic-ease translation between distance modes
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    const spriteMat = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.95,
+      depthTest: false
+    });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(0.18, 0.056, 1);
+    sprite.position.set(0, 0.075, 0);
+    return sprite;
+  }
+
+  // ----------------------------------------------------
+  // 5. Deaf / Hard-of-Hearing Visual Haptic Waveform Rings
+  // ----------------------------------------------------
+
+  /**
+   * Initializes a pool of expanding sinusoidal waveform rings
+   */
+  private initHapticWavePool(count: number): void {
+    const ringGeo = new THREE.RingGeometry(0.02, 0.038, 48);
+
+    for (let i = 0; i < count; i++) {
+      const mat = new THREE.MeshBasicMaterial({
+        color: 0x00f0ff,
+        transparent: true,
+        opacity: 0.0,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+      const mesh = new THREE.Mesh(ringGeo, mat);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.visible = false;
+      this.hapticContainer.add(mesh);
+
+      this.hapticWavePool.push({
+        mesh,
+
+// [Chrono-Loom Milestone 15/19] feat(a11y): implement Shape-Coded Synesthesia for colorblind accessibility
