@@ -2183,5 +2183,35 @@ export class LoomEngine {
     ctx.arcTo(x, y + h, x, y, r);
     ctx.arcTo(x, y + w, x, y, r);
     ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
 
-// [Chrono-Loom Milestone 74/84] feat(share): display 3D holographic toast: 'LOOM LINK COPIED TO CLIPBOARD!'
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 24;
+
+    ctx.font = 'bold 44px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(message, 512, 105);
+
+    if (submessage) {
+      ctx.font = 'bold 24px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText(submessage, 512, 165);
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    const mat = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.98,
+      depthTest: false
+    });
+
+    this.toastSprite = new THREE.Sprite(mat);
+    this.toastSprite.scale.set(0.48, 0.12, 1);
+    this.toastSprite.position.set(0, 1.45, -0.45);
+    this.loomGroup.add(this.toastSprite);
+
+// [Chrono-Loom Milestone 75/84] feat(share): add floating toast animation rising and fading out over 2.5s
