@@ -2065,5 +2065,35 @@ export class LoomEngine {
     this.spatialSynth.updateDroneBed(activeFreqs, this.strings.size);
   }
 
+  /**
+   * Status readout for UI HUD
+   */
+  public getStatusSummary(): {
+    isAwakened: boolean;
+    nodeCount: number;
+    stringCount: number;
+    pulseCount: number;
+    seedOrbPosition: THREE.Vector3;
+  } {
+    return {
+      isAwakened: this.isLoomAwakened,
+      nodeCount: this.nodes.size,
+      stringCount: this.strings.size,
+      pulseCount: this.pulses.size,
+      seedOrbPosition: this.seedOrbCurrentPos.clone()
+    };
+  }
 
-// [Chrono-Loom Milestone 70/84] refactor(loom): decouple pulse traversal logic into dedicated update method
+  /**
+   * Resets the Loom to initial state
+   */
+  public resetLoom(): void {
+    // Clear pulses
+    for (const pulse of this.pulses.values()) {
+      this.loomGroup.remove(pulse.meshGroup);
+      pulse.mesh.geometry.dispose();
+      (pulse.mesh.material as THREE.Material).dispose();
+      pulse.auraSprite.geometry.dispose();
+      (pulse.auraSprite.material as THREE.Material).dispose();
+
+// [Chrono-Loom Milestone 71/84] feat(share): implement Base64 URL Constellation Serialization in LoomEngine
