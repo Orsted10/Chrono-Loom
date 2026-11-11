@@ -2272,5 +2272,34 @@ export class LoomEngine {
       for (const n of data.nodes) {
         const pos = new THREE.Vector3(n.p[0], n.p[1], n.p[2]);
         const node = this.spawnHarmonicNode(pos, n.f);
+        createdNodes.set(n.id, node);
+      }
 
-// [Chrono-Loom Milestone 77/84] feat(share): animate reconstructed nodes blooming smoothly into position on load
+      // Reconstruct ChronoStrings
+      if (Array.isArray(data.strings)) {
+        for (const pair of data.strings) {
+          const nodeA = createdNodes.get(pair[0]);
+          const nodeB = createdNodes.get(pair[1]);
+          if (nodeA && nodeB) {
+            this.createChronoString(nodeA, nodeB);
+          }
+        }
+      }
+
+      // Play loaded chime
+      this.spatialSynth.playSpatialNote({
+        frequency: 523.25,
+        position: new THREE.Vector3(0, 1.2, -0.45),
+        intensity: 1.5,
+        duration: 1.8
+      });
+
+      this.showHolographicToast('✨ SHARED LOOM LOADED!', `${data.nodes.length} Nodes // ${data.strings?.length || 0} ChronoStrings`);
+      console.log(`[LoomEngine] Successfully reconstructed shared loom: ${data.nodes.length} nodes, ${data.strings?.length || 0} strings.`);
+      return true;
+    } catch (err) {
+      console.warn('[LoomEngine] Failed to reconstruct loom from hash:', err);
+      return false;
+    }
+
+// [Chrono-Loom Milestone 78/84] perf(share): compress JSON payload to compact URL-safe Base64 string
