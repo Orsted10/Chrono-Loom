@@ -2124,5 +2124,35 @@ export class LoomEngine {
       if (node.pedestalGroup) {
         this.detachPedestal(node);
       }
+      this.loomGroup.remove(node.meshGroup);
+      node.coreMesh.geometry.dispose();
+      (node.coreMesh.material as THREE.Material).dispose();
+      node.wireframeMesh.geometry.dispose();
+      (node.wireframeMesh.material as THREE.Material).dispose();
+      node.auraSprite.geometry.dispose();
+      (node.auraSprite.material as THREE.Material).dispose();
+      if (node.pitchLabelSprite) {
+        node.pitchLabelSprite.geometry.dispose();
+        (node.pitchLabelSprite.material as THREE.Material).dispose();
+      }
+    }
+    this.nodes.clear();
 
-// [Chrono-Loom Milestone 72/84] feat(share): encode active 3D node positions, strings, and Aria mode into URL hash
+    // Recreate Seed Orb if missing
+    if (!this.seedOrbGroup) {
+      this.isLoomAwakened = false;
+      this.createSeedOrb();
+    }
+
+    // Phase 14: Clear Instanced Ribbon Trails
+    this.ribbonTrailPool.clear();
+    this.prevPulsePositions.clear();
+    this.prevLeftTipPos = null;
+    this.prevRightTipPos = null;
+  }
+
+  // ----------------------------------------------------
+  // Shareable URL Hash Serialization & 3D Holographic Toast
+  // ----------------------------------------------------
+
+// [Chrono-Loom Milestone 73/84] feat(share): copy shareable URL to clipboard with fallback for WebXR browser
