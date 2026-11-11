@@ -2214,4 +2214,33 @@ export class LoomEngine {
     this.toastSprite.position.set(0, 1.45, -0.45);
     this.loomGroup.add(this.toastSprite);
 
-// [Chrono-Loom Milestone 75/84] feat(share): add floating toast animation rising and fading out over 2.5s
+    this.toastTimer = 0;
+    this.toastDuration = duration;
+  }
+
+  /**
+   * Compact Base64 URL Hash serialization of active nodes, strings, and Aria mode
+   */
+  public serializeToUrlHash(ariaMode: string = 'CO-CREATE'): string {
+    const nodesData = Array.from(this.nodes.values()).map((n) => ({
+      id: n.id,
+      p: [
+        parseFloat(n.position.x.toFixed(3)),
+        parseFloat(n.position.y.toFixed(3)),
+        parseFloat(n.position.z.toFixed(3))
+      ],
+      f: parseFloat(n.noteFrequency.toFixed(1))
+    }));
+
+    const stringsData = Array.from(this.strings.values()).map((s) => [s.nodeA.id, s.nodeB.id]);
+
+    const data = {
+      v: 1,
+      nodes: nodesData,
+      strings: stringsData,
+      aria: ariaMode
+    };
+
+    const jsonStr = JSON.stringify(data);
+
+// [Chrono-Loom Milestone 76/84] feat(share): parse window.location.hash on page load to reconstruct shared sculpture
