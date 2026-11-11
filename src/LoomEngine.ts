@@ -2095,5 +2095,34 @@ export class LoomEngine {
       (pulse.mesh.material as THREE.Material).dispose();
       pulse.auraSprite.geometry.dispose();
       (pulse.auraSprite.material as THREE.Material).dispose();
+    }
+    this.pulses.clear();
 
-// [Chrono-Loom Milestone 71/84] feat(share): implement Base64 URL Constellation Serialization in LoomEngine
+    // Clear strings
+    for (const str of this.strings.values()) {
+      this.loomGroup.remove(str.meshGroup);
+      str.tubeMesh.geometry.dispose();
+      (str.tubeMesh.material as THREE.Material).dispose();
+      str.glowLine.geometry.dispose();
+      (str.glowLine.material as THREE.Material).dispose();
+    }
+    this.strings.clear();
+
+    // Clear photon darts
+    for (const dart of this.photonDarts.values()) {
+      this.loomGroup.remove(dart.meshGroup);
+      dart.coreMesh.geometry.dispose();
+      (dart.coreMesh.material as THREE.Material).dispose();
+      this.loomGroup.remove(dart.tailLine);
+      dart.tailLine.geometry.dispose();
+      (dart.tailLine.material as THREE.Material).dispose();
+    }
+    this.photonDarts.clear();
+
+    // Clear nodes
+    for (const node of this.nodes.values()) {
+      if (node.pedestalGroup) {
+        this.detachPedestal(node);
+      }
+
+// [Chrono-Loom Milestone 72/84] feat(share): encode active 3D node positions, strings, and Aria mode into URL hash
