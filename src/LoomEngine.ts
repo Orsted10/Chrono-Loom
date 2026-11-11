@@ -2155,4 +2155,33 @@ export class LoomEngine {
   // Shareable URL Hash Serialization & 3D Holographic Toast
   // ----------------------------------------------------
 
-// [Chrono-Loom Milestone 73/84] feat(share): copy shareable URL to clipboard with fallback for WebXR browser
+  /**
+   * Spawns radiant 3D holographic toast notification floating in front of user
+   */
+  public showHolographicToast(message: string, submessage: string = '', duration: number = 3.2): void {
+    if (this.toastSprite) {
+      this.loomGroup.remove(this.toastSprite);
+      (this.toastSprite.material as THREE.Material).dispose();
+      this.toastSprite = null;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    // Dark cyan glass background with gold border
+    ctx.fillStyle = 'rgba(7, 24, 45, 0.92)';
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 8;
+
+    const x = 20, y = 20, w = 984, h = 216, r = 36;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y + w, x, y, r);
+    ctx.closePath();
+
+// [Chrono-Loom Milestone 74/84] feat(share): display 3D holographic toast: 'LOOM LINK COPIED TO CLIPBOARD!'
