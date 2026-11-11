@@ -2242,5 +2242,35 @@ export class LoomEngine {
     };
 
     const jsonStr = JSON.stringify(data);
+    const base64 = btoa(encodeURIComponent(jsonStr));
+    return `#loom=${base64}`;
+  }
 
-// [Chrono-Loom Milestone 76/84] feat(share): parse window.location.hash on page load to reconstruct shared sculpture
+  /**
+   * Deserializes and reconstructs the shared musical sculpture from URL hash
+   */
+  public loadFromUrlHash(hash: string): boolean {
+    try {
+      if (!hash.startsWith('#loom=')) return false;
+      const base64 = hash.replace('#loom=', '');
+      const jsonStr = decodeURIComponent(atob(base64));
+      const data = JSON.parse(jsonStr);
+
+      if (!data || !Array.isArray(data.nodes) || data.nodes.length === 0) return false;
+
+      // Reset existing loom
+      this.resetLoom();
+      this.isLoomAwakened = true;
+      if (this.seedOrbGroup) {
+        this.loomGroup.remove(this.seedOrbGroup);
+        this.seedOrbGroup = null;
+      }
+
+      const createdNodes = new Map<string, HarmonicNode>();
+
+      // Reconstruct Harmonic Nodes
+      for (const n of data.nodes) {
+        const pos = new THREE.Vector3(n.p[0], n.p[1], n.p[2]);
+        const node = this.spawnHarmonicNode(pos, n.f);
+
+// [Chrono-Loom Milestone 77/84] feat(share): animate reconstructed nodes blooming smoothly into position on load
