@@ -381,4 +381,100 @@
         backdrop-filter: blur(10px);
       }
 
-<!-- [Chrono-Loom Milestone 4/8] feat(ui): add floating telemetry readout bar for pinch distances and hand poses -->
+      .chip-btn {
+        background: rgba(168, 85, 247, 0.12);
+        border: 1px solid rgba(168, 85, 247, 0.35);
+        color: #e9d5ff;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10.5px;
+        font-weight: 500;
+        padding: 5px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .chip-btn:hover {
+        background: rgba(168, 85, 247, 0.3);
+        border-color: #c084fc;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
+      }
+
+      .action-btn.active {
+        background: rgba(16, 185, 129, 0.25);
+        border-color: var(--emerald-neon);
+        color: #34d399;
+      }
+
+      /* Unified WebXR Launch Toolbar (VR Void + Mixed Reality AR Passthrough) */
+      .webxr-toolbar-container {
+        position: fixed !important;
+        bottom: 22px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 14px !important;
+        z-index: 100 !important;
+        pointer-events: auto !important;
+      }
+
+      #vr-button-element,
+      #ar-button-element {
+        position: static !important;
+        transform: none !important;
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.22) 0%, rgba(168, 85, 247, 0.28) 100%) !important;
+        border: 1px solid var(--cyan-neon) !important;
+        border-radius: 9999px !important;
+        color: #ffffff !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        letter-spacing: 1.5px !important;
+        text-transform: uppercase !important;
+        padding: 12px 24px !important;
+        width: auto !important;
+        min-width: 175px !important;
+        backdrop-filter: blur(14px) !important;
+        box-shadow: 0 0 24px var(--cyan-glow) !important;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        cursor: pointer !important;
+      }
+
+      #ar-button-element {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(0, 240, 255, 0.25) 100%) !important;
+        border: 1px solid var(--emerald-neon) !important;
+        box-shadow: 0 0 24px rgba(16, 185, 129, 0.45) !important;
+      }
+
+      #vr-button-element:hover {
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.4) 0%, rgba(168, 85, 247, 0.45) 100%) !important;
+        box-shadow: 0 0 36px rgba(0, 240, 255, 0.65) !important;
+        transform: translateY(-2px) scale(1.03) !important;
+      }
+
+      #ar-button-element:hover {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.45) 0%, rgba(0, 240, 255, 0.38) 100%) !important;
+        box-shadow: 0 0 36px rgba(16, 185, 129, 0.75) !important;
+        transform: translateY(-2px) scale(1.03) !important;
+      }
+
+      /* Demo Recording Live Telemetry Bar (Bottom-Right) */
+      .demo-telemetry-container {
+        position: fixed;
+        bottom: 22px;
+        right: 24px;
+        background: rgba(7, 24, 45, 0.88);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        border-radius: 12px;
+        padding: 12px 16px;
+        backdrop-filter: blur(16px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65), 0 0 16px rgba(0, 240, 255, 0.15);
+        z-index: 90;
+        pointer-events: auto;
+
+<!-- [Chrono-Loom Milestone 5/8] feat(share): add [SHARE LOOM LINK] button to HUD and Wrist menu -->
