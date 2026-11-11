@@ -2301,5 +2301,35 @@ export class LoomEngine {
       console.warn('[LoomEngine] Failed to reconstruct loom from hash:', err);
       return false;
     }
+  }
 
-// [Chrono-Loom Milestone 78/84] perf(share): compress JSON payload to compact URL-safe Base64 string
+  /**
+   * Copies shareable URL link with Base64 hash to clipboard
+   */
+  public copyShareLinkToClipboard(ariaMode: string = 'CO-CREATE'): string {
+    const hash = this.serializeToUrlHash(ariaMode);
+    window.location.hash = hash;
+    const url = window.location.href;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).catch(() => {
+        this.fallbackCopyText(url);
+      });
+    } else {
+      this.fallbackCopyText(url);
+    }
+
+    this.showHolographicToast('✨ LOOM LINK COPIED TO CLIPBOARD!', 'SHARE WITH FRIENDS OR OPEN IN ANY WEBRX BROWSER');
+    return url;
+  }
+
+  private fallbackCopyText(text: string): void {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+
+// [Chrono-Loom Milestone 79/84] test(share): verify exact 3D sculpture round-trip serialization via URL hash
