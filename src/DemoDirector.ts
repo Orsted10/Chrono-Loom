@@ -243,5 +243,54 @@ export class DemoDirector {
     if (t < 6.0) {
       this.updateBanner('ACT 1: AWAKENING THE SEED ORB', 'Right hand pinches golden seed orb & pulls open');
 
+      const seedOrbPos = new THREE.Vector3(0, 1.20, -0.45);
+      const pullEndPos = new THREE.Vector3(0.14, 1.14, -0.38);
 
-// [Chrono-Loom Milestone 5/9] feat(demo): Phase 2: spawn harmonic nodes and weave multi-string constellation
+      if (t < 2.2) {
+        // Right hand reaches from rest to Seed Orb
+        const p = THREE.MathUtils.clamp(t / 2.0, 0, 1);
+        const smoothP = this.easeInOutQuad(p);
+        const rPos = this._v1.lerpVectors(new THREE.Vector3(0.18, 1.03, -0.44), seedOrbPos, smoothP);
+        this.handInputManager.setSimHandPose('right', rPos, false);
+      } else if (t >= 2.2 && t < 4.8) {
+        // Pinch Seed Orb and pull outward
+        const p = THREE.MathUtils.clamp((t - 2.2) / 2.4, 0, 1);
+        const smoothP = this.easeInOutQuad(p);
+        const rPos = this._v1.lerpVectors(seedOrbPos, pullEndPos, smoothP);
+        this.handInputManager.setSimHandPose('right', rPos, true);
+      } else if (t >= 4.8) {
+        // Release pinch, triggering awakening
+        this.handInputManager.setSimPinch('right', false);
+
+        if (!this.hasAwakened) {
+          this.hasAwakened = true;
+          // Spawn first node at release position if not yet spawned
+          if (this.loomEngine.nodes.size === 0) {
+            this.loomEngine.spawnHarmonicNode(new THREE.Vector3(0.14, 1.14, -0.38));
+          }
+        }
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // ACT 2: Seconds 6.0 - 20.0 | Weaving Constellation #322
+    // -----------------------------------------------------------------
+    else if (t >= 6.0 && t < 20.0) {
+      this.updateBanner(
+        'ACT 2: WEAVING CONSTELLATION #322',
+        'Spawning harmonic nodes inside Target Rings & weaving strings'
+      );
+
+      // Target Rings are at:
+      // Ring 1: (-0.18, 1.15, -0.44) (E4)
+      // Ring 2: (0.00, 1.28, -0.46)  (A4)
+      // Ring 3: (0.18, 1.13, -0.43)  (C5)
+
+      const ring1Pos = new THREE.Vector3(-0.18, 1.15, -0.44);
+      const ring2Pos = new THREE.Vector3(0.00, 1.28, -0.46);
+      const ring3Pos = new THREE.Vector3(0.18, 1.13, -0.43);
+
+      if (t < 9.5) {
+        // Left hand glides towards Ring 1 (-0.18, 1.15, -0.44)
+
+// [Chrono-Loom Milestone 6/9] feat(demo): Phase 3: pluck strings in rhythmic sequence to trigger kinetic pulses
