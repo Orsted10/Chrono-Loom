@@ -96,5 +96,54 @@ export class DemoDirector {
     } else {
       this.startDemo();
       return true;
+    }
+  }
 
-// [Chrono-Loom Milestone 2/9] feat(demo): create animated 3D left and right virtual hand indicator models
+  /**
+   * Starts the choreographed 45-second cinematic masterclass
+   */
+  public startDemo(): void {
+    this.isPlaying = true;
+    this.elapsedTime = 0;
+    this.hasAwakened = false;
+    this.hasSpawnedNode1 = false;
+    this.hasSpawnedNode2 = false;
+    this.hasSpawnedNode3 = false;
+    this.hasWovenStrings = false;
+    this.hasPlucked = false;
+    this.hasFistBumpedAria = false;
+
+    // Cache original camera rig transforms
+    this.origRigPos.copy(this.sceneManager.cameraRig.position);
+    this.origRigRot.copy(this.sceneManager.cameraRig.rotation);
+
+    // Enable demo override in HandInputManager
+    this.handInputManager.isDemoModeActive = true;
+
+    // Reset Loom & Constellation Mode to pristine puzzle start
+    this.loomEngine.resetLoom();
+    this.agentAria.reset();
+    this.constellationMode.initDailyPuzzle322();
+
+    // Show banner
+    this.bannerGroup.visible = true;
+    this.updateBanner('ACT 1: AWAKENING THE SEED ORB', 'Pinching and pulling the golden seed orb open');
+
+    // Initial hand rest positions
+    this.handInputManager.setSimHandPose('left', new THREE.Vector3(-0.18, 1.03, -0.44), false);
+    this.handInputManager.setSimHandPose('right', new THREE.Vector3(0.18, 1.03, -0.44), false);
+
+    console.log('[DemoDirector] 🎬 AUTO-DIRECTOR SHOWCASE STARTED (45s Choreography). Press D or move mouse to exit.');
+  }
+
+  /**
+   * Stops the demo and smoothly yields full control back to the user
+   */
+  public stopDemo(): void {
+    if (!this.isPlaying) return;
+    this.isPlaying = false;
+    this.elapsedTime = 0;
+
+    // Release any held virtual pinches
+
+// [Chrono-Loom Milestone 3/9] feat(demo): design 45-second choreographed masterclass performance sequence
