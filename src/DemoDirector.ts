@@ -292,5 +292,54 @@ export class DemoDirector {
 
       if (t < 9.5) {
         // Left hand glides towards Ring 1 (-0.18, 1.15, -0.44)
+        const p = THREE.MathUtils.clamp((t - 6.0) / 2.8, 0, 1);
+        const smoothP = this.easeInOutQuad(p);
+        const lPos = this._v1.lerpVectors(new THREE.Vector3(-0.18, 1.03, -0.44), ring1Pos, smoothP);
+        this.handInputManager.setSimHandPose('left', lPos, false);
 
-// [Chrono-Loom Milestone 6/9] feat(demo): Phase 3: pluck strings in rhythmic sequence to trigger kinetic pulses
+        // Right hand rests near Ring 3
+        const rPos = this._v2.lerpVectors(new THREE.Vector3(0.14, 1.14, -0.38), ring3Pos, smoothP);
+        this.handInputManager.setSimHandPose('right', rPos, false);
+      } else if (t >= 9.5 && t < 10.2) {
+        // Left hand pinches to spawn Node inside Ring 1
+        this.handInputManager.setSimHandPose('left', ring1Pos, true);
+        if (!this.hasSpawnedNode1) {
+          this.hasSpawnedNode1 = true;
+          this.loomEngine.spawnHarmonicNode(ring1Pos, 329.63);
+        }
+      } else if (t >= 10.2 && t < 13.5) {
+        // Left hand pinches and drags from Ring 1 to Ring 2
+        const p = THREE.MathUtils.clamp((t - 10.2) / 3.0, 0, 1);
+        const smoothP = this.easeInOutQuad(p);
+        const lPos = this._v1.lerpVectors(ring1Pos, ring2Pos, smoothP);
+        this.handInputManager.setSimHandPose('left', lPos, true);
+      } else if (t >= 13.5 && t < 14.5) {
+        // Left hand releases at Ring 2, spawning Node 2 & weaving string
+        this.handInputManager.setSimPinch('left', false);
+        if (!this.hasSpawnedNode2) {
+          this.hasSpawnedNode2 = true;
+          const node2 = this.loomEngine.spawnHarmonicNode(ring2Pos, 440.00);
+
+          // Weave string from Node 1 to Node 2
+          const allNodes = Array.from(this.loomEngine.nodes.values());
+          if (allNodes.length >= 2) {
+            this.loomEngine.createChronoString(allNodes[0], allNodes[1]);
+          }
+        }
+      } else if (t >= 14.5 && t < 18.0) {
+        // Right hand pinches Ring 3, spawning Node 3 and completing the triangle weave
+        const p = THREE.MathUtils.clamp((t - 14.5) / 2.8, 0, 1);
+        const smoothP = this.easeInOutQuad(p);
+        const rPos = this._v2.lerpVectors(ring3Pos, ring1Pos, smoothP);
+        this.handInputManager.setSimHandPose('right', rPos, true);
+
+        if (!this.hasSpawnedNode3 && t > 15.0) {
+          this.hasSpawnedNode3 = true;
+          const node3 = this.loomEngine.spawnHarmonicNode(ring3Pos, 523.25);
+          const allNodes = Array.from(this.loomEngine.nodes.values());
+          if (allNodes.length >= 3) {
+            this.loomEngine.createChronoString(allNodes[1], node3);
+            this.loomEngine.createChronoString(node3, allNodes[0]);
+          }
+
+// [Chrono-Loom Milestone 7/9] feat(demo): Phase 4: fist-bump Aria to trigger co-composition and supernova fireworks
