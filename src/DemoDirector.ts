@@ -145,5 +145,54 @@ export class DemoDirector {
     this.elapsedTime = 0;
 
     // Release any held virtual pinches
+    this.handInputManager.setSimPinch('left', false);
+    this.handInputManager.setSimPinch('right', false);
+    this.handInputManager.isDemoModeActive = false;
 
-// [Chrono-Loom Milestone 3/9] feat(demo): design 45-second choreographed masterclass performance sequence
+    // Hide banner
+    this.bannerGroup.visible = false;
+
+    // Smoothly restore camera rig
+    this.sceneManager.cameraRig.position.copy(this.origRigPos);
+    this.sceneManager.cameraRig.rotation.copy(this.origRigRot);
+
+    console.log('[DemoDirector] 🎬 AUTO-DIRECTOR SHOWCASE STOPPED. User has control.');
+  }
+
+  /**
+   * Updates the 3D billboard banner displaying the current act
+   */
+  private updateBanner(actTitle: string, actDesc: string): void {
+    if (this.currentAct === actTitle) return;
+    this.currentAct = actTitle;
+
+    if (this.bannerSprite) {
+      this.bannerGroup.remove(this.bannerSprite);
+      (this.bannerSprite.material as THREE.Material).dispose();
+      this.bannerSprite = null;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    // Dark cyber glass pill with neon cyan/gold border
+    ctx.fillStyle = 'rgba(7, 24, 45, 0.90)';
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 6;
+    const x = 20, y = 20, w = 984, h = 216, r = 36;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y + w, x, y, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 20;
+
+// [Chrono-Loom Milestone 4/9] feat(demo): Phase 1: animate virtual hands awakening Seed Orb into comfort arc
