@@ -341,5 +341,54 @@ export class DemoDirector {
             this.loomEngine.createChronoString(allNodes[1], node3);
             this.loomEngine.createChronoString(node3, allNodes[0]);
           }
+        }
+      } else {
+        this.handInputManager.setSimPinch('right', false);
+        this.handInputManager.setSimPinch('left', false);
+      }
+    }
 
-// [Chrono-Loom Milestone 7/9] feat(demo): Phase 4: fist-bump Aria to trigger co-composition and supernova fireworks
+    // -----------------------------------------------------------------
+    // ACT 3: Seconds 20.0 - 30.0 | 3D Arpeggio Plucking & Supernova
+    // -----------------------------------------------------------------
+    else if (t >= 20.0 && t < 30.0) {
+      this.updateBanner(
+        'ACT 3: KINETIC PULSES & SUPERNOVA',
+        'Strumming strings in 3D to energize target rings & trigger supernova'
+      );
+
+      // Sweeping strum stroke across strings from left to right
+      // Stroke 1 (t = 21 to 24): Right index sweeps through strings
+      if (t >= 21.0 && t < 24.5) {
+        const p = THREE.MathUtils.clamp((t - 21.0) / 3.0, 0, 1);
+        const startStrum = new THREE.Vector3(-0.24, 1.22, -0.44);
+        const endStrum = new THREE.Vector3(0.24, 1.18, -0.42);
+        const strumPos = this._v1.lerpVectors(startStrum, endStrum, p);
+        strumPos.y += Math.sin(p * Math.PI) * 0.04; // Gentle arced stroke
+
+        this.handInputManager.setSimHandPose('right', strumPos, false);
+      } else if (t >= 25.0 && t < 28.0) {
+        // Stroke 2: Left index sweeps back in opposite direction
+        const p = THREE.MathUtils.clamp((t - 25.0) / 2.8, 0, 1);
+        const startStrum = new THREE.Vector3(0.22, 1.16, -0.42);
+        const endStrum = new THREE.Vector3(-0.22, 1.24, -0.44);
+        const strumPos = this._v1.lerpVectors(startStrum, endStrum, p);
+        this.handInputManager.setSimHandPose('left', strumPos, false);
+      }
+
+      // Ensure pulses cascade through strings
+      if (!this.hasPlucked && t >= 23.0) {
+        this.hasPlucked = true;
+        for (const str of this.loomEngine.strings.values()) {
+          this.loomEngine.spawnChronoPulse(str.nodeA, str.nodeB, str);
+        }
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // ACT 4: Seconds 30.0 - 45.0 | Agent Aria Co-Composition & Orbit
+    // -----------------------------------------------------------------
+    else if (t >= 30.0 && t <= 45.0) {
+      this.updateBanner(
+
+// [Chrono-Loom Milestone 8/9] feat(demo): add smooth camera dolly motion for cinematic showcase capture
