@@ -476,5 +476,100 @@
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65), 0 0 16px rgba(0, 240, 255, 0.15);
         z-index: 90;
         pointer-events: auto;
+        min-width: 320px;
+        max-width: 380px;
+        font-family: 'JetBrains Mono', monospace;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
 
-<!-- [Chrono-Loom Milestone 5/8] feat(share): add [SHARE LOOM LINK] button to HUD and Wrist menu -->
+      .demo-telemetry-container.minimized .demo-telemetry-body {
+        display: none;
+      }
+
+      .demo-telemetry-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .rec-title-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--cyan-neon);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .rec-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ef4444;
+        box-shadow: 0 0 8px #ef4444;
+        animation: recPulse 1.4s infinite ease-in-out;
+      }
+
+      @keyframes recPulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.3; transform: scale(0.85); }
+      }
+
+      .toggle-telemetry-btn {
+        background: rgba(0, 240, 255, 0.12);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        color: var(--cyan-neon);
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .toggle-telemetry-btn:hover {
+        background: rgba(0, 240, 255, 0.25);
+        box-shadow: 0 0 8px var(--cyan-glow);
+      }
+
+      .demo-telemetry-body {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 10.5px;
+        line-height: 1.45;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding-top: 8px;
+        margin-top: 8px;
+      }
+
+      .telemetry-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .telemetry-key {
+        color: var(--text-secondary);
+      }
+
+      .telemetry-val {
+        color: #38bdf8;
+        font-weight: 600;
+        text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 2D Heads-Up Display Telemetry Overlay -->
+    <div id="hud-overlay">
+      <div class="hud-header">
+        <div class="brand-box">
+          <div class="brand-title">
+            <span>CHRONO-LOOM</span>
+          </div>
+
+<!-- [Chrono-Loom Milestone 6/8] feat(demo): add [AUTO-DEMO SHOWCASE] button and keyboard shortcut [D] -->
