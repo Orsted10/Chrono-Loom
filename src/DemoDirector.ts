@@ -390,5 +390,54 @@ export class DemoDirector {
     // -----------------------------------------------------------------
     else if (t >= 30.0 && t <= 45.0) {
       this.updateBanner(
+        'ACT 4: AGENT ARIA CO-COMPOSITION',
+        'Fist-bumping Aria to activate Rhythm Boost & cinematic orbit sweep'
+      );
 
-// [Chrono-Loom Milestone 8/9] feat(demo): add smooth camera dolly motion for cinematic showcase capture
+      const ariaHomePos = new THREE.Vector3(0.35, 1.35, -0.50);
+
+      // Right hand reaches up to Fist-Bump Aria (t = 30.5 to 33.0)
+      if (t >= 30.5 && t < 33.0) {
+        const p = THREE.MathUtils.clamp((t - 30.5) / 2.2, 0, 1);
+        const smoothP = this.easeInOutQuad(p);
+        const rPos = this._v1.lerpVectors(new THREE.Vector3(0.18, 1.12, -0.42), ariaHomePos, smoothP);
+        this.handInputManager.setSimHandPose('right', rPos, false);
+      } else if (t >= 33.0 && t < 34.0) {
+        // Fist-Bump contact!
+        if (!this.hasFistBumpedAria) {
+          this.hasFistBumpedAria = true;
+          this.agentAria.cycleAIMode(); // Cycles to RHYTHM BOOST
+        }
+        // Right hand returns to resting comfort arc
+        const p = THREE.MathUtils.clamp((t - 33.0) / 1.0, 0, 1);
+        const rPos = this._v1.lerpVectors(ariaHomePos, new THREE.Vector3(0.18, 1.03, -0.44), p);
+        this.handInputManager.setSimHandPose('right', rPos, false);
+      }
+
+      // Slow 15-degree cinematic camera orbit around the sculpture
+      if (t >= 34.5) {
+        const orbitProgress = (t - 34.5) / 10.5;
+        const angle = Math.sin(orbitProgress * Math.PI) * 0.24; // ~14 degrees
+        this.sceneManager.cameraRig.rotation.y = this.origRigRot.y + angle;
+        this.sceneManager.cameraRig.position.x = this.origRigPos.x + Math.sin(angle) * 0.14;
+        this.sceneManager.cameraRig.position.z = this.origRigPos.z + (1 - Math.cos(angle)) * 0.08;
+      }
+
+      // Conclude showcase at 44.8s
+      if (t >= 44.8) {
+        this.updateBanner('✨ CHRONO-LOOM SHOWCASE COMPLETE', 'Press [D] to replay // Press any key to take control');
+      }
+    }
+
+    // Auto-loop or conclude after total duration
+    if (t >= this.TOTAL_DURATION) {
+      this.stopDemo();
+    }
+  }
+
+  private easeInOutQuad(t: number): number {
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  }
+}
+
+// [Chrono-Loom Milestone 9/9] test(demo): verify seamless manual takeover when user pinches during auto-demo
