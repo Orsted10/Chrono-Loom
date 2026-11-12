@@ -47,5 +47,54 @@ export class DemoDirector {
   private hasSpawnedNode1 = false;
   private hasSpawnedNode2 = false;
   private hasSpawnedNode3 = false;
+  private hasWovenStrings = false;
+  private hasPlucked = false;
+  private hasFistBumpedAria = false;
 
-// [Chrono-Loom Milestone 1/9] feat(demo): initialize DemoDirector.ts for hands-free video capture showcase
+  constructor(
+    sceneManager: SceneManager,
+    handInputManager: HandInputManager,
+    loomEngine: LoomEngine,
+    constellationMode: ConstellationMode,
+    agentAria: AgentAria
+  ) {
+    this.sceneManager = sceneManager;
+    this.handInputManager = handInputManager;
+    this.loomEngine = loomEngine;
+    this.constellationMode = constellationMode;
+    this.agentAria = agentAria;
+
+    this.bannerGroup = new THREE.Group();
+    this.bannerGroup.name = 'DemoDirectorBanner';
+    this.bannerGroup.position.set(0, 1.58, -0.85);
+    this.bannerGroup.visible = false;
+    this.sceneManager.scene.add(this.bannerGroup);
+
+    // Yield control immediately on physical user interaction
+    this.handInputManager.onUserInput = () => {
+      if (this.isPlaying) {
+        console.log('[DemoDirector] Physical user interaction detected -> yielding control back to user.');
+        this.stopDemo();
+      }
+    };
+
+    // Yield control on WebXR session start
+    this.sceneManager.renderer.xr.addEventListener('sessionstart', () => {
+      if (this.isPlaying) {
+        this.stopDemo();
+      }
+    });
+  }
+
+  /**
+   * Toggles the 45-second cinematic auto-showcase
+   */
+  public toggleDemo(): boolean {
+    if (this.isPlaying) {
+      this.stopDemo();
+      return false;
+    } else {
+      this.startDemo();
+      return true;
+
+// [Chrono-Loom Milestone 2/9] feat(demo): create animated 3D left and right virtual hand indicator models
