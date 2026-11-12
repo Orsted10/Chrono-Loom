@@ -195,4 +195,53 @@ export class DemoDirector {
     ctx.shadowColor = '#00f0ff';
     ctx.shadowBlur = 20;
 
-// [Chrono-Loom Milestone 4/9] feat(demo): Phase 1: animate virtual hands awakening Seed Orb into comfort arc
+    // Title
+    ctx.font = 'bold 44px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(`🎬 AUTO-DIRECTOR // ${actTitle}`, 512, 95);
+
+    // Subtitle
+    ctx.font = 'bold 24px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#fde047';
+    ctx.fillText(actDesc, 512, 148);
+
+    // Hotkey Hint
+    ctx.font = '18px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('PRESS [D] OR MOVE MOUSE AT ANY TIME TO TAKE CONTROL', 512, 195);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    const mat = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.96,
+      depthTest: false
+    });
+
+    this.bannerSprite = new THREE.Sprite(mat);
+    this.bannerSprite.scale.set(0.65, 0.16, 1);
+    this.bannerGroup.add(this.bannerSprite);
+  }
+
+  /**
+   * Main per-frame choreographed timeline execution
+   */
+  public update(deltaTime: number): void {
+    if (!this.isPlaying) return;
+
+    this.elapsedTime += deltaTime;
+    const t = this.elapsedTime;
+
+    // Ensure camera rig looks at scene center
+    this.bannerGroup.lookAt(this.sceneManager.camera.position);
+
+    // -----------------------------------------------------------------
+    // ACT 1: Seconds 0.0 - 6.0 | Awakening the Seed Orb
+    // -----------------------------------------------------------------
+    if (t < 6.0) {
+      this.updateBanner('ACT 1: AWAKENING THE SEED ORB', 'Right hand pinches golden seed orb & pulls open');
+
+
+// [Chrono-Loom Milestone 5/9] feat(demo): Phase 2: spawn harmonic nodes and weave multi-string constellation
