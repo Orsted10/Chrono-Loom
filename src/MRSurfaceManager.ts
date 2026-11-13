@@ -205,5 +205,74 @@ export class MRSurfaceManager {
     return surface;
   }
 
+  /**
+   * Procedural Radar Scanner Wave for Room Scanning
+   */
+  private createScanRadarWave(): void {
+    const geo = new THREE.RingGeometry(0.1, 0.25, 64);
+    const mat = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color(0x00f0ff) }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform vec3 uColor;
+        varying vec2 vUv;
+        void main() {
+          float dist = distance(vUv, vec2(0.5));
+          float alpha = smoothstep(0.5, 0.45, dist) * smoothstep(0.2, 0.35, dist);
+          gl_FragColor = vec4(uColor, alpha * 0.7);
+        }
+      `
+    });
 
-// [Chrono-Loom Milestone 3/8] feat(mr): render translucent neon edge wireframes outlining detected desks and walls
+    this.scanGridMaterial = mat;
+    this.scanGridMesh = new THREE.Mesh(geo, mat);
+    this.scanGridMesh.rotation.x = -Math.PI / 2;
+    this.scanGridMesh.position.set(0, 0.89, -0.45);
+    this.scanGridMesh.visible = false;
+    this.surfacesGroup.add(this.scanGridMesh);
+  }
+
+  /**
+   * Main per-frame update loop called from animation loop
+   */
+  public update(deltaTime: number, frame?: XRFrame): void {
+    const now = performance.now() / 1000;
+
+    // 1. Process WebXR Detected Planes if available in Quest 3 AR Passthrough
+    if (frame && (frame as any).detectedPlanes && this.isRoomScanEnabled) {
+      this.updateWebXRPlanes(frame);
+    }
+
+    // 2. Animate and fade surface wireframes & ripples
+    for (const surface of this.surfaces.values()) {
+      if (!this.isRoomScanEnabled) {
+        surface.meshGroup.visible = false;
+        continue;
+      }
+      surface.meshGroup.visible = true;
+
+      // Calculate time since last hit / scan
+      const elapsedSinceHit = now - surface.lastHitTime;
+
+      // Fading out after 4s unless a pulse strikes them
+      let targetOpacity = 0.05; // Idle subtle trace
+      if (elapsedSinceHit < 4.0) {
+        const fade = 1.0 - elapsedSinceHit / 4.0;
+        targetOpacity = THREE.MathUtils.lerp(0.05, 0.75, fade) + surface.flashIntensity * 0.4;
+      } else {
+
+// [Chrono-Loom Milestone 4/8] feat(mr): fade plane wireframes smoothly over 4s unless struck by kinetic pulse
