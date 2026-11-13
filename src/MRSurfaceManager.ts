@@ -67,5 +67,74 @@ export class MRSurfaceManager {
   private initSimulatedRoomSurfaces(): void {
     // 1. Physical Desk / Table Plane (Horizontal at y = 0.88m, z = -0.45m)
     this.registerSurface({
+      id: 'sim_surface_table',
+      orientation: 'horizontal',
+      semanticLabel: 'table',
+      center: new THREE.Vector3(0, 0.88, -0.45),
+      normal: new THREE.Vector3(0, 1, 0),
+      width: 1.15,
+      height: 0.65,
+      rotation: new THREE.Euler(-Math.PI / 2, 0, 0),
+      isSimulated: true
+    });
 
-// [Chrono-Loom Milestone 1/8] feat(mr): initialize MRSurfaceManager.ts for Mixed Reality Passthrough
+    // 2. Front Wall Plane (Vertical at z = -1.65m)
+    this.registerSurface({
+      id: 'sim_surface_front_wall',
+      orientation: 'vertical',
+      semanticLabel: 'wall',
+      center: new THREE.Vector3(0, 1.30, -1.65),
+      normal: new THREE.Vector3(0, 0, 1),
+      width: 2.80,
+      height: 2.20,
+      rotation: new THREE.Euler(0, 0, 0),
+      isSimulated: true
+    });
+
+    // 3. Left Wall Plane (Vertical at x = -1.50m)
+    this.registerSurface({
+      id: 'sim_surface_left_wall',
+      orientation: 'vertical',
+      semanticLabel: 'wall',
+      center: new THREE.Vector3(-1.50, 1.30, -0.40),
+      normal: new THREE.Vector3(1, 0, 0),
+      width: 2.40,
+      height: 2.20,
+      rotation: new THREE.Euler(0, Math.PI / 2, 0),
+      isSimulated: true
+    });
+
+    // 4. Right Wall Plane (Vertical at x = 1.50m)
+    this.registerSurface({
+      id: 'sim_surface_right_wall',
+      orientation: 'vertical',
+      semanticLabel: 'wall',
+      center: new THREE.Vector3(1.50, 1.30, -0.40),
+      normal: new THREE.Vector3(-1, 0, 0),
+      width: 2.40,
+      height: 2.20,
+      rotation: new THREE.Euler(0, -Math.PI / 2, 0),
+      isSimulated: true
+    });
+  }
+
+  /**
+   * Builds and registers a new physical surface with translucent fill and neon edge wireframes
+   */
+  private registerSurface(config: {
+    id: string;
+    orientation: 'horizontal' | 'vertical';
+    semanticLabel: 'desk' | 'table' | 'wall' | 'floor';
+    center: THREE.Vector3;
+    normal: THREE.Vector3;
+    width: number;
+    height: number;
+    rotation: THREE.Euler;
+    isSimulated: boolean;
+  }): MRSurface {
+    const group = new THREE.Group();
+    group.name = `Surface_${config.id}`;
+    group.position.copy(config.center);
+    group.rotation.copy(config.rotation);
+
+// [Chrono-Loom Milestone 2/8] feat(mr): detect real-world horizontal and vertical planes via XRFrame.detectedPlanes
