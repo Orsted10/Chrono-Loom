@@ -718,5 +718,43 @@ export class SceneManager {
       depthWrite: false
     });
 
+    const bannerMesh = new THREE.Mesh(bannerGeo, bannerMat);
+    group.add(bannerMesh);
 
-// [Chrono-Loom Milestone 19/20] feat(cymatics): trigger floor cymatic pulse whenever a node is spawned or plucked
+    // Frame edge line
+    const edges = new THREE.EdgesGeometry(bannerGeo);
+    const line = new THREE.LineSegments(
+      edges,
+      new THREE.LineBasicMaterial({
+        color: 0x00f0ff,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending
+      })
+    );
+    group.add(line);
+
+    // Angle banner slightly down towards seated user eyes at (0, 1.25, 0)
+    group.lookAt(new THREE.Vector3(0, 1.25, 0));
+
+    return group;
+  }
+
+  /**
+   * Resizes viewport and aspect ratio
+   */
+  private onWindowResize(): void {
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  /**
+   * Renders a frame using WebXR animation loop
+   */
+  public render(): void {
+    this.renderer.render(this.scene, this.camera);
+  }
+}
+
+// [Chrono-Loom Milestone 20/20] feat(mr): request 'plane-detection' and 'mesh-detection' optional features in WebXR
