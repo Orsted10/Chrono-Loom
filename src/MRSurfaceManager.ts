@@ -274,5 +274,74 @@ export class MRSurfaceManager {
         const fade = 1.0 - elapsedSinceHit / 4.0;
         targetOpacity = THREE.MathUtils.lerp(0.05, 0.75, fade) + surface.flashIntensity * 0.4;
       } else {
+        targetOpacity = THREE.MathUtils.lerp(surface.wireframeMaterial.opacity, 0.05, 0.05);
+      }
 
-// [Chrono-Loom Milestone 4/8] feat(mr): fade plane wireframes smoothly over 4s unless struck by kinetic pulse
+      surface.flashIntensity = Math.max(0, surface.flashIntensity - deltaTime * 1.5);
+      surface.wireframeMaterial.opacity = THREE.MathUtils.clamp(targetOpacity, 0.04, 0.95);
+      surface.fillMaterial.opacity = THREE.MathUtils.clamp(targetOpacity * 0.12, 0.01, 0.15);
+
+      // Animate hit ripple ring if active
+      if (surface.rippleMesh && surface.rippleMesh.visible) {
+        const rippleScale = surface.rippleMesh.scale.x + deltaTime * 2.2;
+        surface.rippleMesh.scale.set(rippleScale, rippleScale, 1);
+        const rippleMat = surface.rippleMesh.material as THREE.MeshBasicMaterial;
+        rippleMat.opacity = Math.max(0, rippleMat.opacity - deltaTime * 1.8);
+        if (rippleMat.opacity <= 0.01) {
+          surface.rippleMesh.visible = false;
+        }
+      }
+    }
+
+    // 3. Animate Room Scan Radar Wave
+    if (this.isScanningActive && this.scanGridMesh && this.scanGridMaterial) {
+      this.scanWaveTimer += deltaTime;
+      const progress = this.scanWaveTimer / 1.5;
+      const scale = 1.0 + progress * 5.5;
+      this.scanGridMesh.scale.set(scale, scale, 1);
+      this.scanGridMaterial.uniforms.uTime.value = this.scanWaveTimer;
+
+      if (progress >= 1.0) {
+        this.isScanningActive = false;
+        this.scanGridMesh.visible = false;
+      }
+    }
+  }
+
+  /**
+   * Ingests native WebXR XRPlane detected planes from Meta Quest AR Passthrough
+   */
+  private updateWebXRPlanes(frame: XRFrame): void {
+    const planes = (frame as any).detectedPlanes as Set<any>;
+    if (!planes || planes.size === 0) return;
+
+    const refSpace = this.sceneManager.renderer.xr.getReferenceSpace();
+    if (!refSpace) return;
+
+    for (const plane of planes) {
+      const pose = frame.getPose(plane.planeSpace, refSpace);
+      if (!pose) continue;
+
+      const planeId = `xr_plane_${plane.lastChangedTime || Math.round(pose.transform.position.x * 100)}`;
+      let surface = this.surfaces.get(planeId);
+
+      const pos = new THREE.Vector3(
+        pose.transform.position.x,
+        pose.transform.position.y,
+        pose.transform.position.z
+      );
+      const rot = new THREE.Euler().setFromRotationMatrix(
+        new THREE.Matrix4().fromArray(pose.transform.matrix)
+      );
+
+      // Determine plane orientation & label
+      const orientation = plane.orientation || 'horizontal';
+      let label: 'desk' | 'table' | 'wall' | 'floor' = 'wall';
+      if (orientation === 'horizontal') {
+        if (pos.y < 0.3) label = 'floor';
+        else if (pos.y <= 1.05) label = 'table';
+        else label = 'desk';
+      }
+
+
+// [Chrono-Loom Milestone 5/8] feat(mr): implement Physical Surface Anchoring: snap node to real desk within 0.06m
