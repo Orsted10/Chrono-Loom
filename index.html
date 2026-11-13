@@ -571,5 +571,101 @@
           <div class="brand-title">
             <span>CHRONO-LOOM</span>
           </div>
+          <div class="brand-sub">Meta VR Start Competition 2026 // Spatial Loom Engine</div>
+          <div class="hud-telemetry">
+            <!-- Left Hand -->
+            <div class="telemetry-card">
+              <div class="telemetry-label">
+                <span>Left Pinch</span>
+                <span id="left-status" class="status-tag status-rest">RESTING</span>
+              </div>
+              <div class="telemetry-value" id="left-dist">55 mm</div>
+              <div style="font-size: 9.5px; color: var(--purple-neon); font-family: 'JetBrains Mono', monospace;">
+                Pinch &lt; 25mm
+              </div>
+            </div>
 
-<!-- [Chrono-Loom Milestone 6/8] feat(demo): add [AUTO-DEMO SHOWCASE] button and keyboard shortcut [D] -->
+            <!-- Right Hand -->
+            <div class="telemetry-card">
+              <div class="telemetry-label">
+                <span>Right Pinch</span>
+                <span id="right-status" class="status-tag status-rest">RESTING</span>
+              </div>
+              <div class="telemetry-value" id="right-dist">55 mm</div>
+              <div style="font-size: 9.5px; color: var(--cyan-neon); font-family: 'JetBrains Mono', monospace;">
+                Pinch &lt; 25mm
+              </div>
+            </div>
+
+            <!-- Harmonic Nodes -->
+            <div class="telemetry-card">
+              <div class="telemetry-label">
+                <span>Harmonic Nodes</span>
+                <span style="color: var(--cyan-neon);">CRYSTAL</span>
+              </div>
+              <div class="telemetry-value" id="nodes-count">0</div>
+              <div style="font-size: 9.5px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;">
+                Pinch space 0.2s
+              </div>
+            </div>
+
+            <!-- ChronoStrings -->
+            <div class="telemetry-card">
+              <div class="telemetry-label">
+                <span>ChronoStrings</span>
+                <span style="color: #fbbf24;">RESONANT</span>
+              </div>
+              <div class="telemetry-value" id="strings-count">0</div>
+              <div style="font-size: 9.5px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;">
+                Weave Node to Node
+              </div>
+            </div>
+
+            <!-- Kinetic Pulses -->
+            <div class="telemetry-card">
+              <div class="telemetry-label">
+                <span>Kinetic Pulses</span>
+                <span style="color: #38bdf8;">CLOCKWORK</span>
+              </div>
+              <div class="telemetry-value" id="pulses-count">0</div>
+              <div style="font-size: 9.5px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;">
+                Cascading Beads
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-badge-box">
+          <span id="session-mode" class="badge badge-cyan">Desktop 3D Simulator Active</span>
+          <span id="aria-voice-badge" class="badge badge-emerald" style="display: none;">🎤 ARIA: LISTENING...</span>
+          <span id="scale-mode-badge" class="badge badge-purple">SCALE: CELESTIAL LYDIAN [1-5]</span>
+          <span id="jam-room-badge" class="badge badge-rose">JAM: SOLO</span>
+          <span id="a11y-suite-badge" class="badge badge-emerald">A11Y SUITE: ACTIVE</span>
+          <span id="aria-mode-badge" class="badge badge-purple">ARIA: CO-CREATE (OBSERVING)</span>
+          <span id="constellation-progress" class="badge badge-gold">PUZZLE #322: 0 / 3 RINGS</span>
+          <span id="loom-state-badge" class="badge badge-gold">SEED ORB PULSING</span>
+          <span id="palm-status-badge" class="badge badge-muted">CLOSED / RELAXED</span>
+        </div>
+      </div>
+
+      <div class="hud-bottom">
+        <div class="cheatsheet-card">
+          <div class="cheatsheet-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span>Spatial Loom &amp; Tactile Mechanics Guide</span>
+          </div>
+          <ul class="cheatsheet-list">
+            <li>• <strong>1. First Five Minutes:</strong> Pinch golden Seed Orb &amp; pull outward to awaken the Loom!</li>
+            <li>• <strong>2. Harmonic Nodes:</strong> Pinch empty comfort space for 0.2s to spawn crystalline nodes. Drag to move.</li>
+            <li>• <strong>3. Weave ChronoStrings:</strong> Pinch Node &amp; drag to another, or pinch two Nodes simultaneously with both hands!</li>
+            <li>• <strong>4. 3D Spatial Plucking:</strong> Sweep index fingertip through strings to pluck (pure procedural HRTF spatial audio).</li>
+            <li>• <strong>5. Clockwork Kinetic Pulses:</strong> Glowing beads travel along strings, sounding nodes &amp; flashing scale 1.4x.</li>
+            <li>• <strong>6. Agent Aria (AI Companion):</strong> Observes tempo, flies to empty sweet-spots &amp; weaves counter-melodies! Poke/pinch Aria to cycle modes: <em>CO-CREATE, RHYTHM BOOST, ZEN SOLO</em>.</li>
+            <li>• <strong>7. Daily Constellation Challenge:</strong> Guide pulses through all 3 Target Rings within 6 beats to achieve victory supernova &amp; celebratory chord!</li>
+            <li>• <strong>8. Spatial Wrist HUD:</strong> 4 tactile 3D buttons float near your Left Wrist: Daily Puzzle, Freeform, A11y Suite, and Reset.</li>
+
+<!-- [Chrono-Loom Milestone 7/8] feat(mr): add [MR ROOM SCAN: ON/OFF] toggle button in HUD and wrist menu -->
