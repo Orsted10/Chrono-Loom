@@ -92,5 +92,19 @@ Builds an optimized production bundle in `/dist` with Three.js vendor chunking a
 WebXR requires a secure `https://` origin. Deploy the `/dist` folder for free in seconds:
 
 ### Option A: Vercel (Instant HTTPS)
+```bash
+npx vercel --prod
+```
+When prompted, Vercel will use the pre-configured [vercel.json](file:///e:/META/vercel.json) to deploy `/dist` with valid SSL certificates.
 
-<!-- [Chrono-Loom Milestone 7/9] docs(a11y): detail $25k Accessibility Forward Experience features in README.md -->
+### Option B: GitHub Pages
+```bash
+npx gh-pages -d dist
+```
+
+---
+
+## Key Controls Cheatsheet
+
+
+<!-- [Chrono-Loom Milestone 8/9] docs(mr): document Meta Quest 3 Mixed Reality passthrough setup in README.md -->
