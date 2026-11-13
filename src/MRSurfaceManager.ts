@@ -412,5 +412,74 @@ export class MRSurfaceManager {
         if (dx <= halfW && dz <= halfH) {
           // Snap height just above the table surface
           return {
+            surface,
+            anchorY: surfaceY + 0.045
+          };
+        }
+      }
+    }
 
-// [Chrono-Loom Milestone 6/8] feat(mr): attach glowing holographic pedestal base when node locks onto real table
+    return null;
+  }
+
+  /**
+   * Wall-Bounce Ray / Plane Intersection:
+   * Tests if a moving Photon Dart intersects any physical surface during deltaTime.
+   */
+  public checkPhotonBounce(
+    origin: THREE.Vector3,
+    velocity: THREE.Vector3,
+    deltaTime: number
+  ): { hit: boolean; hitPoint: THREE.Vector3; normal: THREE.Vector3; surface: MRSurface } | null {
+    const stepDist = velocity.length() * deltaTime;
+    if (stepDist <= 0.0001) return null;
+
+    const rayDir = this._v1.copy(velocity).normalize();
+    const nextPos = this._v2.copy(origin).addScaledVector(velocity, deltaTime);
+
+    for (const surface of this.surfaces.values()) {
+      this._planeNormal.copy(surface.normal);
+      this._planePoint.copy(surface.center);
+
+      // Check if ray is moving toward the plane
+      const denom = this._planeNormal.dot(rayDir);
+      if (Math.abs(denom) < 0.001) continue; // Parallel
+
+      const toCenter = this._v3.subVectors(this._planePoint, origin);
+      const t = toCenter.dot(this._planeNormal) / denom;
+
+      // Check if intersection occurs within this step frame (with small tolerance)
+      if (t >= -0.01 && t <= stepDist + 0.03) {
+        const hitPoint = origin.clone().addScaledVector(rayDir, t);
+
+        // Check if hit point lies within the planar bounds of this surface
+        const localHit = hitPoint.clone().sub(surface.center);
+        // Inverse transform to surface local space
+        const invRot = new THREE.Euler(-surface.rotation.x, -surface.rotation.y, -surface.rotation.z);
+        localHit.applyEuler(invRot);
+
+        const halfW = surface.width / 2 + 0.20;
+        const halfH = surface.height / 2 + 0.20;
+
+        if (Math.abs(localHit.x) <= halfW && Math.abs(localHit.y) <= halfH) {
+          // Adjust normal if hitting from behind
+          const hitNormal = denom < 0 ? surface.normal.clone() : surface.normal.clone().negate();
+          return {
+            hit: true,
+            hitPoint,
+            normal: hitNormal,
+            surface
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Flashes a surface and spawns an acoustic impact ripple when struck by a pulse or dart
+   */
+  public flashSurface(surface: MRSurface, hitPoint: THREE.Vector3): void {
+
+// [Chrono-Loom Milestone 7/8] perf(mr): optimize plane polygon triangulation to avoid GC allocations
