@@ -343,5 +343,74 @@ export class MRSurfaceManager {
         else label = 'desk';
       }
 
+      if (!surface) {
+        // Compute bounding size from polygon if available
+        let width = 1.2;
+        let height = 0.8;
+        if (plane.polygon && plane.polygon.length >= 3) {
+          let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+          for (const pt of plane.polygon) {
+            minX = Math.min(minX, pt.x);
+            maxX = Math.max(maxX, pt.x);
+            minZ = Math.min(minZ, pt.z);
+            maxZ = Math.max(maxZ, pt.z);
+          }
+          width = Math.max(0.3, maxX - minX);
+          height = Math.max(0.3, maxZ - minZ);
+        }
 
-// [Chrono-Loom Milestone 5/8] feat(mr): implement Physical Surface Anchoring: snap node to real desk within 0.06m
+        const normal = orientation === 'horizontal' ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(0, 0, 1);
+        normal.applyEuler(rot);
+
+        surface = this.registerSurface({
+          id: planeId,
+          orientation,
+          semanticLabel: label,
+          center: pos,
+          normal,
+          width,
+          height,
+          rotation: rot,
+          isSimulated: false
+        });
+      } else {
+        // Update existing surface pose
+        surface.center.copy(pos);
+        surface.rotation.copy(rot);
+        surface.meshGroup.position.copy(pos);
+        surface.meshGroup.rotation.copy(rot);
+      }
+    }
+  }
+
+  /**
+   * Physical Surface Anchoring:
+   * Checks if a Harmonic Node position is within 0.06m of a detected desk/table plane.
+   * If matched, returns the surface and the magnetic snapped Y height for the base-pedestal.
+   */
+  public checkSurfaceAnchor(
+    nodePosition: THREE.Vector3,
+    threshold = 0.06
+  ): { surface: MRSurface; anchorY: number } | null {
+    if (!this.isRoomScanEnabled) return null;
+
+    for (const surface of this.surfaces.values()) {
+      // Only anchor to horizontal surfaces (tables, desks)
+      if (surface.orientation !== 'horizontal') continue;
+
+      const surfaceY = surface.center.y;
+      const distY = Math.abs(nodePosition.y - surfaceY);
+
+      if (distY <= threshold) {
+        // Check horizontal bounds with 0.15m margin
+        const halfW = surface.width / 2 + 0.15;
+        const halfH = surface.height / 2 + 0.15;
+
+        const dx = Math.abs(nodePosition.x - surface.center.x);
+        const dz = Math.abs(nodePosition.z - surface.center.z);
+
+        if (dx <= halfW && dz <= halfH) {
+          // Snap height just above the table surface
+          return {
+
+// [Chrono-Loom Milestone 6/8] feat(mr): attach glowing holographic pedestal base when node locks onto real table
