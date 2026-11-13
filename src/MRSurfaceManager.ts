@@ -137,4 +137,73 @@ export class MRSurfaceManager {
     group.position.copy(config.center);
     group.rotation.copy(config.rotation);
 
-// [Chrono-Loom Milestone 2/8] feat(mr): detect real-world horizontal and vertical planes via XRFrame.detectedPlanes
+    // 1. Subtle, translucent planar fill (faint cyber-grid)
+    const planeGeo = new THREE.PlaneGeometry(config.width, config.height, 4, 4);
+    const isTable = config.semanticLabel === 'table' || config.semanticLabel === 'desk';
+    const baseColor = isTable ? 0x00f0ff : 0xa855f7;
+
+    const fillMaterial = new THREE.MeshBasicMaterial({
+      color: baseColor,
+      transparent: true,
+      opacity: 0.04,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const planeMesh = new THREE.Mesh(planeGeo, fillMaterial);
+    group.add(planeMesh);
+
+    // 2. Subtle neon edge wireframes (glows on strike/scan, fades over 4s)
+    const edgesGeo = new THREE.EdgesGeometry(planeGeo);
+    const wireframeMaterial = new THREE.LineBasicMaterial({
+      color: isTable ? 0x00f0ff : 0x38bdf8,
+      linewidth: 2,
+      transparent: true,
+      opacity: 0.65,
+      blending: THREE.AdditiveBlending
+    });
+    const wireframeLines = new THREE.LineSegments(edgesGeo, wireframeMaterial);
+    group.add(wireframeLines);
+
+    // 3. Impact Ripple Ring for acoustic wall-bounces
+    const rippleGeo = new THREE.RingGeometry(0.02, 0.045, 32);
+    const rippleMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.0,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const rippleMesh = new THREE.Mesh(rippleGeo, rippleMat);
+    rippleMesh.position.z = 0.005; // Just off the surface
+    rippleMesh.visible = false;
+    group.add(rippleMesh);
+
+    this.surfacesGroup.add(group);
+
+    const surface: MRSurface = {
+      id: config.id,
+      orientation: config.orientation,
+      semanticLabel: config.semanticLabel,
+      center: config.center,
+      normal: config.normal.clone().normalize(),
+      width: config.width,
+      height: config.height,
+      rotation: config.rotation,
+      meshGroup: group,
+      planeMesh,
+      wireframeLines,
+      wireframeMaterial,
+      fillMaterial,
+      lastHitTime: performance.now() / 1000,
+      flashIntensity: 0.8,
+      isSimulated: config.isSimulated,
+      rippleMesh
+    };
+
+    this.surfaces.set(config.id, surface);
+    return surface;
+  }
+
+
+// [Chrono-Loom Milestone 3/8] feat(mr): render translucent neon edge wireframes outlining detected desks and walls
