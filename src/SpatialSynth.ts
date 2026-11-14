@@ -573,5 +573,37 @@ export class SpatialSynth {
       panner.rolloffFactor = 1.0;
 
       if (panner.positionX) {
+        panner.positionX.setValueAtTime(hitPoint.x, now);
+        panner.positionY.setValueAtTime(hitPoint.y, now);
+        panner.positionZ.setValueAtTime(hitPoint.z, now);
+      } else {
+        (panner as any).setPosition(hitPoint.x, hitPoint.y, hitPoint.z);
+      }
 
-// [Chrono-Loom Milestone 18/25] refactor(audio): streamline SpatialSynth note triggering API with options object
+      // Connect Signal Chain
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(panner);
+      panner.connect(this.dryGain);
+      if (this.delayNode) {
+        // Feed into cathedral delay bus with subtle wet mix
+        panner.connect(this.delayNode);
+      }
+      if (this.convolverNode) {
+        panner.connect(this.convolverNode);
+      }
+
+      osc.start(now + physicalDelaySec);
+      osc.stop(now + physicalDelaySec + 0.18);
+    } catch (e) {
+      console.warn('[SpatialSynth] Wall reflection echo error:', e);
+    }
+  }
+
+  /**
+   * Phase 13: Procedural Dual-Formant Resonant Synthesis for Agent Aria
+   * Emits rich, expressive sci-fi vowel chirps and harmonic flourishes (NEVER robotic TTS).
+   */
+  public playVocalFormantChirp(
+
+// [Chrono-Loom Milestone 19/25] feat(acoustics): implement Wall-Bounce Acoustic Reflection in SpatialSynth
