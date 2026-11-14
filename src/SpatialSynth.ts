@@ -669,5 +669,37 @@ export class SpatialSynth {
         osc.start(now);
         osc.stop(now + 0.28);
       } else if (type === 'CURIOUS') {
+        // Interrogative rising warble (440 -> 580 -> 720 Hz, F1 750Hz, F2 2200Hz)
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.linearRampToValueAtTime(580, now + 0.12);
+        osc.frequency.exponentialRampToValueAtTime(740, now + 0.32);
 
-// [Chrono-Loom Milestone 21/25] feat(acoustics): model material-dependent high-frequency absorption (drywall vs wood)
+        // Add subtle sub-oscillator for warmth
+        const oscSub = ctx.createOscillator();
+        oscSub.type = 'triangle';
+        oscSub.frequency.setValueAtTime(220, now);
+        oscSub.frequency.exponentialRampToValueAtTime(370, now + 0.32);
+
+        f1.frequency.setValueAtTime(750, now);
+        f1.frequency.linearRampToValueAtTime(950, now + 0.32);
+        f1.Q.setValueAtTime(7.0, now);
+        f2.frequency.setValueAtTime(2200, now);
+        f2.frequency.linearRampToValueAtTime(2600, now + 0.32);
+        f2.Q.setValueAtTime(6.0, now);
+
+        masterGain.gain.setValueAtTime(0.0001, now);
+        masterGain.gain.linearRampToValueAtTime(0.24 * intensity, now + 0.03);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+        osc.connect(f1);
+        osc.connect(f2);
+        oscSub.connect(f1);
+        osc.start(now);
+        oscSub.start(now);
+        osc.stop(now + 0.36);
+        oscSub.stop(now + 0.36);
+      } else if (type === 'TRIUMPHANT' || type === 'CELEBRATING') {
+
+// [Chrono-Loom Milestone 22/25] feat(acoustics): play 3D HRTF early-reflection slapback echo at exact bounce coordinates
