@@ -733,5 +733,37 @@ export class SpatialSynth {
         const osc = ctx.createOscillator();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.25);
 
-// [Chrono-Loom Milestone 23/25] feat(acoustics): feed wall reflections into cathedral delay bus with subtle wet mix
+        // LFO vibrato
+        const lfo = ctx.createOscillator();
+        lfo.frequency.setValueAtTime(6.0, now);
+        const lfoGain = ctx.createGain();
+        lfoGain.gain.setValueAtTime(12.0, now);
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+
+        f1.frequency.setValueAtTime(520, now);
+        f1.Q.setValueAtTime(8.0, now);
+        f2.frequency.setValueAtTime(1750, now);
+        f2.Q.setValueAtTime(7.0, now);
+
+        masterGain.gain.setValueAtTime(0.0001, now);
+        masterGain.gain.linearRampToValueAtTime(0.26 * intensity, now + 0.04);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+
+        osc.connect(f1);
+        osc.connect(f2);
+        lfo.start(now);
+        osc.start(now);
+        lfo.stop(now + 0.6);
+        osc.stop(now + 0.6);
+      } else if (type === 'RESET') {
+        // Soft cleansing descending chime whoosh (660 -> 220 Hz)
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(660, now);
+        osc.frequency.exponentialRampToValueAtTime(220, now + 0.32);
+
+
+// [Chrono-Loom Milestone 24/25] test(acoustics): verify acoustic slapback delay timing matches room dimensions
