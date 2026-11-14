@@ -2390,5 +2390,34 @@ export class LoomEngine {
     const pos = contactPos || new THREE.Vector3().addVectors(pA, pB).multiplyScalar(0.5);
 
     this.spawnParticleBurst(pos, 15, str.color, 0.045);
+    this.sceneManager.triggerCymaticPulse(pos, str.color, 1.15);
+    this.accessibilityManager?.triggerVisualHapticWave(pos, str.frequency, intensity * 1.3);
 
-// [Chrono-Loom Milestone 81/84] feat(acoustics): reflect photon dart specularly off wall plane back toward Loom
+    this.spatialSynth.triggerDroneDucking(intensity);
+    this.spatialSynth.playSpatialNote({
+      frequency: str.frequency,
+      position: pos,
+      intensity: intensity * 1.2,
+      duration: 1.3
+    });
+
+    this.spawnChronoPulse(str.nodeA, str.nodeB, str);
+  }
+
+  public applyRemoteStringSever(cutPoint: THREE.Vector3, stringId?: string): void {
+    this.isApplyingRemote = true;
+    if (stringId && this.strings.has(stringId)) {
+      const str = this.strings.get(stringId)!;
+      this.loomGroup.remove(str.meshGroup);
+      str.tubeMesh.geometry.dispose();
+      (str.tubeMesh.material as THREE.Material).dispose();
+      str.glowLine.geometry.dispose();
+      (str.glowLine.material as THREE.Material).dispose();
+      this.strings.delete(stringId);
+      this.spawnParticleBurst(cutPoint, 28, new THREE.Color(0x00f0ff), 0.08);
+      this.sceneManager.triggerCymaticPulse(cutPoint, new THREE.Color(0x00f0ff), 1.35);
+    } else {
+      this.triggerAcousticScissorsSnip(cutPoint);
+    }
+
+// [Chrono-Loom Milestone 82/84] style(acoustics): spawn sparkling impact flash when photon dart strikes wall
