@@ -637,5 +637,37 @@ export class SpatialSynth {
         panner.connect(this.convolverNode);
       }
 
+      // Create dual formant filters (F1 and F2 bandpasses)
+      const f1 = ctx.createBiquadFilter();
+      f1.type = 'bandpass';
+      const f2 = ctx.createBiquadFilter();
+      f2.type = 'bandpass';
 
-// [Chrono-Loom Milestone 20/25] feat(acoustics): compute physical acoustic slapback delay from distance (speed 343m/s)
+      const filterMix = ctx.createGain();
+      f1.connect(filterMix);
+      f2.connect(filterMix);
+      filterMix.connect(masterGain);
+
+      if (type === 'AFFIRMATIVE') {
+        // Warm rising vowel chirp (520 -> 680 Hz, F1 650Hz, F2 1950Hz)
+        const osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(680, now + 0.24);
+
+        f1.frequency.setValueAtTime(650, now);
+        f1.Q.setValueAtTime(6.0, now);
+        f2.frequency.setValueAtTime(1950, now);
+        f2.Q.setValueAtTime(5.5, now);
+
+        masterGain.gain.setValueAtTime(0.0001, now);
+        masterGain.gain.linearRampToValueAtTime(0.22 * intensity, now + 0.02);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+
+        osc.connect(f1);
+        osc.connect(f2);
+        osc.start(now);
+        osc.stop(now + 0.28);
+      } else if (type === 'CURIOUS') {
+
+// [Chrono-Loom Milestone 21/25] feat(acoustics): model material-dependent high-frequency absorption (drywall vs wood)
