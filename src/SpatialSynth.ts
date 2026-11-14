@@ -701,5 +701,37 @@ export class SpatialSynth {
         osc.stop(now + 0.36);
         oscSub.stop(now + 0.36);
       } else if (type === 'TRIUMPHANT' || type === 'CELEBRATING') {
+        // Triad vocal arpeggio flourish (587 -> 740 -> 880 Hz)
+        const notes = [587.33, 739.99, 880.0];
+        notes.forEach((freq, idx) => {
+          const t = now + idx * 0.08;
+          const osc = ctx.createOscillator();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, t);
+          osc.frequency.exponentialRampToValueAtTime(freq * 1.05, t + 0.18);
 
-// [Chrono-Loom Milestone 22/25] feat(acoustics): play 3D HRTF early-reflection slapback echo at exact bounce coordinates
+          const subGain = ctx.createGain();
+          subGain.gain.setValueAtTime(0.0001, t);
+          subGain.gain.linearRampToValueAtTime(0.20 * intensity, t + 0.015);
+          subGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+
+          osc.connect(f1);
+          osc.connect(f2);
+          osc.connect(subGain);
+          subGain.connect(masterGain);
+
+          osc.start(t);
+          osc.stop(t + 0.25);
+        });
+
+        f1.frequency.setValueAtTime(800, now);
+        f1.Q.setValueAtTime(5.0, now);
+        f2.frequency.setValueAtTime(2400, now);
+        f2.Q.setValueAtTime(5.0, now);
+      } else if (type === 'CALL_RESPONSE') {
+        // Resonant celestial singing tone (440 -> 659.25 Hz with vibrato)
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+
+// [Chrono-Loom Milestone 23/25] feat(acoustics): feed wall reflections into cathedral delay bus with subtle wet mix
