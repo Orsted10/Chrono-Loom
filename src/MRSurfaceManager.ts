@@ -481,5 +481,75 @@ export class MRSurfaceManager {
    * Flashes a surface and spawns an acoustic impact ripple when struck by a pulse or dart
    */
   public flashSurface(surface: MRSurface, hitPoint: THREE.Vector3): void {
+    surface.lastHitTime = performance.now() / 1000;
+    surface.flashIntensity = 1.0;
 
-// [Chrono-Loom Milestone 7/8] perf(mr): optimize plane polygon triangulation to avoid GC allocations
+    if (surface.rippleMesh) {
+      // Localize ripple to hit point on plane
+      const localPos = surface.meshGroup.worldToLocal(hitPoint.clone());
+      surface.rippleMesh.position.set(localPos.x, localPos.y, 0.005);
+      surface.rippleMesh.scale.set(1, 1, 1);
+      (surface.rippleMesh.material as THREE.MeshBasicMaterial).opacity = 0.85;
+      surface.rippleMesh.visible = true;
+    }
+  }
+
+  /**
+   * Toggles the MR Room Scan ON/OFF
+   */
+  public toggleRoomScan(): boolean {
+    this.isRoomScanEnabled = !this.isRoomScanEnabled;
+    this.surfacesGroup.visible = this.isRoomScanEnabled;
+
+    if (this.isRoomScanEnabled) {
+      // Trigger scan wave animation
+      this.isScanningActive = true;
+      this.scanWaveTimer = 0;
+      if (this.scanGridMesh) {
+        this.scanGridMesh.visible = true;
+        this.scanGridMesh.scale.set(1, 1, 1);
+      }
+
+      // Flash all surfaces
+      const now = performance.now() / 1000;
+      for (const surface of this.surfaces.values()) {
+        surface.lastHitTime = now;
+        surface.flashIntensity = 1.0;
+      }
+      console.log('[MRSurfaceManager] MR Room Scan: ACTIVE. Detected surfaces highlighted.');
+    } else {
+      console.log('[MRSurfaceManager] MR Room Scan: OFF. Real-world surfaces hidden.');
+    }
+
+    return this.isRoomScanEnabled;
+  }
+
+  /**
+   * Status telemetry summary for HUD and demo recording
+   */
+  public getStatusSummary(): {
+    isEnabled: boolean;
+    surfaceCount: number;
+    hasTable: boolean;
+    activeMode: string;
+  } {
+    let hasTable = false;
+    for (const surface of this.surfaces.values()) {
+      if (surface.semanticLabel === 'table' || surface.semanticLabel === 'desk') {
+        hasTable = true;
+        break;
+      }
+    }
+
+    return {
+      isEnabled: this.isRoomScanEnabled,
+      surfaceCount: this.surfaces.size,
+      hasTable,
+      activeMode: this.isRoomScanEnabled
+        ? (this.sceneManager.isPassthroughActive ? 'QUEST 3 MR PLANES' : 'SIMULATED DESK/WALLS')
+        : 'DISABLED'
+    };
+  }
+}
+
+// [Chrono-Loom Milestone 8/8] feat(acoustics): cast ray from photon dart against detected real-world wall planes
