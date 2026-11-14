@@ -2360,5 +2360,35 @@ export class LoomEngine {
     if (!node) return;
     this.isApplyingRemote = true;
     node.position.copy(position);
+    node.meshGroup.position.copy(position);
+    this.updateConnectedStrings(node);
+    this.isApplyingRemote = false;
+  }
 
-// [Chrono-Loom Milestone 80/84] feat(acoustics): launch stray Chrono-Pulses as luminous photon darts into real room
+  public applyRemoteStringWeave(id: string, nodeAId: string, nodeBId: string): ChronoString | null {
+    if (this.strings.has(id)) return this.strings.get(id)!;
+    const nodeA = this.nodes.get(nodeAId);
+    const nodeB = this.nodes.get(nodeBId);
+    if (!nodeA || !nodeB) return null;
+    this.isApplyingRemote = true;
+    const str = this.createChronoString(nodeA, nodeB, id);
+    this.isApplyingRemote = false;
+    return str;
+  }
+
+  public applyRemoteStringPluck(stringId: string, contactPos?: THREE.Vector3, intensity: number = 1.0): void {
+    const str = this.strings.get(stringId);
+    if (!str) return;
+
+    str.lastPluckTime = performance.now();
+    str.vibrationAmplitude = 0.024 * Math.min(2.0, Math.max(0.6, intensity * 3));
+    str.vibrationDecay = 2.4;
+    str.vibrationPhase = 0;
+
+    const pA = str.nodeA.position;
+    const pB = str.nodeB.position;
+    const pos = contactPos || new THREE.Vector3().addVectors(pA, pB).multiplyScalar(0.5);
+
+    this.spawnParticleBurst(pos, 15, str.color, 0.045);
+
+// [Chrono-Loom Milestone 81/84] feat(acoustics): reflect photon dart specularly off wall plane back toward Loom
