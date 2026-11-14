@@ -2331,5 +2331,34 @@ export class LoomEngine {
     document.body.appendChild(textArea);
     textArea.select();
     try {
+      document.execCommand('copy');
+    } catch (e) {
+      console.warn('Fallback copy failed', e);
+    }
+    document.body.removeChild(textArea);
+  }
 
-// [Chrono-Loom Milestone 79/84] test(share): verify exact 3D sculpture round-trip serialization via URL hash
+  // ----------------------------------------------------
+  // Phase 11: Remote Multiplayer Applying Methods
+  // ----------------------------------------------------
+
+  public applyRemoteNodeSpawn(id: string, position: THREE.Vector3, frequency: number): HarmonicNode {
+    if (this.nodes.has(id)) {
+      const existing = this.nodes.get(id)!;
+      existing.position.copy(position);
+      existing.meshGroup.position.copy(position);
+      return existing;
+    }
+    this.isApplyingRemote = true;
+    const node = this.spawnHarmonicNode(position, frequency, id);
+    this.isApplyingRemote = false;
+    return node;
+  }
+
+  public applyRemoteNodeMove(id: string, position: THREE.Vector3): void {
+    const node = this.nodes.get(id);
+    if (!node) return;
+    this.isApplyingRemote = true;
+    node.position.copy(position);
+
+// [Chrono-Loom Milestone 80/84] feat(acoustics): launch stray Chrono-Pulses as luminous photon darts into real room
