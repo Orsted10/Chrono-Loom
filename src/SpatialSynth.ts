@@ -605,5 +605,37 @@ export class SpatialSynth {
    * Emits rich, expressive sci-fi vowel chirps and harmonic flourishes (NEVER robotic TTS).
    */
   public playVocalFormantChirp(
+    type: VocalChirpType,
+    position: THREE.Vector3,
+    intensity = 1.0
+  ): void {
+    const ctx = this.ensureContext();
+    if (!ctx || !this.dryGain || !this.delayNode) return;
 
-// [Chrono-Loom Milestone 19/25] feat(acoustics): implement Wall-Bounce Acoustic Reflection in SpatialSynth
+    try {
+      const now = ctx.currentTime;
+      const panner = ctx.createPanner();
+      panner.panningModel = 'HRTF';
+      panner.distanceModel = 'inverse';
+      panner.refDistance = 0.35;
+      panner.maxDistance = 12.0;
+      panner.rolloffFactor = 1.0;
+
+      if (panner.positionX) {
+        panner.positionX.setValueAtTime(position.x, now);
+        panner.positionY.setValueAtTime(position.y, now);
+        panner.positionZ.setValueAtTime(position.z, now);
+      } else {
+        (panner as any).setPosition(position.x, position.y, position.z);
+      }
+
+      const masterGain = ctx.createGain();
+      masterGain.connect(panner);
+      panner.connect(this.dryGain);
+      panner.connect(this.delayNode);
+      if (this.convolverNode) {
+        panner.connect(this.convolverNode);
+      }
+
+
+// [Chrono-Loom Milestone 20/25] feat(acoustics): compute physical acoustic slapback delay from distance (speed 343m/s)
