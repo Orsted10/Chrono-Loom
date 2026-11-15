@@ -2449,5 +2449,35 @@ export class LoomEngine {
   }
 
   public applyLoomSnapshot(snapshot: {
+    nodes: { id: string; x: number; y: number; z: number; freq: number }[];
+    strings: { id: string; nodeA: string; nodeB: string }[];
+    bpm: number;
+  }): void {
+    if (!snapshot) return;
+    this.isApplyingRemote = true;
+    for (const n of snapshot.nodes) {
+      if (!this.nodes.has(n.id)) {
+        this.spawnHarmonicNode(new THREE.Vector3(n.x, n.y, n.z), n.freq, n.id);
+      } else {
+        const existing = this.nodes.get(n.id)!;
+        existing.position.set(n.x, n.y, n.z);
+        existing.meshGroup.position.copy(existing.position);
+      }
+    }
+    for (const s of snapshot.strings) {
+      if (!this.strings.has(s.id)) {
+        const nodeA = this.nodes.get(s.nodeA);
+        const nodeB = this.nodes.get(s.nodeB);
+        if (nodeA && nodeB) {
+          this.createChronoString(nodeA, nodeB, s.id);
+        }
+      }
+    }
+    if (snapshot.bpm) {
+      this.setGlobalBPM(snapshot.bpm);
+    }
+    this.isApplyingRemote = false;
+  }
+}
 
-// [Chrono-Loom Milestone 83/84] feat(gestures): split single node into triangulated 3-node triad cluster with strings
+// [Chrono-Loom Milestone 84/84] feat(gestures): sever single string with spark shower without deleting nodes
