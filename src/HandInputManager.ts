@@ -1321,5 +1321,49 @@ export class HandInputManager {
       // Bar background
       ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
       ctx.beginPath();
+      ctx.roundRect(30, y + 25, 450, 7, 3);
+      ctx.fill();
 
-// [Chrono-Loom Milestone 30/33] feat(gestures): implement Harmonic Chord 'Bloom' (pinch + outward wrist flick)
+      // Bar fill
+      if (g.conf > 0.02) {
+        ctx.fillStyle = g.color;
+        ctx.beginPath();
+        ctx.roundRect(30, y + 25, Math.max(6, 450 * g.conf), 7, 3);
+        ctx.fill();
+      }
+
+      y += 56;
+    }
+
+    this.holoCardTexture.needsUpdate = true;
+  }
+
+  /**
+   * Main Neural Gesture Classifiers evaluation loop
+   */
+  private updateNeuralGestures(deltaTime: number): void {
+    const left = this.leftHandState;
+    const right = this.rightHandState;
+
+    // 1. Pinch Weave Confidence
+    const anyPinching = left.isPinching || right.isPinching;
+    this.gestureConfidences.pinchWeave = anyPinching
+      ? 1.0
+      : Math.max(0, 1.0 - Math.min(left.currentPinchDist, right.currentPinchDist) / 0.05);
+
+    // 2. Open Palm Freeze Confidence
+    this.gestureConfidences.openPalmFreeze = left.isOpenPalm || right.isOpenPalm ? 1.0 : 0.15;
+
+    // 3. Time-Dilation Conductor Frame Evaluation
+    const isTracked = (left.isConnected && right.isConnected) || this.isSimulatorActive;
+    const wristDist = left.wristPos.distanceTo(right.wristPos);
+    const inDistanceRange = wristDist >= 0.14 && wristDist <= 0.52;
+    const leftOpen = left.isOpenPalm || left.currentPinchDist > 0.045;
+    const rightOpen = right.isOpenPalm || right.currentPinchDist > 0.045;
+    const isSimConductor = this.isSimulatorActive && this.simConductorActive;
+
+    let conductorConfidence = 0;
+    if (inDistanceRange && leftOpen && rightOpen) {
+      const distFactor = 1.0 - Math.abs(wristDist - 0.32) / 0.20;
+
+// [Chrono-Loom Milestone 31/33] feat(gestures): implement Acoustic Scissors 'Snip' (index+middle scissor cut)
