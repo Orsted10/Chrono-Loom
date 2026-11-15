@@ -1189,5 +1189,49 @@ export class HandInputManager {
     ctx.textAlign = 'center';
     ctx.fillText(`⚡ CHRONO-TEMPO: ${bpm} BPM`, 256, 62);
 
+    ctx.font = 'bold 20px "JetBrains Mono", monospace';
+    ctx.fillStyle = bpm < 70 ? '#38bdf8' : bpm > 140 ? '#f43f5e' : '#fbbf24';
+    const sub = bpm < 70 ? '[BULLET-TIME DRIFT]' : bpm > 140 ? '[HYPER-ARPEGGIO]' : '[HARMONIC GROOVE]';
+    ctx.fillText(sub, 256, 94);
+    this.tempoRibbonTexture.needsUpdate = true;
+  }
 
-// [Chrono-Loom Milestone 27/33] feat(gestures): implement Time-Dilation 'Conductor Frame' (palms facing each other)
+  /**
+   * Builds the 3D "Gesture Cheat-Sheet" Holo-Card tucked behind the left wrist
+   */
+  private createGestureHoloCard(): void {
+    this.holoCardGroup = new THREE.Group();
+    this.holoCardGroup.name = 'GestureHoloCardGroup';
+    this.holoCardGroup.visible = false;
+    this.sceneManager.scene.add(this.holoCardGroup);
+
+    this.holoCardCanvas = document.createElement('canvas');
+    this.holoCardCanvas.width = 512;
+    this.holoCardCanvas.height = 420;
+    this.holoCardTexture = new THREE.CanvasTexture(this.holoCardCanvas);
+    this.holoCardTexture.minFilter = THREE.LinearFilter;
+
+    const planeGeo = new THREE.PlaneGeometry(0.24, 0.197);
+    const planeMat = new THREE.MeshBasicMaterial({
+      map: this.holoCardTexture,
+      transparent: true,
+      opacity: 0.95,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    this.holoCardMesh = new THREE.Mesh(planeGeo, planeMat);
+    this.holoCardGroup.add(this.holoCardMesh);
+
+    // Subtle cyan edge frame
+    const edgeGeo = new THREE.EdgesGeometry(planeGeo);
+    const edgeMat = new THREE.LineBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.8,
+      linewidth: 2,
+      blending: THREE.AdditiveBlending
+    });
+    const edge = new THREE.LineSegments(edgeGeo, edgeMat);
+    this.holoCardGroup.add(edge);
+
+// [Chrono-Loom Milestone 28/33] feat(gestures): scale global BPM from 40 BPM (bullet-time) to 180 BPM by raising hands
