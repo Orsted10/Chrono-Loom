@@ -1365,5 +1365,49 @@ export class HandInputManager {
     let conductorConfidence = 0;
     if (inDistanceRange && leftOpen && rightOpen) {
       const distFactor = 1.0 - Math.abs(wristDist - 0.32) / 0.20;
+      conductorConfidence = THREE.MathUtils.clamp(distFactor * 0.95, 0, 1);
+    } else if (isSimConductor) {
+      conductorConfidence = 0.95;
+    }
 
-// [Chrono-Loom Milestone 31/33] feat(gestures): implement Acoustic Scissors 'Snip' (index+middle scissor cut)
+    this.gestureConfidences.conductorFrame = conductorConfidence;
+
+    if (conductorConfidence >= 0.55 || isSimConductor) {
+      this.isConductorActive = true;
+      const avgY = (left.wristPos.y + right.wristPos.y) * 0.5;
+      const t = THREE.MathUtils.clamp((avgY - 0.92) / (1.45 - 0.92), 0, 1);
+      this.currentConductorBPM = Math.round(40 + t * 140);
+
+      this.updateTempoRibbon(left.wristPos, right.wristPos, this.currentConductorBPM, deltaTime);
+      this.emitConductorTempo(this.currentConductorBPM);
+    } else {
+      this.isConductorActive = false;
+      this.tempoRibbonGroup.visible = false;
+    }
+
+    // 4. Harmonic Chord Bloom Evaluation (Pinch + Outward Wrist Flick)
+    this.evaluateChordBloom(left, deltaTime);
+    this.evaluateChordBloom(right, deltaTime);
+
+    // 5. Acoustic Scissors Snip Evaluation (Index + Middle Scissor Cut)
+    this.evaluateAcousticScissors(left);
+    this.evaluateAcousticScissors(right);
+
+    // 6. Update 3D Holo-Card Position & Visuals if visible
+    if (this.isHoloCardVisible) {
+      const wrist = left.wristPos;
+      this.holoCardGroup.position.set(wrist.x - 0.12, wrist.y + 0.14, wrist.z + 0.05);
+      this.holoCardGroup.lookAt(this.camera.position);
+      this.drawGestureHoloCard();
+    }
+  }
+
+  /**
+   * Helper: Evaluates Harmonic Chord Bloom gesture for a single hand
+   */
+  private evaluateChordBloom(state: HandInternalState, dt: number): void {
+    if (!state.isPinching) {
+      state.prevWristPos.copy(state.wristPos);
+      return;
+
+// [Chrono-Loom Milestone 32/33] feat(gestures): create floating 3D 'Gesture Cheat-Sheet' holo-card on left wrist [G]
