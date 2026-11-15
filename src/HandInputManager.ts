@@ -1101,5 +1101,49 @@ export class HandInputManager {
   private createTempoRibbonVisuals(): void {
     this.tempoRibbonGroup = new THREE.Group();
     this.tempoRibbonGroup.name = 'TempoRibbonGroup';
+    this.tempoRibbonGroup.visible = false;
+    this.sceneManager.scene.add(this.tempoRibbonGroup);
 
-// [Chrono-Loom Milestone 25/33] test(hands): verify desktop simulator parity with WebXR hand tracking
+    // 1. Dynamic sine wave ribbon line (32 points)
+    const points: THREE.Vector3[] = [];
+    for (let i = 0; i <= 32; i++) {
+      points.push(new THREE.Vector3(0, 0, 0));
+    }
+    const ribbonGeo = new THREE.BufferGeometry().setFromPoints(points);
+    const ribbonMat = new THREE.LineBasicMaterial({
+      color: 0x00f0ff,
+      linewidth: 3,
+      transparent: true,
+      opacity: 0.92,
+      blending: THREE.AdditiveBlending
+    });
+    this.tempoRibbonLine = new THREE.Line(ribbonGeo, ribbonMat);
+    this.tempoRibbonGroup.add(this.tempoRibbonLine);
+
+    // 2. Floating 3D Text billboard showing live BPM
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 128;
+    this.tempoRibbonCanvas = canvas;
+    this.tempoRibbonTexture = new THREE.CanvasTexture(canvas);
+    this.tempoRibbonTexture.minFilter = THREE.LinearFilter;
+
+    const spriteMat = new THREE.SpriteMaterial({
+      map: this.tempoRibbonTexture,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthTest: false
+    });
+    this.tempoRibbonSprite = new THREE.Sprite(spriteMat);
+    this.tempoRibbonSprite.scale.set(0.36, 0.09, 1);
+    this.tempoRibbonGroup.add(this.tempoRibbonSprite);
+  }
+
+  /**
+   * Updates the Holographic Tempo Ribbon connecting both palms
+   */
+  private updateTempoRibbon(pLeft: THREE.Vector3, pRight: THREE.Vector3, bpm: number, dt: number): void {
+    this.tempoRibbonGroup.visible = true;
+
+// [Chrono-Loom Milestone 26/33] feat(gestures): upgrade HandInputManager with neural multi-joint pose classifiers
