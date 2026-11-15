@@ -1277,5 +1277,49 @@ export class HandInputManager {
       {
         name: 'Harmonic Chord Bloom',
         sub: 'Pinch + Outward Flick [B]',
+        conf: this.gestureConfidences.chordBloom,
+        color: '#fbbf24'
+      },
+      {
+        name: 'Acoustic Scissors Snip',
+        sub: 'Index+Middle Scissor-Cut [X]',
+        conf: this.gestureConfidences.acousticScissors,
+        color: '#f43f5e'
+      },
+      {
+        name: 'Euclidean Pinch Weave',
+        sub: 'Index-Thumb <25mm [Left/Right Click]',
+        conf: this.gestureConfidences.pinchWeave,
+        color: '#34d399'
+      },
+      {
+        name: 'Open Palm Acoustic Freeze',
+        sub: 'All 5 Extended [O]',
+        conf: this.gestureConfidences.openPalmFreeze,
+        color: '#a855f7'
+      }
+    ];
 
-// [Chrono-Loom Milestone 29/33] feat(gestures): render glowing holographic tempo ribbon stretching between palms
+    let y = 115;
+    for (const g of gestures) {
+      ctx.font = 'bold 15px "Space Grotesk", sans-serif';
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillText(g.name, 30, y);
+
+      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText(g.sub, 30, y + 17);
+
+      // Percentage
+      const pct = Math.round(g.conf * 100);
+      ctx.font = 'bold 14px "JetBrains Mono", monospace';
+      ctx.fillStyle = g.color;
+      ctx.textAlign = 'right';
+      ctx.fillText(`${pct}%`, 480, y + 6);
+      ctx.textAlign = 'left';
+
+      // Bar background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.beginPath();
+
+// [Chrono-Loom Milestone 30/33] feat(gestures): implement Harmonic Chord 'Bloom' (pinch + outward wrist flick)
