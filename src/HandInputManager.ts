@@ -1146,4 +1146,48 @@ export class HandInputManager {
   private updateTempoRibbon(pLeft: THREE.Vector3, pRight: THREE.Vector3, bpm: number, dt: number): void {
     this.tempoRibbonGroup.visible = true;
 
-// [Chrono-Loom Milestone 26/33] feat(gestures): upgrade HandInputManager with neural multi-joint pose classifiers
+    const mid = new THREE.Vector3().addVectors(pLeft, pRight).multiplyScalar(0.5);
+    this.tempoRibbonSprite.position.set(mid.x, mid.y + 0.09, mid.z);
+    this.tempoRibbonSprite.lookAt(this.camera.position);
+
+    const attr = this.tempoRibbonLine.geometry.attributes.position as THREE.BufferAttribute;
+    const time = performance.now() * 0.005;
+    const waveFreq = (bpm / 60) * 4.5;
+
+    for (let i = 0; i <= 32; i++) {
+      const s = i / 32;
+      const pt = new THREE.Vector3().lerpVectors(pLeft, pRight, s);
+      const wave = Math.sin(time + s * waveFreq) * 0.02 * Math.sin(Math.PI * s);
+      pt.y += wave;
+      attr.setXYZ(i, pt.x, pt.y, pt.z);
+    }
+    attr.needsUpdate = true;
+
+    // Shift color: 40 BPM (cyan) -> 110 BPM (gold) -> 180 BPM (magenta)
+    const color = (this.tempoRibbonLine.material as THREE.LineBasicMaterial).color;
+    if (bpm < 110) {
+      const t = THREE.MathUtils.clamp((bpm - 40) / 70, 0, 1);
+      color.setRGB(0, 0.94, 1.0).lerp(new THREE.Color(0xf59e0b), t);
+    } else {
+      const t = THREE.MathUtils.clamp((bpm - 110) / 70, 0, 1);
+      color.setRGB(0.96, 0.62, 0.04).lerp(new THREE.Color(0xd946ef), t);
+    }
+
+    // Redraw canvas text
+    const ctx = this.tempoRibbonCanvas.getContext('2d')!;
+    ctx.clearRect(0, 0, 512, 128);
+    ctx.fillStyle = 'rgba(7, 24, 45, 0.88)';
+    ctx.strokeStyle = color.getHexString() ? `#${color.getHexString()}` : '#00f0ff';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(10, 15, 492, 98, 24);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold 36px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(`⚡ CHRONO-TEMPO: ${bpm} BPM`, 256, 62);
+
+
+// [Chrono-Loom Milestone 27/33] feat(gestures): implement Time-Dilation 'Conductor Frame' (palms facing each other)
