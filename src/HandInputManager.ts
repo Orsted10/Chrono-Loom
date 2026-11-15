@@ -1409,5 +1409,50 @@ export class HandInputManager {
     if (!state.isPinching) {
       state.prevWristPos.copy(state.wristPos);
       return;
+    }
 
-// [Chrono-Loom Milestone 32/33] feat(gestures): create floating 3D 'Gesture Cheat-Sheet' holo-card on left wrist [G]
+    const vel = state.wristPos.distanceTo(state.prevWristPos) / Math.max(dt, 0.001);
+    const outwardDir = state.wristPos.clone().sub(new THREE.Vector3(0, 1.2, -0.45)).normalize();
+    const deltaDir = state.wristPos.clone().sub(state.prevWristPos).normalize();
+    const isOutward = deltaDir.dot(outwardDir) > 0.2;
+
+    const flickThreshold = 0.58; // m/s
+    this.gestureConfidences.chordBloom = THREE.MathUtils.clamp(vel / flickThreshold, 0, 1);
+
+    if (vel > flickThreshold && isOutward) {
+      this.emitChordBloom(state.handedness, state.indexTipPos.clone());
+      this.gestureConfidences.chordBloom = 1.0;
+    }
+
+    state.prevWristPos.copy(state.wristPos);
+  }
+
+  /**
+   * Helper: Evaluates Acoustic Scissors Snip gesture for a single hand
+   */
+  private evaluateAcousticScissors(state: HandInternalState): void {
+    const indexDist = state.wristPos.distanceTo(state.indexTipPos);
+    const middleDist = state.wristPos.distanceTo(state.middleTipPos);
+
+    if (indexDist < 0.065 || middleDist < 0.065) {
+      state.prevScissorDist = 0.04;
+      return;
+    }
+
+    const scissorDist = state.indexTipPos.distanceTo(state.middleTipPos);
+    const isSpread = state.prevScissorDist > 0.032;
+    const isClosed = scissorDist < 0.016;
+
+    this.gestureConfidences.acousticScissors = 1.0 - THREE.MathUtils.clamp(scissorDist / 0.045, 0, 1);
+
+    if (isSpread && isClosed) {
+      const cutPoint = new THREE.Vector3().addVectors(state.indexTipPos, state.middleTipPos).multiplyScalar(0.5);
+      this.emitAcousticScissors(state.handedness, cutPoint);
+      this.gestureConfidences.acousticScissors = 1.0;
+    }
+
+    state.prevScissorDist = scissorDist;
+  }
+}
+
+// [Chrono-Loom Milestone 33/33] style(gestures): display live real-time confidence bars for each detected gesture
