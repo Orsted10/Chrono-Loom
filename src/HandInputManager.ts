@@ -1234,4 +1234,48 @@ export class HandInputManager {
     const edge = new THREE.LineSegments(edgeGeo, edgeMat);
     this.holoCardGroup.add(edge);
 
-// [Chrono-Loom Milestone 28/33] feat(gestures): scale global BPM from 40 BPM (bullet-time) to 180 BPM by raising hands
+    this.drawGestureHoloCard();
+  }
+
+  /**
+   * Renders the 3D Gesture Cheat-Sheet with live animated confidence bars
+   */
+  private drawGestureHoloCard(): void {
+    const ctx = this.holoCardCanvas.getContext('2d')!;
+    ctx.clearRect(0, 0, 512, 420);
+
+    // 1. Cyber glassmorphic card backdrop
+    ctx.fillStyle = 'rgba(7, 24, 45, 0.92)';
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(10, 10, 492, 400, 24);
+    ctx.fill();
+    ctx.stroke();
+
+    // 2. Header
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 12;
+    ctx.font = 'bold 24px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'left';
+    ctx.fillText('⚡ NEURAL GESTURE VOCABULARY', 30, 48);
+
+    ctx.font = '13px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('MULTI-JOINT SPATIAL CLASSIFIERS // QUEST 3', 30, 72);
+    ctx.shadowBlur = 0;
+
+    // 3. Gesture Confidence Rows
+    const gestures = [
+      {
+        name: 'Time-Dilation Conductor',
+        sub: 'Palms Facing | 40-180 BPM [T]',
+        conf: this.gestureConfidences.conductorFrame,
+        color: '#00f0ff'
+      },
+      {
+        name: 'Harmonic Chord Bloom',
+        sub: 'Pinch + Outward Flick [B]',
+
+// [Chrono-Loom Milestone 29/33] feat(gestures): render glowing holographic tempo ribbon stretching between palms
