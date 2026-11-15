@@ -2419,5 +2419,35 @@ export class LoomEngine {
     } else {
       this.triggerAcousticScissorsSnip(cutPoint);
     }
+    this.isApplyingRemote = false;
+  }
 
-// [Chrono-Loom Milestone 82/84] style(acoustics): spawn sparkling impact flash when photon dart strikes wall
+  public applyRemoteBPM(bpm: number): void {
+    this.isApplyingRemote = true;
+    this.setGlobalBPM(bpm);
+    this.isApplyingRemote = false;
+  }
+
+  public getLoomSnapshot(): {
+    nodes: { id: string; x: number; y: number; z: number; freq: number }[];
+    strings: { id: string; nodeA: string; nodeB: string }[];
+    bpm: number;
+  } {
+    const nodes = Array.from(this.nodes.values()).map((n) => ({
+      id: n.id,
+      x: n.position.x,
+      y: n.position.y,
+      z: n.position.z,
+      freq: n.noteFrequency
+    }));
+    const strings = Array.from(this.strings.values()).map((s) => ({
+      id: s.id,
+      nodeA: s.nodeA.id,
+      nodeB: s.nodeB.id
+    }));
+    return { nodes, strings, bpm: this.globalBPM };
+  }
+
+  public applyLoomSnapshot(snapshot: {
+
+// [Chrono-Loom Milestone 83/84] feat(gestures): split single node into triangulated 3-node triad cluster with strings
