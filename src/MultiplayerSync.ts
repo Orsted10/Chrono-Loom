@@ -735,5 +735,153 @@ export class MultiplayerSync {
         cutPoint: [Math.round(cutPoint.x * 1000) / 1000, Math.round(cutPoint.y * 1000) / 1000, Math.round(cutPoint.z * 1000) / 1000],
         stringId
       });
+    };
 
-// [Chrono-Loom Milestone 5/8] feat(multiplayer): render remote player's glowing 3D Ghost Hands and Head Crest
+    this.loomEngine.onBPMChanged = (bpm) => {
+      if (!this.isConnected) return;
+      this.sendPacket({ type: 'BPM_SYNC', bpm });
+    };
+  }
+
+  private hookConstellationEvents(): void {
+    this.constellationMode.onRingHit = (ringId) => {
+      if (!this.isConnected) return;
+      this.sendPacket({ type: 'RING_HIT', ringId });
+    };
+
+    this.constellationMode.onHarmonizedCoop = () => {
+      if (!this.isConnected) return;
+      this.sendPacket({ type: 'SUPERNOVA', val: true });
+    };
+  }
+
+  // ----------------------------------------------------
+  // 7. Per-Frame Render Update (Lerp 60/90fps interpolation)
+  // ----------------------------------------------------
+
+  public update(deltaTime: number): void {
+    if (!this.isConnected) {
+      this.ghostAvatarGroup.visible = false;
+      return;
+    }
+
+    this.ghostAvatarGroup.visible = true;
+
+    // Smooth lerp transforms (0.28 factor eliminates network jitter)
+    this.headCrestGroup.position.lerp(this.remoteHeadTarget, 0.28);
+    this.leftGhostHand.group.position.lerp(this.remoteLeftWristTarget, 0.28);
+    this.rightGhostHand.group.position.lerp(this.remoteRightWristTarget, 0.28);
+
+    // Dynamic pinch laser visibility & light response
+    this.leftGhostHand.pinchLine.visible = this.remoteLeftPinching;
+    this.rightGhostHand.pinchLine.visible = this.remoteRightPinching;
+    this.leftGhostHand.glowLight.intensity = this.remoteLeftPinching ? 2.5 : 1.1;
+    this.rightGhostHand.glowLight.intensity = this.remoteRightPinching ? 2.5 : 1.1;
+
+    // Subtle breathing rotation on Head Crest
+    this.headCrestGroup.rotation.y += 0.02;
+    this.headCrestSprite.lookAt(this.sceneManager.camera.position);
+
+    // Periodically refresh ping readout
+    if (Math.random() < 0.03) {
+      const pingText = `● 30Hz P2P SYNC | ${this.pingMs}ms`;
+      this.drawHeadCrestPlate('CO-WEAVER // GHOST PEER', pingText);
+    }
+  }
+
+  // ----------------------------------------------------
+  // 8. Cyber Modal UI & HUD Bindings
+  // ----------------------------------------------------
+
+  public setHUDElements(jamBtn: HTMLElement | null, jamBadge: HTMLElement | null): void {
+    this.hudJamBtn = jamBtn;
+    this.hudJamBadge = jamBadge;
+    this.updateHUDStatus();
+
+    if (this.hudJamBtn) {
+      this.hudJamBtn.addEventListener('click', () => {
+        this.toggleModal();
+      });
+    }
+  }
+
+  private updateHUDStatus(): void {
+    if (this.hudJamBadge) {
+      if (this.isConnected) {
+        this.hudJamBadge.className = 'badge badge-rose';
+        this.hudJamBadge.textContent = `JAM: CONNECTED (${this.isUsingBroadcast ? 'LOCAL' : 'WEBRTC'} 30Hz)`;
+      } else if (this.connectionState === 'WAITING_PEER') {
+        this.hudJamBadge.className = 'badge badge-gold';
+        this.hudJamBadge.textContent = 'JAM: HOSTING (WAITING)';
+      } else if (this.connectionState === 'CONNECTING') {
+        this.hudJamBadge.className = 'badge badge-cyan';
+        this.hudJamBadge.textContent = 'JAM: CONNECTING...';
+      } else {
+        this.hudJamBadge.className = 'badge badge-cyan';
+        this.hudJamBadge.textContent = 'JAM: SOLO';
+      }
+    }
+
+    if (this.hudJamBtn) {
+      this.hudJamBtn.textContent = this.isConnected
+        ? 'Jam Room: P2P Active [J]'
+        : this.currentRole === 'HOST'
+        ? 'Jam Room: Hosting [J]'
+        : 'Jam Room: Solo [J]';
+      this.hudJamBtn.classList.toggle('active', this.isConnected);
+    }
+  }
+
+  public toggleModal(): void {
+    if (!this.modalContainer) return;
+    const isVisible = this.modalContainer.style.display === 'flex';
+    this.modalContainer.style.display = isVisible ? 'none' : 'flex';
+    if (!isVisible) {
+      this.refreshModalContent();
+    }
+  }
+
+  private createModalUI(): void {
+    const modal = document.createElement('div');
+    modal.id = 'jam-modal';
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(4, 9, 20, 0.85);
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      font-family: 'Space Grotesk', sans-serif;
+    `;
+
+    modal.innerHTML = `
+      <div style="
+        background: rgba(7, 24, 45, 0.95);
+        border: 2px solid #f43f5e;
+        box-shadow: 0 0 35px rgba(244, 63, 94, 0.35);
+        border-radius: 20px;
+        width: 90%;
+        max-width: 580px;
+        padding: 26px 30px;
+        color: #f8fafc;
+        position: relative;
+      ">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(244,63,94,0.3); padding-bottom: 14px; margin-bottom: 18px;">
+          <div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+              <span style="color: #f43f5e;">⚡</span> ZERO-BACKEND P2P MULTIPLAYER JAM
+            </div>
+            <div style="font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #fb7185; margin-top: 3px;">
+              WEBRTC DATACHANNELS // 30HZ DELTA SYNC // NO SERVER REQUIRED
+            </div>
+          </div>
+          <button id="close-jam-modal-btn" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+
+
+// [Chrono-Loom Milestone 6/8] feat(multiplayer): synchronize remote node spawns, string weaves, and plucks in real-time
