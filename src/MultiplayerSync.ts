@@ -883,5 +883,152 @@ export class MultiplayerSync {
           <button id="close-jam-modal-btn" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
         </div>
 
+        <div id="jam-modal-body"></div>
+      </div>
+    `;
 
-// [Chrono-Loom Milestone 6/8] feat(multiplayer): synchronize remote node spawns, string weaves, and plucks in real-time
+    document.body.appendChild(modal);
+    this.modalContainer = modal;
+
+    const closeBtn = modal.querySelector('#close-jam-modal-btn');
+    closeBtn?.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.key === 'j' || e.key === 'J') && (e.target as HTMLElement).tagName !== 'INPUT' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+        this.toggleModal();
+      } else if (e.key === 'Escape' && modal.style.display === 'flex') {
+        modal.style.display = 'none';
+      }
+    });
+  }
+
+  private refreshModalContent(): void {
+    const body = document.getElementById('jam-modal-body');
+    if (!body) return;
+
+    if (this.isConnected) {
+      body.innerHTML = `
+        <div style="text-align: center; padding: 20px 0;">
+          <div style="font-size: 38px; margin-bottom: 10px;">🌐</div>
+          <div style="font-size: 20px; font-weight: 700; color: #34d399;">CONNECTED WITH CO-WEAVER!</div>
+          <div style="font-size: 13px; font-family: 'JetBrains Mono', monospace; color: #94a3b8; margin: 8px 0 20px;">
+            Transport: <strong style="color: #fb7185;">${this.isUsingBroadcast ? 'Local P2P BroadcastChannel' : 'WebRTC DataChannel'}</strong><br/>
+            Rate: <strong>30Hz Delta-Compressed</strong> | Ping: <strong>${this.pingMs}ms</strong>
+          </div>
+          <button id="disconnect-jam-btn" style="
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            font-weight: 700;
+            padding: 10px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+          ">DISCONNECT / RETURN TO SOLO</button>
+        </div>
+      `;
+
+      body.querySelector('#disconnect-jam-btn')?.addEventListener('click', () => {
+        this.disconnect();
+        this.refreshModalContent();
+      });
+      return;
+    }
+
+    body.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- Option 1: Instant Local Multi-Tab Jam -->
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 14px 18px;">
+          <div style="font-size: 14px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+            <span>⚡</span> Instant Local Multi-Tab Jam
+          </div>
+          <div style="font-size: 11.5px; color: #94a3b8; margin: 4px 0 10px;">
+            Pairs instantly between two browser tabs or windows on this computer. Zero setup, zero copy-paste!
+          </div>
+          <button id="local-pair-jam-btn" style="
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(56, 189, 248, 0.15));
+            border: 1px solid #00f0ff;
+            color: #00f0ff;
+            font-weight: 700;
+            padding: 9px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+          ">⚡ PAIR INSTANT MULTI-TAB JAM</button>
+        </div>
+
+        <!-- Option 2: Cross-Device WebRTC Host -->
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: 12px; padding: 14px 18px;">
+          <div style="font-size: 14px; font-weight: 700; color: #f43f5e; display: flex; align-items: center; gap: 6px;">
+            <span>👑</span> Host Cross-Device WebRTC Jam
+          </div>
+          <div style="font-size: 11.5px; color: #94a3b8; margin: 4px 0 10px;">
+            Create a room invite code to co-weave with a friend on another headset or PC across the internet.
+          </div>
+          <div id="host-controls">
+            <button id="create-host-btn" style="
+              background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(251, 113, 133, 0.15));
+              border: 1px solid #f43f5e;
+              color: #fb7185;
+              font-weight: 700;
+              padding: 9px 18px;
+              border-radius: 8px;
+              cursor: pointer;
+              font-size: 12px;
+            ">👑 GENERATE HOST INVITE CODE</button>
+          </div>
+        </div>
+
+        <!-- Option 3: Join WebRTC Host -->
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 14px 18px;">
+          <div style="font-size: 14px; font-weight: 700; color: #fbbf24; display: flex; align-items: center; gap: 6px;">
+            <span>🔗</span> Join Cross-Device WebRTC Jam
+          </div>
+          <div style="font-size: 11.5px; color: #94a3b8; margin: 4px 0 8px;">
+            Paste your friend's Host Invite Code below:
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input id="join-invite-input" placeholder="Paste Base64 Host Code here..." style="
+              flex: 1;
+              background: rgba(3, 7, 18, 0.8);
+              border: 1px solid rgba(245, 158, 11, 0.4);
+              border-radius: 6px;
+              padding: 8px 12px;
+              color: #fff;
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 11px;
+            "/>
+            <button id="connect-join-btn" style="
+              background: rgba(245, 158, 11, 0.2);
+              border: 1px solid #fbbf24;
+              color: #fbbf24;
+              font-weight: 700;
+              padding: 8px 16px;
+              border-radius: 6px;
+              cursor: pointer;
+              font-size: 12px;
+            ">CONNECT</button>
+          </div>
+          <div id="join-answer-box" style="margin-top: 10px; display: none;"></div>
+        </div>
+      </div>
+    `;
+
+    // Hook Local Pair
+    body.querySelector('#local-pair-jam-btn')?.addEventListener('click', () => {
+      this.instantLocalMultiTabConnect();
+      this.refreshModalContent();
+    });
+
+    // Hook Host Generation
+    body.querySelector('#create-host-btn')?.addEventListener('click', async () => {
+      const hostControls = body.querySelector('#host-controls');
+      if (hostControls) {
+        hostControls.innerHTML = `<div style="font-size: 12px; color: #fb7185;">Generating WebRTC STUN Offer...</div>`;
+      }
+      try {
+        const code = await this.startHosting();
+        if (hostControls) {
+
+// [Chrono-Loom Milestone 7/8] feat(multiplayer): synchronize master BPM clock across all connected peers
