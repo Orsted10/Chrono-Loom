@@ -294,4 +294,151 @@ export class MultiplayerSync {
   private initBroadcastChannel(): void {
     if (typeof BroadcastChannel === 'undefined') return;
 
-// [Chrono-Loom Milestone 2/8] feat(multiplayer): configure WebRTC DataChannels with public STUN servers
+    this.broadcastChannel = new BroadcastChannel('chrono_loom_p2p_jam');
+    this.broadcastChannel.onmessage = (event) => {
+      this.handleIncomingData(event.data, true);
+    };
+  }
+
+  // ----------------------------------------------------
+  // 3. WebRTC DataChannel Cross-Device Handshake
+  // ----------------------------------------------------
+
+  public async startHosting(): Promise<string> {
+    this.currentRole = 'HOST';
+    this.connectionState = 'WAITING_PEER';
+    this.updateHUDStatus();
+
+    this.peerConnection = new RTCPeerConnection(this.rtcConfig);
+
+    // Create reliable low-latency DataChannel
+    this.dataChannel = this.peerConnection.createDataChannel('chrono-loom-sync', {
+      ordered: false,
+      maxRetransmits: 0 // Ultra-fast UDP-like behavior for VR 30Hz
+    });
+
+    this.setupDataChannel(this.dataChannel);
+
+    // Create Offer
+    const offer = await this.peerConnection.createOffer();
+    await this.peerConnection.setLocalDescription(offer);
+
+    // Await ICE candidates to bundle into one single complete self-contained code
+    const completeOffer = await this.waitForIceGatheringComplete(this.peerConnection);
+    const offerCode = btoa(JSON.stringify(completeOffer || offer));
+
+    // Also announce presence on BroadcastChannel for instant local pairing
+    this.broadcastChannel?.postMessage({ type: 'CHRONO_LOOM_HOST_HELLO' });
+
+    console.log('[MultiplayerSync] Host initialized. Offer code generated.');
+    return offerCode;
+  }
+
+  public async joinWithOffer(offerCode: string): Promise<string> {
+    this.currentRole = 'JOIN';
+    this.connectionState = 'CONNECTING';
+    this.updateHUDStatus();
+
+    this.peerConnection = new RTCPeerConnection(this.rtcConfig);
+
+    this.peerConnection.ondatachannel = (event) => {
+      this.dataChannel = event.channel;
+      this.setupDataChannel(this.dataChannel);
+    };
+
+    const offer = JSON.parse(atob(offerCode.trim()));
+    await this.peerConnection.setRemoteDescription(offer);
+
+    const answer = await this.peerConnection.createAnswer();
+    await this.peerConnection.setLocalDescription(answer);
+
+    const completeAnswer = await this.waitForIceGatheringComplete(this.peerConnection);
+    const answerCode = btoa(JSON.stringify(completeAnswer || answer));
+
+    console.log('[MultiplayerSync] Joiner initialized. Answer code generated.');
+    return answerCode;
+  }
+
+  public async finalizeHostWithAnswer(answerCode: string): Promise<void> {
+    if (!this.peerConnection) return;
+    const answer = JSON.parse(atob(answerCode.trim()));
+    await this.peerConnection.setRemoteDescription(answer);
+    console.log('[MultiplayerSync] Host accepted joiner answer. Handshake finalizing.');
+  }
+
+  public instantLocalMultiTabConnect(): void {
+    if (!this.broadcastChannel) return;
+
+    if (this.currentRole === 'SOLO') {
+      // Act as Host
+      this.currentRole = 'HOST';
+      this.connectionState = 'WAITING_PEER';
+      this.isUsingBroadcast = true;
+      this.updateHUDStatus();
+      this.broadcastChannel.postMessage({ type: 'CHRONO_LOOM_HOST_HELLO' });
+      this.loomEngine.showHolographicToast('⚡ LOCAL JAM HOST READY', 'OPEN A 2ND BROWSER TAB TO PAIR INSTANTLY', 3.5);
+    } else {
+      // Announce join request
+      this.broadcastChannel.postMessage({ type: 'CHRONO_LOOM_JOIN_REQUEST' });
+    }
+  }
+
+  private waitForIceGatheringComplete(pc: RTCPeerConnection): Promise<RTCSessionDescriptionInit | null> {
+    return new Promise((resolve) => {
+      if (pc.iceGatheringState === 'complete') {
+        resolve(pc.localDescription);
+        return;
+      }
+
+      const checkState = () => {
+        if (pc.iceGatheringState === 'complete') {
+          pc.removeEventListener('icegatheringstatechange', checkState);
+          resolve(pc.localDescription);
+        }
+      };
+
+      pc.addEventListener('icegatheringstatechange', checkState);
+
+      // Fallback timeout after 1.8 seconds so user never hangs
+      setTimeout(() => {
+        pc.removeEventListener('icegatheringstatechange', checkState);
+        resolve(pc.localDescription);
+      }, 1800);
+    });
+  }
+
+  private setupDataChannel(channel: RTCDataChannel): void {
+    channel.onopen = () => {
+      this.onConnectionEstablished(false);
+    };
+
+    channel.onclose = () => {
+      this.onConnectionClosed();
+    };
+
+    channel.onerror = (err) => {
+      console.warn('[MultiplayerSync] DataChannel Error:', err);
+    };
+
+    channel.onmessage = (event) => {
+      try {
+        const packet = JSON.parse(event.data);
+        this.handleIncomingData(packet, false);
+      } catch (e) {
+        console.warn('[MultiplayerSync] Malformed packet:', e);
+      }
+    };
+  }
+
+  private onConnectionEstablished(isBroadcast: boolean): void {
+    this.isConnected = true;
+    this.isUsingBroadcast = isBroadcast;
+    this.connectionState = 'CONNECTED';
+    this.ghostAvatarGroup.visible = true;
+    this.constellationMode.isCoopMultiplayer = true;
+
+    this.updateHUDStatus();
+    this.start30HzSync();
+
+
+// [Chrono-Loom Milestone 3/8] feat(multiplayer): implement local BroadcastChannel fallback for instant multi-tab testing
