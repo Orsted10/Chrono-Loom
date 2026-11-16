@@ -440,5 +440,153 @@ export class MultiplayerSync {
     this.updateHUDStatus();
     this.start30HzSync();
 
+    // If host, transmit full state snapshot to joiner immediately
+    if (this.currentRole === 'HOST') {
+      const snapshot = this.loomEngine.getLoomSnapshot();
+      this.sendPacket({ type: 'SNAPSHOT_RES', snapshot });
+    }
 
-// [Chrono-Loom Milestone 3/8] feat(multiplayer): implement local BroadcastChannel fallback for instant multi-tab testing
+    this.loomEngine.showHolographicToast(
+      '🌐 JAM ROOM CONNECTED!',
+      isBroadcast ? 'Local P2P Broadcast Channel Active (30Hz)' : 'WebRTC Direct DataChannel Active (30Hz)',
+      4.0
+    );
+    console.log(`[MultiplayerSync] P2P Connected via ${isBroadcast ? 'BroadcastChannel' : 'WebRTC'}!`);
+  }
+
+  private onConnectionClosed(): void {
+    this.isConnected = false;
+    this.connectionState = 'DISCONNECTED';
+    this.ghostAvatarGroup.visible = false;
+    this.constellationMode.isCoopMultiplayer = false;
+    this.stop30HzSync();
+    this.updateHUDStatus();
+    console.log('[MultiplayerSync] P2P Disconnected.');
+  }
+
+  public disconnect(): void {
+    if (this.dataChannel) {
+      try { this.dataChannel.close(); } catch {}
+      this.dataChannel = null;
+    }
+    if (this.peerConnection) {
+      try { this.peerConnection.close(); } catch {}
+      this.peerConnection = null;
+    }
+    if (this.broadcastChannel) {
+      this.broadcastChannel.postMessage({ type: 'CHRONO_LOOM_DISCONNECT' });
+    }
+    this.currentRole = 'SOLO';
+    this.onConnectionClosed();
+  }
+
+  // ----------------------------------------------------
+  // 4. 30Hz Sync Loop & Delta Compression
+  // ----------------------------------------------------
+
+  private start30HzSync(): void {
+    this.stop30HzSync();
+    const intervalMs = Math.round(1000 / this.SYNC_FPS);
+
+    this.syncTimer = window.setInterval(() => {
+      this.broadcastFrameUpdate();
+    }, intervalMs);
+  }
+
+  private stop30HzSync(): void {
+    if (this.syncTimer !== null) {
+      clearInterval(this.syncTimer);
+      this.syncTimer = null;
+    }
+  }
+
+  private broadcastFrameUpdate(): void {
+    if (!this.isConnected) return;
+
+    // 1. Gather local camera head pose
+    const head = this.sceneManager.camera.position;
+
+    // 2. Gather local hands telemetry
+    const lTele = this.handInputManager.getTelemetry('left');
+    const rTele = this.handInputManager.getTelemetry('right');
+
+    // 3. Delta Compression for Harmonic Nodes:
+    // Only send nodes that have moved > 2mm since last transmission!
+    const movedNodes: [string, number, number, number][] = [];
+    for (const node of this.loomEngine.nodes.values()) {
+      const pos = node.position;
+      const last = this.lastSentNodePositions.get(node.id);
+      if (!last || last.distanceTo(pos) > 0.002) {
+        movedNodes.push([
+          node.id,
+          Math.round(pos.x * 1000) / 1000,
+          Math.round(pos.y * 1000) / 1000,
+          Math.round(pos.z * 1000) / 1000
+        ]);
+        if (!last) {
+          this.lastSentNodePositions.set(node.id, pos.clone());
+        } else {
+          last.copy(pos);
+        }
+      }
+    }
+
+    const framePacket = {
+      type: 'FRAME',
+      head: [Math.round(head.x * 1000) / 1000, Math.round(head.y * 1000) / 1000, Math.round(head.z * 1000) / 1000],
+      lh: [
+        Math.round(lTele.wristPosition.x * 1000) / 1000,
+        Math.round(lTele.wristPosition.y * 1000) / 1000,
+        Math.round(lTele.wristPosition.z * 1000) / 1000,
+        lTele.isPinching ? 1 : 0,
+        Math.round(lTele.pinchDistance * 1000) / 1000,
+        lTele.isOpenPalm ? 1 : 0
+      ],
+      rh: [
+        Math.round(rTele.wristPosition.x * 1000) / 1000,
+        Math.round(rTele.wristPosition.y * 1000) / 1000,
+        Math.round(rTele.wristPosition.z * 1000) / 1000,
+        rTele.isPinching ? 1 : 0,
+        Math.round(rTele.pinchDistance * 1000) / 1000,
+        rTele.isOpenPalm ? 1 : 0
+      ],
+      mn: movedNodes.length > 0 ? movedNodes : undefined,
+      t: performance.now()
+    };
+
+    this.sendPacket(framePacket);
+  }
+
+  public sendPacket(packet: any): void {
+    const json = JSON.stringify(packet);
+
+    if (this.dataChannel && this.dataChannel.readyState === 'open') {
+      this.dataChannel.send(json);
+    } else if (this.isUsingBroadcast && this.broadcastChannel) {
+      this.broadcastChannel.postMessage(packet);
+    }
+  }
+
+  // ----------------------------------------------------
+  // 5. Incoming Packet Dispatcher
+  // ----------------------------------------------------
+
+  private handleIncomingData(packet: any, isFromBroadcast: boolean): void {
+    if (!packet || !packet.type) return;
+
+    // Presence handshake messages for BroadcastChannel
+    if (isFromBroadcast) {
+      if (packet.type === 'CHRONO_LOOM_HOST_HELLO') {
+        if (this.currentRole === 'SOLO' || this.currentRole === 'JOIN') {
+          this.currentRole = 'JOIN';
+          this.broadcastChannel?.postMessage({ type: 'CHRONO_LOOM_JOIN_REQUEST' });
+        }
+        return;
+      } else if (packet.type === 'CHRONO_LOOM_JOIN_REQUEST') {
+        if (this.currentRole === 'HOST') {
+          this.broadcastChannel?.postMessage({
+            type: 'CHRONO_LOOM_JOIN_ACCEPT',
+            snapshot: this.loomEngine.getLoomSnapshot()
+          });
+
+// [Chrono-Loom Milestone 4/8] feat(multiplayer): design 30Hz delta compression binary packet format
