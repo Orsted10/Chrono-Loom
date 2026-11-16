@@ -1030,5 +1030,153 @@ export class MultiplayerSync {
       try {
         const code = await this.startHosting();
         if (hostControls) {
+          hostControls.innerHTML = `
+            <div style="margin-top: 6px;">
+              <textarea readonly style="
+                width: 100%;
+                height: 55px;
+                background: rgba(3, 7, 18, 0.85);
+                border: 1px solid #f43f5e;
+                border-radius: 6px;
+                padding: 6px;
+                color: #fca5a5;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 9.5px;
+                resize: none;
+              ">${code}</textarea>
+              <div style="display: flex; gap: 8px; margin-top: 6px;">
+                <button id="copy-host-code-btn" style="
+                  background: rgba(244, 63, 94, 0.2);
+                  border: 1px solid #f43f5e;
+                  color: #fb7185;
+                  font-weight: 700;
+                  padding: 6px 14px;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  font-size: 11px;
+                ">COPY CODE</button>
+              </div>
+              <div style="margin-top: 12px;">
+                <div style="font-size: 11.5px; color: #94a3b8; margin-bottom: 4px;">Paste Joiner Answer Code below to finish:</div>
+                <div style="display: flex; gap: 8px;">
+                  <input id="host-answer-input" placeholder="Paste Joiner Answer Code..." style="
+                    flex: 1;
+                    background: rgba(3, 7, 18, 0.8);
+                    border: 1px solid rgba(244, 63, 94, 0.4);
+                    border-radius: 6px;
+                    padding: 6px 10px;
+                    color: #fff;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 11px;
+                  "/>
+                  <button id="host-finalize-btn" style="
+                    background: rgba(52, 211, 153, 0.2);
+                    border: 1px solid #34d399;
+                    color: #34d399;
+                    font-weight: 700;
+                    padding: 6px 12px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 11px;
+                  ">ACCEPT</button>
+                </div>
+              </div>
+            </div>
+          `;
 
-// [Chrono-Loom Milestone 7/8] feat(multiplayer): synchronize master BPM clock across all connected peers
+          body.querySelector('#copy-host-code-btn')?.addEventListener('click', () => {
+            navigator.clipboard.writeText(code);
+            this.loomEngine.showHolographicToast('📋 HOST CODE COPIED!', 'Send this to your friend to join.');
+          });
+
+          body.querySelector('#host-finalize-btn')?.addEventListener('click', async () => {
+            const ansInput = body.querySelector('#host-answer-input') as HTMLInputElement;
+            if (ansInput && ansInput.value.trim()) {
+              await this.finalizeHostWithAnswer(ansInput.value.trim());
+              this.loomEngine.showHolographicToast('⚡ FINALIZING PEER CONNECTION...', 'Waiting for DataChannel open.');
+            }
+          });
+        }
+      } catch (err) {
+        console.error('[MultiplayerSync] Failed to host:', err);
+      }
+    });
+
+    // Hook Joiner Connect
+    body.querySelector('#connect-join-btn')?.addEventListener('click', async () => {
+      const input = body.querySelector('#join-invite-input') as HTMLInputElement;
+      const val = input ? input.value.trim() : '';
+      if (!val) return;
+
+      const answerBox = body.querySelector('#join-answer-box') as HTMLElement;
+      if (answerBox) {
+        answerBox.style.display = 'block';
+        answerBox.innerHTML = `<div style="font-size: 12px; color: #fbbf24;">Connecting & Generating Answer...</div>`;
+      }
+
+      try {
+        const answerCode = await this.joinWithOffer(val);
+        if (answerBox) {
+          answerBox.innerHTML = `
+            <div style="font-size: 11.5px; color: #34d399; font-weight: 700; margin-bottom: 4px;">
+              ✓ Answer Code Generated! Send this back to Host:
+            </div>
+            <textarea readonly style="
+              width: 100%;
+              height: 55px;
+              background: rgba(3, 7, 18, 0.85);
+              border: 1px solid #34d399;
+              border-radius: 6px;
+              padding: 6px;
+              color: #a7f3d0;
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 9.5px;
+              resize: none;
+            ">${answerCode}</textarea>
+            <button id="copy-answer-btn" style="
+              margin-top: 6px;
+              background: rgba(52, 211, 153, 0.2);
+              border: 1px solid #34d399;
+              color: #34d399;
+              font-weight: 700;
+              padding: 6px 14px;
+              border-radius: 6px;
+              cursor: pointer;
+              font-size: 11px;
+            ">COPY ANSWER CODE</button>
+          `;
+
+          body.querySelector('#copy-answer-btn')?.addEventListener('click', () => {
+            navigator.clipboard.writeText(answerCode);
+            this.loomEngine.showHolographicToast('📋 ANSWER CODE COPIED!', 'Send this back to the Host.');
+          });
+        }
+      } catch (err) {
+        console.error('[MultiplayerSync] Failed to join:', err);
+        if (answerBox) {
+          answerBox.innerHTML = `<div style="font-size: 12px; color: #ef4444;">Connection failed. Invalid Host Code.</div>`;
+        }
+      }
+    });
+  }
+
+  // ----------------------------------------------------
+  // 9. URL Hash Signaling (#jam=offer:...)
+  // ----------------------------------------------------
+
+  private checkUrlHashSignaling(): void {
+    const hash = window.location.hash;
+    if (hash.startsWith('#jam=offer:')) {
+      const code = hash.replace('#jam=offer:', '');
+      setTimeout(() => {
+        this.toggleModal();
+        const input = document.getElementById('join-invite-input') as HTMLInputElement;
+        if (input) {
+          input.value = code;
+        }
+      }, 800);
+    }
+  }
+}
+
+// [Chrono-Loom Milestone 8/8] feat(multiplayer): implement Cooperative Constellation Mode with double supernova
