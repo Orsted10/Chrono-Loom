@@ -145,5 +145,153 @@ export class MultiplayerSync {
       emissiveIntensity: 0.9,
       roughness: 0.2,
       metalness: 0.8,
+      transparent: true,
+      opacity: 0.88
+    });
+    const torusRing = new THREE.Mesh(torusGeo, torusMat);
+    torusRing.rotation.x = Math.PI * 0.5;
+    this.headCrestGroup.add(torusRing);
 
-// [Chrono-Loom Milestone 1/8] feat(multiplayer): initialize MultiplayerSync.ts for zero-backend P2P jam rooms
+    const crestLight = new THREE.PointLight(0xf43f5e, 1.4, 0.85);
+    this.headCrestGroup.add(crestLight);
+
+    // 3D Billboard text plate
+    this.headCrestCanvas = document.createElement('canvas');
+    this.headCrestCanvas.width = 512;
+    this.headCrestCanvas.height = 140;
+    this.headCrestTexture = new THREE.CanvasTexture(this.headCrestCanvas);
+    this.headCrestTexture.minFilter = THREE.LinearFilter;
+
+    const spriteMat = new THREE.SpriteMaterial({
+      map: this.headCrestTexture,
+      transparent: true,
+      opacity: 0.95,
+      depthTest: false
+    });
+    this.headCrestSprite = new THREE.Sprite(spriteMat);
+    this.headCrestSprite.scale.set(0.38, 0.104, 1);
+    this.headCrestSprite.position.set(0, 0.16, 0);
+    this.headCrestGroup.add(this.headCrestSprite);
+
+    this.drawHeadCrestPlate('CO-WEAVER // GHOST PEER', '● 30Hz P2P SYNC');
+  }
+
+  private createGhostHand(hand: Handedness): GhostHandMesh {
+    const group = new THREE.Group();
+    group.name = `GhostHand_${hand}`;
+
+    // Wrist Sphere
+    const wristGeo = new THREE.SphereGeometry(0.013, 10, 10);
+    const wristMat = new THREE.MeshStandardMaterial({
+      color: 0xf43f5e,
+      emissive: 0xf43f5e,
+      emissiveIntensity: 0.8,
+      roughness: 0.3,
+      metalness: 0.5,
+      transparent: true,
+      opacity: 0.92
+    });
+    const wristMesh = new THREE.Mesh(wristGeo, wristMat);
+    group.add(wristMesh);
+
+    // Fingertip spheres (Thumb, Index, Middle, Ring, Pinky)
+    const tipMeshes: THREE.Mesh[] = [];
+    const tipGeo = new THREE.SphereGeometry(0.009, 8, 8);
+    const tipMat = new THREE.MeshBasicMaterial({
+      color: 0xfda4af,
+      transparent: true,
+      opacity: 0.95
+    });
+
+    const tipOffsets = [
+      new THREE.Vector3(hand === 'left' ? -0.03 : 0.03, 0.045, -0.01),  // Thumb
+      new THREE.Vector3(hand === 'left' ? -0.015 : 0.015, 0.075, -0.02), // Index
+      new THREE.Vector3(0, 0.082, -0.022),                              // Middle
+      new THREE.Vector3(hand === 'left' ? 0.015 : -0.015, 0.072, -0.018), // Ring
+      new THREE.Vector3(hand === 'left' ? 0.03 : -0.03, 0.055, -0.015)   // Pinky
+    ];
+
+    const boneLines: THREE.Line[] = [];
+    const boneMat = new THREE.LineBasicMaterial({
+      color: 0xfb7185,
+      transparent: true,
+      opacity: 0.7,
+      linewidth: 2,
+      blending: THREE.AdditiveBlending
+    });
+
+    for (let i = 0; i < 5; i++) {
+      const tipMesh = new THREE.Mesh(tipGeo, tipMat.clone());
+      tipMesh.position.copy(tipOffsets[i]);
+      group.add(tipMesh);
+      tipMeshes.push(tipMesh);
+
+      // Bone line linking wrist to tip
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0),
+        tipOffsets[i]
+      ]);
+      const line = new THREE.Line(lineGeo, boneMat);
+      group.add(line);
+      boneLines.push(line);
+    }
+
+    // Dynamic Pinch Laser Line (Thumb to Index)
+    const pinchGeo = new THREE.BufferGeometry().setFromPoints([
+      tipOffsets[0],
+      tipOffsets[1]
+    ]);
+    const pinchMat = new THREE.LineBasicMaterial({
+      color: 0xff0055,
+      linewidth: 3,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending
+    });
+    const pinchLine = new THREE.Line(pinchGeo, pinchMat);
+    pinchLine.visible = false;
+    group.add(pinchLine);
+
+    const glowLight = new THREE.PointLight(0xf43f5e, 1.2, 0.35);
+    group.add(glowLight);
+
+    return { group, wristMesh, tipMeshes, boneLines, pinchLine, glowLight };
+  }
+
+  private drawHeadCrestPlate(title: string, sub: string): void {
+    const ctx = this.headCrestCanvas.getContext('2d')!;
+    ctx.clearRect(0, 0, 512, 140);
+
+    // Glass backdrop
+    ctx.fillStyle = 'rgba(7, 24, 45, 0.92)';
+    ctx.strokeStyle = '#f43f5e';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(10, 10, 492, 120, 20);
+    ctx.fill();
+    ctx.stroke();
+
+    // Text Header
+    ctx.shadowColor = '#f43f5e';
+    ctx.shadowBlur = 10;
+    ctx.font = 'bold 26px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(title, 256, 56);
+
+    ctx.font = 'bold 16px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#fb7185';
+    ctx.fillText(sub, 256, 96);
+    ctx.shadowBlur = 0;
+
+    this.headCrestTexture.needsUpdate = true;
+  }
+
+  // ----------------------------------------------------
+  // 2. BroadcastChannel (Instant Multi-Tab Local Testing)
+  // ----------------------------------------------------
+
+  private initBroadcastChannel(): void {
+    if (typeof BroadcastChannel === 'undefined') return;
+
+// [Chrono-Loom Milestone 2/8] feat(multiplayer): configure WebRTC DataChannels with public STUN servers
