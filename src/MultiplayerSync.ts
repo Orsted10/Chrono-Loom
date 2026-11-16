@@ -588,5 +588,152 @@ export class MultiplayerSync {
             type: 'CHRONO_LOOM_JOIN_ACCEPT',
             snapshot: this.loomEngine.getLoomSnapshot()
           });
+          if (!this.isConnected) this.onConnectionEstablished(true);
+        }
+        return;
+      } else if (packet.type === 'CHRONO_LOOM_JOIN_ACCEPT') {
+        if (this.currentRole === 'JOIN' && !this.isConnected) {
+          this.onConnectionEstablished(true);
+          if (packet.snapshot) {
+            this.loomEngine.applyLoomSnapshot(packet.snapshot);
+          }
+        }
+        return;
+      } else if (packet.type === 'CHRONO_LOOM_DISCONNECT') {
+        this.onConnectionClosed();
+        return;
+      }
+    }
 
-// [Chrono-Loom Milestone 4/8] feat(multiplayer): design 30Hz delta compression binary packet format
+    switch (packet.type) {
+      case 'FRAME': {
+        // Compute round-trip ping
+        if (packet.t) {
+          const now = performance.now();
+          this.pingMs = Math.max(1, Math.round((now - packet.t) * 0.5));
+        }
+
+        // Remote Head Target
+        if (packet.head) {
+          this.remoteHeadTarget.set(packet.head[0], packet.head[1], packet.head[2]);
+        }
+
+        // Remote Left Hand Target
+        if (packet.lh) {
+          this.remoteLeftWristTarget.set(packet.lh[0], packet.lh[1], packet.lh[2]);
+          this.remoteLeftPinching = packet.lh[3] === 1;
+        }
+
+        // Remote Right Hand Target
+        if (packet.rh) {
+          this.remoteRightWristTarget.set(packet.rh[0], packet.rh[1], packet.rh[2]);
+          this.remoteRightPinching = packet.rh[3] === 1;
+        }
+
+        // Delta-compressed moved nodes
+        if (packet.mn && Array.isArray(packet.mn)) {
+          for (const [id, x, y, z] of packet.mn) {
+            this.loomEngine.applyRemoteNodeMove(id, new THREE.Vector3(x, y, z));
+          }
+        }
+        break;
+      }
+
+      case 'NODE_SPAWN':
+        this.loomEngine.applyRemoteNodeSpawn(
+          packet.id,
+          new THREE.Vector3(packet.pos[0], packet.pos[1], packet.pos[2]),
+          packet.freq
+        );
+        break;
+
+      case 'NODE_MOVE':
+        this.loomEngine.applyRemoteNodeMove(
+          packet.id,
+          new THREE.Vector3(packet.pos[0], packet.pos[1], packet.pos[2])
+        );
+        break;
+
+      case 'STR_WEAVE':
+        this.loomEngine.applyRemoteStringWeave(packet.id, packet.nodeA, packet.nodeB);
+        break;
+
+      case 'STR_PLUCK':
+        this.loomEngine.applyRemoteStringPluck(
+          packet.id,
+          packet.pos ? new THREE.Vector3(packet.pos[0], packet.pos[1], packet.pos[2]) : undefined,
+          packet.vel || 1.0
+        );
+        break;
+
+      case 'STR_SEVER':
+        this.loomEngine.applyRemoteStringSever(
+          new THREE.Vector3(packet.cutPoint[0], packet.cutPoint[1], packet.cutPoint[2]),
+          packet.stringId
+        );
+        break;
+
+      case 'BPM_SYNC':
+        this.loomEngine.applyRemoteBPM(packet.bpm);
+        break;
+
+      case 'RING_HIT':
+        this.constellationMode.applyRemoteRingHit(packet.ringId);
+        break;
+
+      case 'SUPERNOVA':
+        this.constellationMode.applyRemoteHarmonizedCoop();
+        break;
+
+      case 'SNAPSHOT_RES':
+        if (packet.snapshot) {
+          this.loomEngine.applyLoomSnapshot(packet.snapshot);
+        }
+        break;
+    }
+  }
+
+  // ----------------------------------------------------
+  // 6. Hook LoomEngine & Constellation Events
+  // ----------------------------------------------------
+
+  private hookLoomEngineEvents(): void {
+    this.loomEngine.onNodeCreated = (node) => {
+      if (!this.isConnected) return;
+      this.sendPacket({
+        type: 'NODE_SPAWN',
+        id: node.id,
+        pos: [Math.round(node.position.x * 1000) / 1000, Math.round(node.position.y * 1000) / 1000, Math.round(node.position.z * 1000) / 1000],
+        freq: Math.round(node.noteFrequency * 10) / 10
+      });
+    };
+
+    this.loomEngine.onStringCreated = (str) => {
+      if (!this.isConnected) return;
+      this.sendPacket({
+        type: 'STR_WEAVE',
+        id: str.id,
+        nodeA: str.nodeA.id,
+        nodeB: str.nodeB.id
+      });
+    };
+
+    this.loomEngine.onStringPlucked = (stringId, pos, vel) => {
+      if (!this.isConnected) return;
+      this.sendPacket({
+        type: 'STR_PLUCK',
+        id: stringId,
+        pos: [Math.round(pos.x * 1000) / 1000, Math.round(pos.y * 1000) / 1000, Math.round(pos.z * 1000) / 1000],
+        vel: Math.round(vel * 100) / 100
+      });
+    };
+
+    this.loomEngine.onStringSevered = (cutPoint, stringId) => {
+      if (!this.isConnected) return;
+      this.sendPacket({
+        type: 'STR_SEVER',
+        cutPoint: [Math.round(cutPoint.x * 1000) / 1000, Math.round(cutPoint.y * 1000) / 1000, Math.round(cutPoint.z * 1000) / 1000],
+        stringId
+      });
+
+// [Chrono-Loom Milestone 5/8] feat(multiplayer): render remote player's glowing 3D Ghost Hands and Head Crest
