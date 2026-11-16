@@ -667,5 +667,101 @@
             <li>• <strong>6. Agent Aria (AI Companion):</strong> Observes tempo, flies to empty sweet-spots &amp; weaves counter-melodies! Poke/pinch Aria to cycle modes: <em>CO-CREATE, RHYTHM BOOST, ZEN SOLO</em>.</li>
             <li>• <strong>7. Daily Constellation Challenge:</strong> Guide pulses through all 3 Target Rings within 6 beats to achieve victory supernova &amp; celebratory chord!</li>
             <li>• <strong>8. Spatial Wrist HUD:</strong> 4 tactile 3D buttons float near your Left Wrist: Daily Puzzle, Freeform, A11y Suite, and Reset.</li>
+            <li>• <strong>9. Accessibility Suite:</strong> 1-Handed Virtual Anchor Tether &amp; Gaze Snap. Shape-Coded Synesthesia (Cube = Bass, Octahedron = Mid, Tetrahedron = High) + 3D Note Badges &amp; Visual Haptic Ripple Rings for colorblind &amp; Deaf players. Press <kbd>C</kbd> to Pull Workspace Closer (&lt; 0.35m radius). Press <kbd>A</kbd> to toggle A11y Suite.</li>
+            <li>• <strong>10. Showcase &amp; Sharing:</strong> Press <kbd>D</kbd> or click <em>🎬 Auto-Demo</em> for the hands-free 45-second cinematic masterclass walkthrough. Click <em>🔗 Share Loom Link</em> to copy a portable Base64 constellation URL hash!</li>
+            <li>• <strong>11. MR Plane Detection &amp; Wall-Bounce Acoustics:</strong> Pinched nodes snap magnetically onto physical desks/tables (&lt; 0.06m) with a holographic base-pedestal. Stray pulses shoot outward as luminous photon darts, bouncing off real walls &amp; triggering early-reflection stereo echoes in <code>SpatialSynth</code>! Press <kbd>R</kbd> or click <em>MR Room Scan</em> to toggle.</li>
+            <li>• <strong>12. Neural Gesture Vocabulary:</strong> <em>Time-Dilation Conductor</em> (Palms facing: raise/lower hands to scale 40-180 BPM with tempo ribbon [Key <kbd>T</kbd>]). <em>Harmonic Chord Bloom</em> (Pinch + outward flick splits node into 3-node triad chord [Key <kbd>B</kbd>]). <em>Acoustic Scissors Snip</em> (Index+middle scissor-cut across string severs it cleanly [Key <kbd>X</kbd>]). Press <kbd>G</kbd> to toggle the 3D Wrist Holo-Card!</li>
+            <li>• <strong>13. Zero-Backend P2P Jam Rooms:</strong> Co-weave with remote peers via WebRTC DataChannels or instant multi-tab <code>BroadcastChannel</code> at 30Hz! Includes glowing 3D Ghost Hands + Head Crest avatar, shared clock, and Cooperative Constellation Mode (doubled supernova!). Press <kbd>J</kbd> or click <em>Jam Room [J]</em>.</li>
+            <li>• <strong>14. Euclidean Polyrhythms &amp; Scale Presets:</strong> Bjorklund's algorithm $E(k, n)$ on every Harmonic Node! Twist wrist while pinching (or mouse wheel on desktop) to dial active hits $k$ and step counts $n$ (3, 4, 5, 7, 8, 12, 16) with radial constellation step-rings. Press <kbd>1</kbd>–<kbd>5</kbd> or click <em>Scale [1-5]</em> to smoothly morph between 5 curated scales (<em>Celestial Lydian, Tokyo Midnight Hirajoshi, Raga Yaman Evening, Dorian Cyber-Noir, Deep Sub-Drone</em>) with dynamic chromatic lighting shifts!</li>
+            <li>• <strong>15. Agent Aria v2 Call-and-Response &amp; Voice Director:</strong> Aria listens to your last 4 plucked notes, analyzes rhythmic density &amp; interval tension, flies to a complementary sweet-spot, and weaves a 2-bar "Call-and-Response" counter-melody with glowing optical laser filaments! Press <kbd>V</kbd> or click <em>🎤 Talk to Aria [V]</em> to speak natural intents (<em>"make it faster"</em>, <em>"add a bassline"</em>, <em>"switch to raga scale"</em>, <em>"harmonize with me"</em>, <em>"clear the loom"</em>) with 3D expressive emotional animations (curious head-tilt, joyful barrel-roll, focused laser weave) and dual-formant procedural vocalizations!</li>
+            <li>• <strong>16. Quantum Strings &amp; Instanced Ribbon Trails:</strong> Custom GLSL <code>QuantumStringMaterial</code> computes physical standing-wave harmonics ($\sin(n \pi u) \cos(\omega t)$) directly in the vertex shader whenever plucked, with spectral chromatic aberration fringes along peak displacement and traveling energy solitons! An <code>InstancedMesh</code> GPU ribbon trail pool (max 256 instances, 1 draw call) trails behind moving fingertips and flying Chrono-Pulses, smoothly tapering opacity and width over 0.45s with 100% Quest 3 Adreno GPU precision guards.</li>
+            <li>• <strong>Simulator:</strong> <kbd>Left-Click Drag</kbd> = Left Hand Pinch, <kbd>Right-Click / Space</kbd> = Right Hand Pinch.</li>
+          </ul>
+          <div class="hud-actions">
+            <button id="talk-aria-btn" class="action-btn action-btn-purple">🎤 Talk to Aria [V]</button>
+            <button id="aria-chips-toggle-btn" class="action-btn">Voice Intents ▾</button>
+            <button id="scale-cycle-btn" class="action-btn">Scale: Lydian [1-5]</button>
+            <button id="jam-room-btn" class="action-btn">Jam Room [J]</button>
+            <button id="gesture-guide-btn" class="action-btn">Gesture Guide [G]</button>
+            <button id="conductor-mode-btn" class="action-btn">Conductor BPM [T]</button>
+            <button id="room-scan-toggle-btn" class="action-btn active">MR Room Scan: ON [R]</button>
+            <button id="demo-showcase-btn" class="action-btn action-btn-gold">🎬 Auto-Demo [D]</button>
+            <button id="share-loom-btn" class="action-btn">🔗 Share Loom Link</button>
+            <button id="aria-cycle-btn" class="action-btn">Cycle Aria Mode</button>
+            <button id="puzzle-toggle-btn" class="action-btn">Mode: Constellation #322</button>
+            <button id="a11y-toggle-btn" class="action-btn active">A11y Suite: ON</button>
+            <button id="compact-toggle-btn" class="action-btn">Pull Closer [C]</button>
+            <button id="sim-openpalm-btn" class="action-btn">Toggle Open Palm (Key: O)</button>
+            <button id="reset-loom-btn" class="action-btn action-btn-gold">Reset Spatial Loom</button>
+            <button id="clear-threads-btn" class="action-btn">Clear Weave Trails</button>
+          </div>
+          <div id="aria-intent-chips-drawer" class="aria-chips-drawer" style="display: none;">
+            <button class="chip-btn" data-intent="faster">⚡ Faster (+25 BPM)</button>
+            <button class="chip-btn" data-intent="slower">🌊 Slower (-25 BPM)</button>
+            <button class="chip-btn" data-intent="add a bassline">🎸 Add Bassline</button>
+            <button class="chip-btn" data-intent="harmonize with me">🎼 Harmonize</button>
+            <button class="chip-btn" data-intent="switch to raga scale">🎵 Raga Scale</button>
+            <button class="chip-btn" data-intent="switch to tokyo midnight scale">🌸 Hirajoshi Scale</button>
+            <button class="chip-btn" data-intent="clear the loom">🧹 Clear Loom</button>
+          </div>
+        </div>
 
-<!-- [Chrono-Loom Milestone 7/8] feat(mr): add [MR ROOM SCAN: ON/OFF] toggle button in HUD and wrist menu -->
+        <!-- On-Screen Telemetry Bar for Demo Recording (Bottom-Right) -->
+        <div id="demo-telemetry-panel" class="demo-telemetry-container">
+          <div class="demo-telemetry-header">
+            <div class="rec-title-group">
+              <span class="rec-dot"></span>
+              <span>LIVE DEMO TELEMETRY // 2026</span>
+            </div>
+            <button id="toggle-telemetry-btn" class="toggle-telemetry-btn" title="Toggle Telemetry (Hotkey: H)">
+              HIDE [H]
+            </button>
+          </div>
+          <div class="demo-telemetry-body" id="telemetry-body">
+            <div class="telemetry-row">
+              <span class="telemetry-key">Hand Tracking:</span>
+              <span class="telemetry-val" id="demo-hand-tracking">ACTIVE (L: REST | R: REST | 99.8%)</span>
+            </div>
+            <div class="telemetry-row">
+              <span class="telemetry-key">Seated Radius:</span>
+              <span class="telemetry-val" id="demo-seated-radius">&lt; 0.55m (Airplane Seat Compliant)</span>
+            </div>
+            <div class="telemetry-row">
+              <span class="telemetry-key">Agent Aria State:</span>
+              <span class="telemetry-val" id="demo-aria-state">[OBSERVING / CO-CREATE]</span>
+            </div>
+            <div class="telemetry-row">
+              <span class="telemetry-key">Aria Intent:</span>
+              <span class="telemetry-val" id="demo-aria-intent" style="color: #c084fc;">IDLE (Voice Key [V])</span>
+            </div>
+            <div class="telemetry-row">
+              <span class="telemetry-key">Accessibility Suite:</span>
+              <span class="telemetry-val" id="demo-a11y-status" style="color: #34d399;">ON (1-Hand Tether + Gaze Snap)</span>
+            </div>
+            <div class="telemetry-row">
+              <span class="telemetry-key">Multiplayer Jam:</span>
+              <span class="telemetry-val" id="demo-multiplayer-status" style="color: #fb7185;">SOLO (WebRTC Ready [J])</span>
+            </div>
+            <div class="telemetry-row">
+              <span class="telemetry-key">Scale Preset:</span>
+              <span class="telemetry-val" id="demo-scale-status" style="color: #ffd700;">Lydian (Key [1])</span>
+            </div>
+            <div class="telemetry-row">
+              <span class="telemetry-key">GPU Shaders:</span>
+              <span class="telemetry-val" id="demo-gpu-shaders" style="color: #00f0ff;">QUANTUM STRINGS + RIBBONS (1-DC)</span>
+            </div>
+            <div class="telemetry-row">
+              <span class="telemetry-key">Loom Polyrhythm:</span>
+              <span class="telemetry-val" id="demo-polyrhythm-bpm">3 Nodes | 2 Strings | 90 BPM</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Application Script Entry Point -->
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+
+<!-- [Chrono-Loom Milestone 8/8] feat(multiplayer): add [JAM ROOM: SOLO / HOST / JOIN] controls to HUD and wrist menu -->
