@@ -588,5 +588,89 @@ export class EuclideanEngine {
 
   public update(deltaTime: number): void {
     const bpm = this.loomEngine.globalBPM;
+    const time = performance.now() * 0.001;
+    this.polyrhythmClock += deltaTime;
 
-// [Chrono-Loom Milestone 7/9] feat(scales): add Dorian Cyber-Noir and Deep Sub-Harmonic Drone presets
+    // 1. Process VR Hand Wrist-Twist Interactions
+    this.updateVRHandTwist('left');
+    this.updateVRHandTwist('right');
+
+    // 2. Measure duration of 4 beats (one measure)
+    const measureDuration = (4 * 60) / bpm;
+    const globalPhase = (time / measureDuration) % 1.0;
+
+    // 3. Update every active Harmonic Node's Euclidean Ring
+    for (const node of this.loomEngine.nodes.values()) {
+      if (!node.euclideanConfig) {
+        // Ensure every node has its Euclidean ring
+        this.attachEuclideanRing(node, 3, 8);
+        continue;
+      }
+
+      const cfg: EuclideanRingConfig = node.euclideanConfig;
+      const n = cfg.n;
+      const ringRadius = 0.062;
+
+      // Position playhead along ring
+      const theta = 2 * Math.PI * globalPhase - Math.PI / 2;
+      cfg.playheadMesh.position.set(
+        ringRadius * Math.cos(theta),
+        ringRadius * Math.sin(theta),
+        0
+      );
+
+      // Current step index
+      const currentStep = Math.floor(globalPhase * n) % n;
+      cfg.currentStep = currentStep;
+
+      // Trigger hit when crossing step boundary
+      if (currentStep !== cfg.lastTriggeredStep) {
+        cfg.lastTriggeredStep = currentStep;
+
+        if (cfg.pattern[currentStep] === true && !node.isMuted) {
+          // A. Trigger Visual Pip Scale Explosion
+          cfg.pipScales[currentStep] = 2.0;
+
+          // B. Trigger Short Acoustic Kalimba/Chime Note
+          this.spatialSynth.playSpatialNote({
+            frequency: node.noteFrequency,
+            position: node.position,
+            intensity: 1.25,
+            duration: 0.18
+          });
+
+          // C. Floor Cymatic Pulse & Mini Particle Shower
+          this.loomEngine.spawnParticleBurst(node.position, 8, this.activeScale.palette.accentColor, 0.04);
+          this.sceneManager.triggerCymaticPulse(node.position, this.activeScale.palette.accentColor, 0.85);
+
+          // D. Inject Traveling Chrono-Pulses into connected strings!
+          for (const str of this.loomEngine.strings.values()) {
+            if (str.nodeA.id === node.id || str.nodeB.id === node.id) {
+              const target = str.nodeA.id === node.id ? str.nodeB : str.nodeA;
+              if (this.loomEngine.pulses.size < 14) {
+                this.loomEngine.spawnChronoPulse(node, target, str);
+              }
+            }
+          }
+        }
+      }
+
+      // Smooth pip scale decay
+      for (let i = 0; i < n; i++) {
+        if (cfg.pipScales[i] > 1.01) {
+          cfg.pipScales[i] = THREE.MathUtils.lerp(cfg.pipScales[i], 1.0, 0.15);
+          cfg.pipMeshes[i].scale.setScalar(cfg.pipScales[i]);
+        } else {
+          cfg.pipScales[i] = 1.0;
+          cfg.pipMeshes[i].scale.setScalar(1.0);
+        }
+      }
+
+      // Orient label billboard toward user camera
+      cfg.labelSprite.lookAt(this.sceneManager.camera.position);
+
+      // Ring always faces user eye level
+      cfg.ringGroup.lookAt(this.sceneManager.camera.position);
+
+
+// [Chrono-Loom Milestone 8/9] feat(scales): smoothly morph all active node frequencies when scale is switched
