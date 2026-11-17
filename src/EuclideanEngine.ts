@@ -419,5 +419,90 @@ export class EuclideanEngine {
     ctx.textAlign = 'center';
     ctx.fillText(`E(${k}, ${n})`, 256, 56);
 
+    ctx.font = 'bold 20px "JetBrains Mono", monospace';
+    ctx.fillStyle = `#${this.activeScale.palette.accentColor.getHexString()}`;
+    const name = getEuclideanRhythmName(k, n);
+    ctx.fillText(name.toUpperCase(), 256, 92);
 
-// [Chrono-Loom Milestone 5/9] feat(scales): implement 5 curated spatial scale presets (Keys 1-5)
+    labelTexture.needsUpdate = true;
+  }
+
+  // ----------------------------------------------------
+  // 2. Pinch-and-Twist Hand Interaction & Desktop Controls
+  // ----------------------------------------------------
+
+  public cycleNodeStepCount(node: HarmonicNode, dir: 1 | -1): void {
+    if (!node.euclideanConfig) {
+      this.attachEuclideanRing(node, 3, 8);
+      return;
+    }
+
+    const currentN = node.euclideanConfig.n;
+    const idx = ALLOWED_EUCLIDEAN_STEPS.indexOf(currentN);
+    const nextIdx = THREE.MathUtils.clamp(
+      (idx + dir + ALLOWED_EUCLIDEAN_STEPS.length) % ALLOWED_EUCLIDEAN_STEPS.length,
+      0,
+      ALLOWED_EUCLIDEAN_STEPS.length - 1
+    );
+    const newN = ALLOWED_EUCLIDEAN_STEPS[nextIdx];
+    const newK = Math.max(1, Math.min(node.euclideanConfig.k, newN));
+
+    this.attachEuclideanRing(node, newK, newN);
+    this.spatialSynth.playSpatialNote({
+      frequency: node.noteFrequency * 1.5,
+      position: node.position,
+      intensity: 0.9,
+      duration: 0.2
+    });
+  }
+
+  public adjustNodeHits(node: HarmonicNode, delta: number): void {
+    if (!node.euclideanConfig) {
+      this.attachEuclideanRing(node, 3, 8);
+      return;
+    }
+
+    const { n, k } = node.euclideanConfig;
+    let nextK = k + delta;
+
+    if (nextK > n) {
+      // Step up to next allowed steps count
+      this.cycleNodeStepCount(node, 1);
+      return;
+    } else if (nextK < 1) {
+      // Step down to previous allowed steps count
+      this.cycleNodeStepCount(node, -1);
+      return;
+    }
+
+    this.attachEuclideanRing(node, nextK, n);
+    this.spatialSynth.playSpatialNote({
+      frequency: node.noteFrequency,
+      position: node.position,
+      intensity: 1.0,
+      duration: 0.15
+    });
+  }
+
+  private setupDesktopControls(): void {
+    // Mouse wheel on desktop while hovering/grabbing node cycles k and n
+    window.addEventListener('wheel', (e: WheelEvent) => {
+      // Find nearest node within comfort reach of reticle/mouse
+      const targetPos = (this.handInputManager as any).simTargetPos || new THREE.Vector3(0, 1.2, -0.45);
+      const nearest = this.loomEngine.findNearestNode(targetPos, 0.12);
+
+      if (nearest && nearest.node) {
+        e.preventDefault();
+        if (e.shiftKey) {
+          this.cycleNodeStepCount(nearest.node, e.deltaY < 0 ? 1 : -1);
+        } else {
+          this.adjustNodeHits(nearest.node, e.deltaY < 0 ? 1 : -1);
+        }
+      }
+    }, { passive: false });
+
+    // Keyboard Shortcuts:
+    // '1'-'5' for Scale Modes, 'E' for Euclidean toggle, '['/']' for k, '{'/'}' for n
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+
+// [Chrono-Loom Milestone 6/9] feat(scales): add Celestial Lydian, Tokyo Midnight Hirajoshi, and Raga Yaman
