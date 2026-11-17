@@ -504,5 +504,89 @@ export class EuclideanEngine {
     // Keyboard Shortcuts:
     // '1'-'5' for Scale Modes, 'E' for Euclidean toggle, '['/']' for k, '{'/'}' for n
     window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
 
-// [Chrono-Loom Milestone 6/9] feat(scales): add Celestial Lydian, Tokyo Midnight Hirajoshi, and Raga Yaman
+      if (e.key >= '1' && e.key <= '5') {
+        const scaleIdx = parseInt(e.key, 10) - 1;
+        this.applyScalePreset(scaleIdx, true);
+      } else if (e.key === 'e' || e.key === 'E') {
+        const targetPos = (this.handInputManager as any).simTargetPos || new THREE.Vector3(0, 1.2, -0.45);
+        const nearest = this.loomEngine.findNearestNode(targetPos, 0.16);
+        if (nearest && nearest.node) {
+          this.cycleNodeStepCount(nearest.node, 1);
+        }
+      } else if (e.key === '[' || e.key === ']') {
+        const targetPos = (this.handInputManager as any).simTargetPos || new THREE.Vector3(0, 1.2, -0.45);
+        const nearest = this.loomEngine.findNearestNode(targetPos, 0.16);
+        if (nearest && nearest.node) {
+          this.adjustNodeHits(nearest.node, e.key === ']' ? 1 : -1);
+        }
+      } else if (e.key === 'n' || e.key === 'N') {
+        const targetPos = (this.handInputManager as any).simTargetPos || new THREE.Vector3(0, 1.2, -0.45);
+        const nearest = this.loomEngine.findNearestNode(targetPos, 0.16);
+        if (nearest && nearest.node) {
+          this.cycleNodeStepCount(nearest.node, 1);
+        }
+      }
+    });
+  }
+
+  // ----------------------------------------------------
+  // 3. VR Wrist Roll Hand Interaction
+  // ----------------------------------------------------
+
+  private updateVRHandTwist(hand: Handedness): void {
+    const tele = this.handInputManager.getTelemetry(hand);
+    if (!tele.isPinching) {
+      this.prevWristRoll.delete(hand);
+      this.rollAccumulator.delete(hand);
+      return;
+    }
+
+    // Find grabbed node by this hand
+    let grabbedNode: HarmonicNode | null = null;
+    for (const node of this.loomEngine.nodes.values()) {
+      if (node.isGrabbed && node.grabbedByHand === hand) {
+        grabbedNode = node;
+        break;
+      }
+    }
+
+    if (!grabbedNode) return;
+
+    // Vector from wrist to index tip represents the forearm orientation
+    const dir = new THREE.Vector3().subVectors(tele.indexTipPosition, tele.wristPosition).normalize();
+    // Roll angle in the transverse plane
+    const rollAngle = Math.atan2(dir.y, dir.x);
+
+    const prev = this.prevWristRoll.get(hand);
+    if (prev !== undefined) {
+      let delta = rollAngle - prev;
+      if (delta > Math.PI) delta -= 2 * Math.PI;
+      if (delta < -Math.PI) delta += 2 * Math.PI;
+
+      let accum = (this.rollAccumulator.get(hand) || 0) + delta;
+      const twistThreshold = 0.38; // ~22 degrees
+
+      if (accum > twistThreshold) {
+        this.adjustNodeHits(grabbedNode, 1);
+        accum = 0;
+      } else if (accum < -twistThreshold) {
+        this.adjustNodeHits(grabbedNode, -1);
+        accum = 0;
+      }
+
+      this.rollAccumulator.set(hand, accum);
+    }
+
+    this.prevWristRoll.set(hand, rollAngle);
+  }
+
+  // ----------------------------------------------------
+  // 4. Per-Frame Polyrhythm Clock & Playhead Evaluation
+  // ----------------------------------------------------
+
+  public update(deltaTime: number): void {
+    const bpm = this.loomEngine.globalBPM;
+
+// [Chrono-Loom Milestone 7/9] feat(scales): add Dorian Cyber-Noir and Deep Sub-Harmonic Drone presets
