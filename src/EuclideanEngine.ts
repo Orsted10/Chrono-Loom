@@ -166,5 +166,90 @@ export const SCALE_PRESETS: ScalePreset[] = [
     frequencies: [
       73.42, 87.31, 110.00, 130.81, 146.83, 164.81, 174.61, 196.00, 220.00, 246.94, // D2-B3
       261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33        // C4-D5
+    ],
+    noteNames: ['D2', 'F2', 'A2', 'C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5'],
+    palette: {
+      primaryColor: new THREE.Color(0x10b981), // Matrix Emerald
+      accentColor: new THREE.Color(0x34d399),  // Mint Neon
+      cymaticColor: new THREE.Color(0x06b6d4), // Deep Teal
+      ambientColor: new THREE.Color(0x021a14), // Dark Matrix
+      backgroundFogColor: new THREE.Color(0x010d0a)
+    }
+  },
+  {
+    id: 'deep_sub_drone',
+    name: 'Deep Sub-Harmonic Drone',
+    shortName: 'Sub Drone',
+    description: 'Cavernous acoustic sub-bass fundament & sub-harmonic overtone series',
+    keyNumber: 5,
+    frequencies: [
+      43.65, 55.00, 65.41, 82.41, 98.00, 110.00, 130.81, 146.83, 164.81, 196.00, 220.00, 261.63, 329.63, 440.00
+    ],
+    noteNames: ['F0', 'A0', 'C1', 'E1', 'G1', 'A1', 'C2', 'D2', 'E2', 'G2', 'A2', 'C3', 'E3', 'A3'],
+    palette: {
+      primaryColor: new THREE.Color(0xef4444), // Crimson Fire
+      accentColor: new THREE.Color(0xf97316),  // Electric Blaze
+      cymaticColor: new THREE.Color(0x991b1b), // Blood Obsidian
+      ambientColor: new THREE.Color(0x1a0404), // Cavernous Crimson
+      backgroundFogColor: new THREE.Color(0x0a0101)
+    }
+  }
+];
 
-// [Chrono-Loom Milestone 2/9] feat(euclidean): implement Bjorklund algorithm E(k, n) for Euclidean rhythm steps
+export class EuclideanEngine {
+  private sceneManager: SceneManager;
+  private handInputManager: HandInputManager;
+  private loomEngine: LoomEngine;
+  private spatialSynth: SpatialSynth;
+
+  // Active Scale Preset
+  public activeScaleIndex = 0; // 0 = Celestial Lydian
+  public activeScale: ScalePreset = SCALE_PRESETS[0];
+
+  // Twist Tracking for VR Hand Interaction
+  private prevWristRoll: Map<Handedness, number> = new Map();
+  private rollAccumulator: Map<Handedness, number> = new Map();
+
+  // Hovered / Selected Node for Desktop Controls
+  public hoveredNode: HarmonicNode | null = null;
+
+  // Global Clock ticker for Polyrhythms
+  private polyrhythmClock = 0;
+
+  // HUD Elements
+  private scaleBadgeEl: HTMLElement | null = null;
+  private scaleCycleBtn: HTMLElement | null = null;
+
+  constructor(
+    sceneManager: SceneManager,
+    handInputManager: HandInputManager,
+    loomEngine: LoomEngine,
+    spatialSynth: SpatialSynth
+  ) {
+    this.sceneManager = sceneManager;
+    this.handInputManager = handInputManager;
+    this.loomEngine = loomEngine;
+    this.spatialSynth = spatialSynth;
+
+    // 1. Hook LoomEngine Node Spawn: automatically attach Euclidean Step-Ring!
+    this.hookLoomNodeSpawns();
+
+    // Attach to any existing nodes
+    for (const node of this.loomEngine.nodes.values()) {
+      if (!node.euclideanConfig) {
+        this.attachEuclideanRing(node, 3, 8);
+      }
+    }
+
+    // 2. Setup Desktop Mouse Wheel & Keyboard Handlers
+    this.setupDesktopControls();
+
+    // 3. Initialize default scale
+    this.applyScalePreset(0, false);
+
+    console.log('[EuclideanEngine] Initialized Euclidean Polyrhythm Engine & 5 Curated Scale Modes.');
+  }
+
+  // ----------------------------------------------------
+
+// [Chrono-Loom Milestone 3/9] feat(euclidean): render radial constellation step-rings around Harmonic Nodes
