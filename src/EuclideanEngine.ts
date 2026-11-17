@@ -335,5 +335,89 @@ export class EuclideanEngine {
       color: 0xffffff,
       transparent: true,
       opacity: 0.95
+    });
+    const playheadMesh = new THREE.Mesh(playheadGeo, playheadMat);
+    playheadMesh.position.set(0, ringRadius, 0);
+    ringGroup.add(playheadMesh);
 
-// [Chrono-Loom Milestone 4/9] feat(euclidean): cycle step counts (3, 4, 5, 7, 8, 12, 16) via wrist roll or scroll wheel
+    // Playhead point light
+    const playheadLight = new THREE.PointLight(this.activeScale.palette.accentColor, 1.2, 0.25);
+    playheadMesh.add(playheadLight);
+
+    // D. 3D Billboard Label Sprite above node
+    const labelCanvas = document.createElement('canvas');
+    labelCanvas.width = 512;
+    labelCanvas.height = 128;
+    const labelTexture = new THREE.CanvasTexture(labelCanvas);
+    labelTexture.minFilter = THREE.LinearFilter;
+
+    const spriteMat = new THREE.SpriteMaterial({
+      map: labelTexture,
+      transparent: true,
+      opacity: 0.95,
+      depthTest: false
+    });
+    const labelSprite = new THREE.Sprite(spriteMat);
+    labelSprite.scale.set(0.24, 0.06, 1);
+    labelSprite.position.set(0, 0.088, 0);
+    ringGroup.add(labelSprite);
+
+    node.meshGroup.add(ringGroup);
+
+    node.euclideanConfig = {
+      k,
+      n,
+      pattern,
+      ringGroup,
+      guideRing,
+      pipMeshes,
+      playheadMesh,
+      labelSprite,
+      labelCanvas,
+      labelTexture,
+      currentStep: 0,
+      lastTriggeredStep: -1,
+      pipScales
+    };
+
+    this.drawNodeLabel(node);
+  }
+
+  public removeEuclideanRing(node: HarmonicNode): void {
+    if (!node.euclideanConfig) return;
+    const cfg = node.euclideanConfig;
+    node.meshGroup.remove(cfg.ringGroup);
+    cfg.guideRing.geometry.dispose();
+    (cfg.guideRing.material as THREE.Material).dispose();
+    cfg.pipMeshes.forEach((p: THREE.Mesh) => {
+      p.geometry.dispose();
+      (p.material as THREE.Material).dispose();
+    });
+    cfg.playheadMesh.geometry.dispose();
+    (cfg.playheadMesh.material as THREE.Material).dispose();
+    cfg.labelTexture.dispose();
+    node.euclideanConfig = undefined;
+  }
+
+  private drawNodeLabel(node: HarmonicNode): void {
+    if (!node.euclideanConfig) return;
+    const { k, n, labelCanvas, labelTexture } = node.euclideanConfig;
+    const ctx = labelCanvas.getContext('2d')!;
+    ctx.clearRect(0, 0, 512, 128);
+
+    // Cyber glass pill backdrop
+    ctx.fillStyle = 'rgba(7, 24, 45, 0.88)';
+    ctx.strokeStyle = `#${this.activeScale.palette.primaryColor.getHexString()}`;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(10, 10, 492, 108, 20);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold 36px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(`E(${k}, ${n})`, 256, 56);
+
+
+// [Chrono-Loom Milestone 5/9] feat(scales): implement 5 curated spatial scale presets (Keys 1-5)
