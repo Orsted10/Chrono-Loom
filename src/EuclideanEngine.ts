@@ -251,5 +251,89 @@ export class EuclideanEngine {
   }
 
   // ----------------------------------------------------
+  // 1. Automatic Euclidean Ring Attachment
+  // ----------------------------------------------------
 
-// [Chrono-Loom Milestone 3/9] feat(euclidean): render radial constellation step-rings around Harmonic Nodes
+  private hookLoomNodeSpawns(): void {
+    // When a node is created in LoomEngine, give it a Euclidean Step-Ring
+    const originalSpawn = this.loomEngine.spawnHarmonicNode.bind(this.loomEngine);
+    this.loomEngine.spawnHarmonicNode = (pos, freq, customId) => {
+      const node = originalSpawn(pos, freq, customId);
+      // Give each node a default Euclidean pattern: E(2, 4) or E(3, 8)
+      const defaultSteps: EuclideanStepCount = node.id === 'node_1' ? 4 : 8;
+      const defaultHits = node.id === 'node_1' ? 1 : 3;
+      this.attachEuclideanRing(node, defaultHits, defaultSteps);
+      return node;
+    };
+  }
+
+  /**
+   * Attaches or updates a radial constellation step-ring around a Harmonic Node
+   */
+  public attachEuclideanRing(node: HarmonicNode, k: number = 3, n: EuclideanStepCount = 8): void {
+    if (node.euclideanConfig) {
+      this.removeEuclideanRing(node);
+    }
+
+    k = Math.max(1, Math.min(k, n));
+    const pattern = computeBjorklundPattern(k, n);
+    const ringRadius = 0.062;
+
+    const ringGroup = new THREE.Group();
+    ringGroup.name = `EuclideanRing_${node.id}`;
+
+    // A. Subtle circular orbital guide path
+    const curve = new THREE.EllipseCurve(0, 0, ringRadius, ringRadius, 0, 2 * Math.PI, false, 0);
+    const points = curve.getPoints(48).map((p) => new THREE.Vector3(p.x, p.y, 0));
+    const guideGeo = new THREE.BufferGeometry().setFromPoints(points);
+    const guideMat = new THREE.LineBasicMaterial({
+      color: this.activeScale.palette.primaryColor,
+      transparent: true,
+      opacity: 0.38,
+      blending: THREE.AdditiveBlending
+    });
+    const guideRing = new THREE.Line(guideGeo, guideMat);
+    ringGroup.add(guideRing);
+
+    // B. Pips around the ring
+    const pipMeshes: THREE.Mesh[] = [];
+    const pipScales: number[] = [];
+
+    const activeGeo = new THREE.OctahedronGeometry(0.0055, 1);
+    const restGeo = new THREE.SphereGeometry(0.0028, 6, 6);
+
+    const activeMat = new THREE.MeshStandardMaterial({
+      color: this.activeScale.palette.accentColor,
+      emissive: this.activeScale.palette.accentColor,
+      emissiveIntensity: 0.9,
+      roughness: 0.2,
+      metalness: 0.6
+    });
+
+    const restMat = new THREE.MeshBasicMaterial({
+      color: 0x94a3b8,
+      transparent: true,
+      opacity: 0.28
+    });
+
+    for (let i = 0; i < n; i++) {
+      const theta = (2 * Math.PI * i) / n - Math.PI / 2;
+      const x = ringRadius * Math.cos(theta);
+      const y = ringRadius * Math.sin(theta);
+
+      const isHit = pattern[i];
+      const pip = new THREE.Mesh(isHit ? activeGeo : restGeo, isHit ? activeMat.clone() : restMat);
+      pip.position.set(x, y, 0);
+      ringGroup.add(pip);
+      pipMeshes.push(pip);
+      pipScales.push(1.0);
+    }
+
+    // C. Traveling Playhead Bead
+    const playheadGeo = new THREE.SphereGeometry(0.0065, 8, 8);
+    const playheadMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.95
+
+// [Chrono-Loom Milestone 4/9] feat(euclidean): cycle step counts (3, 4, 5, 7, 8, 12, 16) via wrist roll or scroll wheel
