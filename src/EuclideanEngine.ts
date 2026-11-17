@@ -672,5 +672,90 @@ export class EuclideanEngine {
       // Ring always faces user eye level
       cfg.ringGroup.lookAt(this.sceneManager.camera.position);
 
+      // Smooth pitch morphing (portamento glide)
+      if (node.targetFrequency && Math.abs(node.targetFrequency - node.noteFrequency) > 0.05) {
+        node.noteFrequency = THREE.MathUtils.lerp(node.noteFrequency, node.targetFrequency, 0.08);
+        this.loomEngine.updateConnectedStrings(node);
+      }
+    }
+  }
 
-// [Chrono-Loom Milestone 8/9] feat(scales): smoothly morph all active node frequencies when scale is switched
+  // ----------------------------------------------------
+  // 5. Curated Scale Switching & Smooth Pitch Morphs
+  // ----------------------------------------------------
+
+  public applyScalePreset(index: number, showToast: boolean = true): void {
+    if (index < 0 || index >= SCALE_PRESETS.length) return;
+
+    this.activeScaleIndex = index;
+    this.activeScale = SCALE_PRESETS[index];
+
+    // 1. Update SpatialSynth active frequencies
+    this.spatialSynth.setActiveScaleFrequencies(this.activeScale.frequencies);
+
+    // 2. Smoothly morph all existing Harmonic Nodes
+    const nodes = Array.from(this.loomEngine.nodes.values());
+    const freqs = this.activeScale.frequencies;
+
+    nodes.forEach((node, idx) => {
+      const targetFreq = freqs[idx % freqs.length];
+      node.targetFrequency = targetFreq;
+
+      // Update Deaf/Colorblind pitch label if present
+      if (node.pitchLabelSprite && node.noteName) {
+        const noteName = this.activeScale.noteNames[idx % this.activeScale.noteNames.length];
+        node.noteName = noteName;
+      }
+
+      // Refresh node's Euclidean ring label & materials
+      if (node.euclideanConfig) {
+        this.attachEuclideanRing(node, node.euclideanConfig.k, node.euclideanConfig.n);
+      }
+    });
+
+    // 3. Shift Global Chromatic Lighting Palette in SceneManager
+    this.sceneManager.setChromaticPalette(this.activeScale.palette);
+
+    // 4. Update HUD elements
+    this.updateHUDStatus();
+
+    // 5. 3D Holographic Toast
+    if (showToast) {
+      this.loomEngine.showHolographicToast(
+        `🎵 SCALE: ${this.activeScale.name.toUpperCase()}`,
+        `${this.activeScale.description} // KEY [${index + 1}]`,
+        3.5
+      );
+    }
+
+    console.log(`[EuclideanEngine] Morphed into Scale Preset [${this.activeScale.name}] (Key ${index + 1})`);
+  }
+
+  public cycleNextScale(): void {
+    const nextIdx = (this.activeScaleIndex + 1) % SCALE_PRESETS.length;
+    this.applyScalePreset(nextIdx, true);
+  }
+
+  public setHUDElements(badgeEl: HTMLElement | null, cycleBtn: HTMLElement | null): void {
+    this.scaleBadgeEl = badgeEl;
+    this.scaleCycleBtn = cycleBtn;
+    this.updateHUDStatus();
+
+    if (this.scaleCycleBtn) {
+      this.scaleCycleBtn.addEventListener('click', () => {
+        this.cycleNextScale();
+      });
+    }
+  }
+
+  private updateHUDStatus(): void {
+    if (this.scaleBadgeEl) {
+      this.scaleBadgeEl.textContent = `SCALE: ${this.activeScale.shortName.toUpperCase()} [1-5]`;
+    }
+    if (this.scaleCycleBtn) {
+      this.scaleCycleBtn.textContent = `Scale: ${this.activeScale.shortName} [1-5]`;
+    }
+  }
+}
+
+// [Chrono-Loom Milestone 9/9] feat(scales): shift global chromatic lighting and comfort arc palettes per scale
