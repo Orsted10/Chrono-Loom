@@ -1247,5 +1247,68 @@ export class AgentAria {
           this.coreMesh.lookAt(rightTele.indexTipPosition);
         }
 
+        // Mode: Zen Solo chord swells
+        if (this.mode === 'ZEN_SOLO') {
+          this.zenChordTimer += deltaTime;
+          if (this.zenChordTimer >= 6.0) {
+            this.zenChordTimer = 0;
+            this.playZenAmbientChord();
+          }
+        }
 
-// [Chrono-Loom Milestone 20/25] test(aria): verify non-intrusive flight trajectories avoiding user's line of sight
+        // Mode: Co-Create Autonomous Weaving Timer
+        if (this.mode === 'CO-CREATE' && activeNodes.size >= 2) {
+          this.autonomousTimer += deltaTime;
+          if (this.autonomousTimer >= this.WEAVE_INTERVAL) {
+            this.autonomousTimer = 0;
+            this.beginHarmonizingSequence();
+          }
+        }
+        break;
+      }
+
+      case 'LISTENING_VOICE': {
+        // Hover in place with attentive listening orientation
+        const hoverOffset = new THREE.Vector3(
+          Math.sin(time * 2.5) * 0.008,
+          Math.sin(time * 3.5) * 0.008,
+          0
+        );
+        this.ariaGroup.position.copy(this.homePosition).add(hoverOffset);
+        break;
+      }
+
+      case 'CALL_AND_RESPONSE': {
+        this.callResponseTimer += deltaTime;
+
+        if (this.callResponsePhase === 'FLYING_TO_RESPONSE') {
+          this.flightProgress = Math.min(1.0, this.flightProgress + deltaTime * 2.2);
+          this.ariaGroup.position.lerpVectors(
+            this.callResponseOrigin,
+            this.callResponseTarget,
+            this.easeOutCubic(this.flightProgress)
+          );
+
+          if (this.flightProgress >= 1.0) {
+            this.callResponsePhase = 'PLAYING_NOTES';
+          }
+        } else if (this.callResponsePhase === 'PLAYING_NOTES') {
+          let allPlayed = true;
+
+          this.callResponseSequence.forEach((note, index) => {
+            if (!note.hasTriggered && this.callResponseTimer >= note.delaySec) {
+              note.hasTriggered = true;
+
+              // 1. Play spatialized note
+              this.spatialSynth.playSpatialNote({
+                frequency: note.frequency,
+                position: this.ariaGroup.position,
+                intensity: note.intensity,
+                duration: note.duration,
+                filterCutoff: 3800
+              });
+
+              // 2. Activate Laser Beam to target pluck point
+              if (index < this.laserBeams.length) {
+
+// [Chrono-Loom Milestone 21/25] feat(aria): upgrade AgentAria with real-time Call-and-Response musical phrase analyzer
