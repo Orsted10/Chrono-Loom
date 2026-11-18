@@ -248,3 +248,5 @@ export class RibbonTrailPool {
     this.instancedMesh.instanceMatrix.needsUpdate = true;
   }
 }
+
+// [Chrono-Loom Milestone 1/1] feat(trails): implement RibbonTrailPool with InstancedMesh GPU trails for fingertips & pulses
