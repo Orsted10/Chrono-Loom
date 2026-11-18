@@ -920,9 +920,9 @@ export class AccessibilityManager {
     wave.color.copy(waveColor);
     (wave.mesh.material as THREE.MeshBasicMaterial).color.copy(waveColor);
     wave.progress = 0.0;
-    wave.speed = 1.2 + (frequency / 600) * 0.8;
-    wave.maxRadius = 0.22 + intensity * 0.14;
-    wave.thickness = tierInfo.tier === 'BASS' ? 0.045 : tierInfo.tier === 'MID' ? 0.028 : 0.016;
+    wave.speed = 1.8 + (frequency / 600) * 0.8;
+    wave.maxRadius = 0.045 + intensity * 0.025; // Delicate localized micro-ripple around node
+    wave.thickness = tierInfo.tier === 'BASS' ? 0.015 : tierInfo.tier === 'MID' ? 0.010 : 0.006;
     wave.frequency = frequency;
     wave.active = true;
     wave.mesh.visible = true;
@@ -1012,18 +1012,15 @@ export class AccessibilityManager {
         continue;
       }
 
-      // Expansion radius
-      const currentRadius = 0.03 + wave.progress * wave.maxRadius;
+      // Expansion radius (subtle localized node vibration, zero camera billboard blinding)
+      const currentRadius = 0.038 + wave.progress * wave.maxRadius;
       const scale = currentRadius / 0.038;
       wave.mesh.scale.set(scale, scale, 1);
+      wave.mesh.rotation.x = -Math.PI / 2;
 
-      // Camera orientation (billboard ripple ring)
-      wave.mesh.lookAt(this.sceneManager.camera.position);
-
-      // Opacity fadeout with sinusoidal ripple pulse
+      // Soft architectural acoustic fadeout
       const alpha = Math.sin((1.0 - wave.progress) * Math.PI);
-      const ripplePulse = 0.7 + Math.sin(wave.progress * 18.0) * 0.3;
-      (wave.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, alpha * ripplePulse * 0.85);
+      (wave.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, alpha * 0.25);
     }
   }
 

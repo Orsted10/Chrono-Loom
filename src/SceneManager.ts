@@ -196,9 +196,9 @@ export class SceneManager {
     this.scene.add(this.cymaticContainer);
     this.initCymaticWavePool(8);
 
-    // 9. Floating 3D Title Header high above workspace (y = 1.75m, z = -1.2m)
+    // 9. Floating 3D Title Header: Disabled in favor of VisionOS-style dynamic island HUD
     this.titleHeaderGroup = this.createFloatingTitleHeader();
-    this.scene.add(this.titleHeaderGroup);
+    this.titleHeaderGroup.visible = false;
 
     // 10. Resize and interactions
     window.addEventListener('resize', this.onWindowResize.bind(this));
@@ -223,7 +223,7 @@ export class SceneManager {
     this.scene.add(this.rimLight);
 
     // Under-desk soft bioluminescent point light
-    this.deskGlow = new THREE.PointLight(0x00f0ff, 1.5, 2.5);
+    this.deskGlow = new THREE.PointLight(0x00f0ff, 0.35, 1.2);
     this.deskGlow.position.set(0, 0.9, -0.45);
     this.scene.add(this.deskGlow);
   }

@@ -187,8 +187,8 @@ export class LoomEngine {
   public pulses: Map<string, ChronoPulse> = new Map();
   private nextPulseIndex = 1;
   private clockworkPulseTimer = 0;
-  private readonly CLOCKWORK_BEAT_INTERVAL = 2.4; // Periodic pulse beat (seconds)
-  private readonly MAX_ACTIVE_PULSES = 12;
+  private readonly CLOCKWORK_BEAT_INTERVAL = 3.6; // Controlled rhythmic pulse spacing
+  private readonly MAX_ACTIVE_PULSES = 6; // Clean, readable polyrhythmic beats
 
   // Phase 10: Global Time-Dilation BPM (Conductor Frame: 40-180 BPM)
   public globalBPM = 90;
@@ -378,8 +378,8 @@ export class LoomEngine {
     gimbalRing.name = 'SeedGimbalRing';
     this.seedOrbGroup.add(gimbalRing);
 
-    // Localized warm radiant point light
-    const orbLight = new THREE.PointLight(0xffb700, 0.7, 0.35);
+    // Localized warm radiant point light (Gentle ambient glow)
+    const orbLight = new THREE.PointLight(0xffb700, 0.35, 0.25);
     this.seedOrbGroup.add(orbLight);
 
     this.loomGroup.add(this.seedOrbGroup);
@@ -557,7 +557,7 @@ export class LoomEngine {
     group.add(wireframeMesh);
 
     // Inner glow point light (tight localized glow to preserve 120 FPS forward rendering)
-    const innerGlow = new THREE.PointLight(0x00f0ff, 0.4, 0.25);
+    const innerGlow = new THREE.PointLight(0x00f0ff, 0.18, 0.20);
     group.add(innerGlow);
 
     // Subtle localized luminous halo sprite
@@ -979,17 +979,17 @@ export class LoomEngine {
     const aura = new THREE.Mesh(auraGeo, auraMat);
     group.add(aura);
 
-    // Soft additive-blended glow aura halo sprite (Super-Optimized Zero-Light Rendering)
+    // Subtle luminous photonic bead halo
     const pulseAuraMat = new THREE.SpriteMaterial({
       map: this.getAuraTexture(),
       color: string.color,
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.32,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
     const pulseAuraSprite = new THREE.Sprite(pulseAuraMat);
-    pulseAuraSprite.scale.set(0.08, 0.08, 1);
+    pulseAuraSprite.scale.set(0.042, 0.042, 1);
     group.add(pulseAuraSprite);
 
     this.loomGroup.add(group);
@@ -1064,7 +1064,7 @@ export class LoomEngine {
       if (pulse.glowLight) {
         pulse.glowLight.intensity = 1.2 + Math.sin(performance.now() * 0.01) * 0.4;
       }
-      pulse.auraSprite.scale.setScalar(0.065 + Math.sin(performance.now() * 0.012) * 0.012);
+      pulse.auraSprite.scale.setScalar(0.040 + Math.sin(performance.now() * 0.012) * 0.006);
 
       // Check arrival at target node
       if (pulse.progress >= 1.0) {
@@ -1966,11 +1966,11 @@ export class LoomEngine {
       const pulse = node.isMuted ? 0.3 : 0.6 + Math.sin(time * 4.0 + node.id.charCodeAt(5)) * 0.25;
       (node.coreMesh.material as THREE.MeshPhysicalMaterial).emissiveIntensity = pulse;
 
-      // Soft glow aura halo scaling and breathing
-      node.auraSprite.scale.setScalar(node.currentScale * 0.16);
+      // Precision micro-corona aura (Refractive gemstone aesthetic, zero blurry blowout)
+      node.auraSprite.scale.setScalar(node.currentScale * 0.08);
       const auraMat = node.auraSprite.material as THREE.SpriteMaterial;
       if (!node.isMuted) {
-        auraMat.opacity = 0.62 + Math.sin(time * 3.5 + node.id.charCodeAt(5)) * 0.15;
+        auraMat.opacity = 0.22 + Math.sin(time * 3.5 + node.id.charCodeAt(5)) * 0.06;
       }
 
       // Orient pitch label sprite towards camera and only show on hover/grab

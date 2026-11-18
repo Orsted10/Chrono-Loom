@@ -295,34 +295,34 @@ export class ConstellationMode {
       const group = new THREE.Group();
       group.position.copy(config.pos);
 
-      // Torus Ring Mesh
-      const torusGeo = new THREE.TorusGeometry(0.042, 0.0035, 16, 48);
+      // Torus Ring Mesh: Precision Satin Gimbal Ring
+      const torusGeo = new THREE.TorusGeometry(0.044, 0.0016, 16, 64);
       const torusMat = new THREE.MeshStandardMaterial({
         color: config.baseColor,
         emissive: config.baseColor,
-        emissiveIntensity: 0.65,
-        roughness: 0.2,
-        metalness: 0.4,
+        emissiveIntensity: 0.25,
+        roughness: 0.18,
+        metalness: 0.85,
         transparent: true,
-        opacity: 0.88
+        opacity: 0.92
       });
       const torusMesh = new THREE.Mesh(torusGeo, torusMat);
       group.add(torusMesh);
 
-      // Outer concentric aura ring
-      const auraGeo = new THREE.RingGeometry(0.046, 0.052, 32);
+      // Delicate concentric accent edge
+      const auraGeo = new THREE.RingGeometry(0.046, 0.048, 48);
       const auraMat = new THREE.MeshBasicMaterial({
         color: config.baseColor,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.45,
+        opacity: 0.18,
         blending: THREE.AdditiveBlending
       });
       const auraMesh = new THREE.Mesh(auraGeo, auraMat);
       group.add(auraMesh);
 
-      // Core point light
-      const glowLight = new THREE.PointLight(config.baseColor, 1.2, 0.35);
+      // Soft accent point light (Zero Overexposure)
+      const glowLight = new THREE.PointLight(config.baseColor, 0.25, 0.25);
       group.add(glowLight);
 
       this.ringContainer.add(group);
@@ -1056,12 +1056,12 @@ export class ConstellationMode {
 
       if (ring.isEnergized) {
         // Glowing energized pulse
-        const p = Math.sin(time * 6.0) * 0.3;
-        ring.glowLight.intensity = 1.8 + p;
+        const p = Math.sin(time * 6.0) * 0.1;
+        ring.glowLight.intensity = 0.5 + p;
       } else {
         // Subtle ambient ring glow
-        const p = Math.sin(time * 2.5) * 0.15;
-        ring.glowLight.intensity = 1.0 + p;
+        const p = Math.sin(time * 2.5) * 0.05;
+        ring.glowLight.intensity = 0.25 + p;
       }
     }
 
