@@ -1454,5 +1454,3 @@ export class HandInputManager {
     state.prevScissorDist = scissorDist;
   }
 }
-
-// [Chrono-Loom Milestone 33/33] style(gestures): display live real-time confidence bars for each detected gesture

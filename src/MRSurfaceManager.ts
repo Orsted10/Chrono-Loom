@@ -551,5 +551,3 @@ export class MRSurfaceManager {
     };
   }
 }
-
-// [Chrono-Loom Milestone 8/8] feat(acoustics): cast ray from photon dart against detected real-world wall planes

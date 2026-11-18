@@ -756,5 +756,3 @@ export class SceneManager {
     this.renderer.render(this.scene, this.camera);
   }
 }
-
-// [Chrono-Loom Milestone 20/20] feat(mr): request 'plane-detection' and 'mesh-detection' optional features in WebXR

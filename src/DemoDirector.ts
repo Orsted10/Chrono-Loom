@@ -439,5 +439,3 @@ export class DemoDirector {
     return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
   }
 }
-
-// [Chrono-Loom Milestone 9/9] test(demo): verify seamless manual takeover when user pinches during auto-demo

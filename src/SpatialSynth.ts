@@ -797,5 +797,3 @@ export class SpatialSynth {
     return freqs[index];
   }
 }
-
-// [Chrono-Loom Milestone 25/25] feat(audio): implement Procedural Convolution Reverb, Harmonic Drone Bed & Master Limiter

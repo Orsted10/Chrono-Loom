@@ -1178,5 +1178,3 @@ export class MultiplayerSync {
     }
   }
 }
-
-// [Chrono-Loom Milestone 8/8] feat(multiplayer): implement Cooperative Constellation Mode with double supernova

@@ -2479,5 +2479,3 @@ export class LoomEngine {
     this.isApplyingRemote = false;
   }
 }
-
-// [Chrono-Loom Milestone 84/84] feat(gestures): sever single string with spark shower without deleting nodes

@@ -723,5 +723,3 @@ export class ConstellationMode {
     };
   }
 }
-
-// [Chrono-Loom Milestone 17/17] test(wrist): verify poke button collision reliability in WebXR session

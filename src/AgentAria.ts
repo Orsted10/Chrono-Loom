@@ -1560,5 +1560,3 @@ export class AgentAria {
     this.updateSpatialBadge();
   }
 }
-
-// [Chrono-Loom Milestone 25/25] feat(aria): recognize natural voice intents ('faster', 'add bass', 'harmonize', 'clear')

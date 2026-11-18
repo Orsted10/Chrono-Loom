@@ -23,5 +23,3 @@ export default defineConfig({
     }
   }
 });
-
-// [Chrono-Loom Milestone 1/1] feat(build): configure vite.config.ts with Three.js vendor chunking

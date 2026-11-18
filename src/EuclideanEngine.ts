@@ -757,5 +757,3 @@ export class EuclideanEngine {
     }
   }
 }
-
-// [Chrono-Loom Milestone 9/9] feat(scales): shift global chromatic lighting and comfort arc palettes per scale

@@ -766,5 +766,3 @@ export class AccessibilityManager {
     };
   }
 }
-
-// [Chrono-Loom Milestone 19/19] feat(a11y): render sinusoidal ripple rings with thickness proportional to note volume

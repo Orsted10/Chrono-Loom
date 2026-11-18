@@ -106,5 +106,17 @@ npx gh-pages -d dist
 
 ## Key Controls Cheatsheet
 
-
-<!-- [Chrono-Loom Milestone 8/9] docs(mr): document Meta Quest 3 Mixed Reality passthrough setup in README.md -->
+| Action | VR Hands | Desktop Simulator |
+|---|---|---|
+| **Awaken Loom** | Pinch Seed Orb & pull outward | Left-Click drag Seed Orb outward |
+| **Spawn Node** | Pinch empty space for 0.2s | Hold Left-Click in space for 0.2s |
+| **Move Node** | Pinch & drag any node | Left-Click drag node |
+| **Weave String** | Drag Node to Node, or 2-hand pinch | Drag Node to Node |
+| **1-Hand Virtual Tether** | Pinch Node A once $\to$ Pinch Node B | Click Node A once $\to$ Click Node B |
+| **Pluck String** | Sweep index finger through string | Sweep cursor through string |
+| **Palm-Mute** | Open Palm near node ($< 0.12\text{m}$) | Press <kbd>O</kbd> & move near node |
+| **Aria Mode** | Fist-bump or pinch Aria ($< 0.075\text{m}$) | Click "Cycle Aria Mode" button |
+| **Wrist HUD** | Poke 3D buttons with right index finger | Click 3D buttons or 2D HUD buttons |
+| **Pull Workspace Closer** | Poke HUD or press Key <kbd>C</kbd> | Press <kbd>C</kbd> or click "Pull Closer [C]" |
+| **Toggle A11y Suite** | Poke HUD or press Key <kbd>A</kbd> | Press <kbd>A</kbd> or click "A11y Suite: ON" |
+| **Toggle Demo Telemetry** | View on-screen panel | Press <kbd>H</kbd> or click HIDE [H] |

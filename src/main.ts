@@ -943,5 +943,3 @@ class ChronoLoomApp {
 window.addEventListener('DOMContentLoaded', () => {
   new ChronoLoomApp();
 });
-
-// [Chrono-Loom Milestone 6/6] refactor(main): synchronize wrist HUD state with 2D desktop HUD buttons
