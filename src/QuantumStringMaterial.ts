@@ -194,3 +194,5 @@ export function createQuantumStringMaterial(
     `
   });
 }
+
+// [Chrono-Loom Milestone 1/1] feat(shaders): create custom GLSL QuantumStringMaterial with vertex wave harmonics
