@@ -9,6 +9,7 @@ import { DemoDirector } from './DemoDirector.js';
 import { MRSurfaceManager } from './MRSurfaceManager.js';
 import { MultiplayerSync } from './MultiplayerSync.js';
 import { EuclideanEngine } from './EuclideanEngine.js';
+import { TutorialGuide } from './TutorialGuide.js';
 
 // Interactive Chrono-Loom Temporal Thread representation (Phase 1 visual trails)
 interface TemporalThread {
@@ -30,6 +31,7 @@ class ChronoLoomApp {
   public mrSurfaceManager: MRSurfaceManager;
   public multiplayerSync: MultiplayerSync;
   public euclideanEngine: EuclideanEngine;
+  public tutorialGuide: TutorialGuide;
   private clock: THREE.Clock;
 
   // Active Chrono-Threads woven by pinching
@@ -167,6 +169,14 @@ class ChronoLoomApp {
         this.loomEngine.loadFromUrlHash(window.location.hash);
       }
     });
+
+    // 6.11. Initialize Phase 17: Spatial "First-Pluck" Onboarding Guide
+    this.tutorialGuide = new TutorialGuide(
+      this.sceneManager,
+      this.handInputManager,
+      this.loomEngine,
+      this.demoDirector
+    );
 
     // 7. Setup Temporal Thread Weave container (Phase 1 trails)
     this.threadsGroup = new THREE.Group();
@@ -516,10 +526,31 @@ class ChronoLoomApp {
       updateContrastBtnText();
     }
 
+    // Phase 17: Spatial "First-Pluck" Onboarding Guide Button
+    const guideBtn = document.getElementById('guide-toggle-btn');
+    const updateGuideBtnText = () => {
+      if (guideBtn) {
+        const active = this.tutorialGuide.isActive;
+        guideBtn.textContent = active ? `[? GUIDE: STEP ${this.tutorialGuide.currentStep}/3]` : '[? GUIDE]';
+        guideBtn.classList.toggle('active', active);
+      }
+    };
+    if (guideBtn) {
+      guideBtn.addEventListener('click', () => {
+        this.tutorialGuide.toggleGuide();
+        updateGuideBtnText();
+      });
+      updateGuideBtnText();
+    }
+
     // Button for Auto-Director Cinematic Showcase
     const demoBtn = document.getElementById('demo-showcase-btn');
     if (demoBtn) {
       demoBtn.addEventListener('click', () => {
+        if (this.tutorialGuide.isActive) {
+          this.tutorialGuide.dismissGuide();
+          updateGuideBtnText();
+        }
         this.demoDirector.toggleDemo();
       });
     }
@@ -640,6 +671,9 @@ class ChronoLoomApp {
         this.accessibilityManager.toggleHighContrast();
         this.accessibilityManager.toggleDyslexiaTypography();
         updateContrastBtnText();
+      } else if (e.key === 'u' || e.key === 'U' || e.key === '?') {
+        this.tutorialGuide.toggleGuide();
+        updateGuideBtnText();
       }
     });
   }
@@ -832,6 +866,14 @@ class ChronoLoomApp {
       }
     }
 
+    // Update Phase 17: Tutorial Guide button state
+    const guideBtn = document.getElementById('guide-toggle-btn');
+    if (guideBtn) {
+      const active = this.tutorialGuide.isActive;
+      guideBtn.textContent = active ? `[? GUIDE: STEP ${this.tutorialGuide.currentStep}/3]` : '[? GUIDE]';
+      guideBtn.classList.toggle('active', active);
+    }
+
     // Live On-Screen Telemetry Bar for Demo Recording
     if (this.isDemoTelemetryVisible) {
       if (this.demoHandTrackingEl) {
@@ -984,6 +1026,9 @@ class ChronoLoomApp {
 
     // 6.9. Update Phase 12: Euclidean Polyrhythms & Scale Pitch Morphs
     this.euclideanEngine.update(deltaTime);
+
+    // 6.10. Update Phase 17: Spatial "First-Pluck" Onboarding Guide
+    this.tutorialGuide.update(deltaTime);
 
     // 7. Update visual spark particles
     this.updateTemporalEffects(deltaTime, elapsedTime);

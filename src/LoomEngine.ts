@@ -176,6 +176,10 @@ export class LoomEngine {
   // Phase 10: Global Time-Dilation BPM (Conductor Frame: 40-180 BPM)
   public globalBPM = 90;
 
+  public get isAwakened(): boolean {
+    return this.isLoomAwakened;
+  }
+
   // Phase 11: Multiplayer Synchronization Hooks
   public onNodeCreated?: (node: HarmonicNode) => void;
   public onNodeMoved?: (nodeId: string, position: THREE.Vector3) => void;
@@ -184,6 +188,22 @@ export class LoomEngine {
   public onStringSevered?: (cutPoint: THREE.Vector3, stringId?: string) => void;
   public onBPMChanged?: (bpm: number) => void;
   public isApplyingRemote = false;
+
+  // Phase 17: Multi-listener arrays for non-colliding event subscriptions
+  public nodeCreatedListeners: Array<(node: HarmonicNode) => void> = [];
+  public addNodeCreatedListener(fn: (node: HarmonicNode) => void): void {
+    this.nodeCreatedListeners.push(fn);
+  }
+
+  public stringCreatedListeners: Array<(str: ChronoString) => void> = [];
+  public addStringCreatedListener(fn: (str: ChronoString) => void): void {
+    this.stringCreatedListeners.push(fn);
+  }
+
+  public loomAwakenedListeners: Array<(pos: THREE.Vector3) => void> = [];
+  public addLoomAwakenedListener(fn: (pos: THREE.Vector3) => void): void {
+    this.loomAwakenedListeners.push(fn);
+  }
 
   // Phase 13: String Plucked Listeners for Phrase Analysis & Aria Call-and-Response
   public stringPluckedListeners: Array<(stringId: string, pos: THREE.Vector3, vel: number, frequency: number) => void> = [];
@@ -418,6 +438,11 @@ export class LoomEngine {
 
     // Spawn first Harmonic Node at the release point
     this.spawnHarmonicNode(spawnPos);
+
+    // Notify Phase 17 listeners
+    for (const fn of this.loomAwakenedListeners) {
+      fn(spawnPos);
+    }
   }
 
   // ----------------------------------------------------
@@ -570,6 +595,9 @@ export class LoomEngine {
     console.log(`[LoomEngine] Spawned Harmonic Node [${id}] (freq: ${noteFrequency.toFixed(1)}Hz) at (${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`);
     if (!this.isApplyingRemote) {
       this.onNodeCreated?.(node);
+      for (const fn of this.nodeCreatedListeners) {
+        fn(node);
+      }
     }
     return node;
   }
@@ -809,6 +837,9 @@ export class LoomEngine {
 
     if (!this.isApplyingRemote) {
       this.onStringCreated?.(chronoStr);
+      for (const fn of this.stringCreatedListeners) {
+        fn(chronoStr);
+      }
     }
 
     console.log(`[LoomEngine] Created ChronoString [${id}] (L = ${(length * 100).toFixed(1)}cm, freq = ${frequency.toFixed(0)}Hz)`);

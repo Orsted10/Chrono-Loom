@@ -369,6 +369,19 @@
         animation: recPulse 1.2s infinite ease-in-out;
       }
 
+      .action-btn-cyan {
+        border-color: rgba(0, 240, 255, 0.4);
+        color: #00f0ff;
+      }
+
+      .action-btn-cyan:hover,
+      .action-btn-cyan.active {
+        background: rgba(0, 240, 255, 0.2);
+        border-color: #00f0ff;
+        color: #ffffff;
+        box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+      }
+
       .aria-chips-drawer {
         display: flex;
         flex-wrap: wrap;
@@ -710,9 +723,11 @@
             <li>• <strong>15. Agent Aria v2 Call-and-Response &amp; Voice Director:</strong> Aria listens to your last 4 plucked notes, analyzes rhythmic density &amp; interval tension, flies to a complementary sweet-spot, and weaves a 2-bar "Call-and-Response" counter-melody with glowing optical laser filaments! Press <kbd>V</kbd> or click <em>🎤 Talk to Aria [V]</em> to speak natural intents (<em>"make it faster"</em>, <em>"add a bassline"</em>, <em>"switch to raga scale"</em>, <em>"harmonize with me"</em>, <em>"clear the loom"</em>) with 3D expressive emotional animations (curious head-tilt, joyful barrel-roll, focused laser weave) and dual-formant procedural vocalizations!</li>
             <li>• <strong>16. Quantum Strings &amp; Instanced Ribbon Trails:</strong> Custom GLSL <code>QuantumStringMaterial</code> computes physical standing-wave harmonics ($\sin(n \pi u) \cos(\omega t)$) directly in the vertex shader whenever plucked, with spectral chromatic aberration fringes along peak displacement and traveling energy solitons! An <code>InstancedMesh</code> GPU ribbon trail pool (max 256 instances, 1 draw call) trails behind moving fingertips and flying Chrono-Pulses, smoothly tapering opacity and width over 0.45s with 100% Quest 3 Adreno GPU precision guards.</li>
             <li>• <strong>17. Controller Haptics &amp; Zero-Fatigue Switch Mode:</strong> Full dual-input parity between optical Hand Tracking and Quest Touch Controllers! Sleek transparent laser styluses render at controller tips with variable haptic feedback scaled to string tension, pluck velocity, and sub-bass frequencies (&lt; 220Hz). Motor-disability Dwell Mode: hold gaze/hand steady on a node for 0.85s to auto-latch anchor tether or complete weave with animated 360° cyan-to-gold fill-ring (or press Single-Switch <kbd>S</kbd>). Low-vision High-Contrast Rim-Lighting (2.5x emissive electric-gold outlines) and Dyslexia-Friendly typography toggle (<kbd>L</kbd> / <em>Contrast &amp; Font</em>).</li>
+            <li>• <strong>18. Spatial "First-Pluck" Onboarding Guide:</strong> Runs unobtrusively on first visit (or replay anytime via <em>[? GUIDE]</em> / <kbd>U</kbd>)! Displays translucent holographic ghost-hand animations directly in 3D space demonstrating 3 micro-steps: (1) Pinch &amp; pull the golden Seed Orb, (2) Connect two nodes to weave a string, (3) Pluck the glowing string. Zero modal popups, zero walls of text—advances automatically as you act, celebrating with harmonic sparks and persisting completion in <code>localStorage</code>!</li>
             <li>• <strong>Simulator:</strong> <kbd>Left-Click Drag</kbd> = Left Hand Pinch, <kbd>Right-Click / Space</kbd> = Right Hand Pinch.</li>
           </ul>
           <div class="hud-actions">
+            <button id="guide-toggle-btn" class="action-btn action-btn-cyan">[? GUIDE [U]]</button>
             <button id="talk-aria-btn" class="action-btn action-btn-purple">🎤 Talk to Aria [V]</button>
             <button id="aria-chips-toggle-btn" class="action-btn">Voice Intents ▾</button>
             <button id="scale-cycle-btn" class="action-btn">Scale: Lydian [1-5]</button>
