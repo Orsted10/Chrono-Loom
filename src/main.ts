@@ -127,6 +127,7 @@ class ChronoLoomApp {
       this.constellationMode,
       this.agentAria
     );
+    this.demoDirector.setAccessibilityManager(this.accessibilityManager);
 
     // 6.7. Initialize Phase 9: MR Surface Manager (WebXR Plane Detection & Wall-Bounce Acoustics)
     this.mrSurfaceManager = new MRSurfaceManager(this.sceneManager);
@@ -189,6 +190,8 @@ class ChronoLoomApp {
       this.loomEngine.spatialSynth,
       this.euclideanEngine
     );
+    this.demoDirector.setEuclideanEngine(this.euclideanEngine);
+    this.demoDirector.setHarmonicVault(this.harmonicVault);
 
     // 6.13. Initialize Phase 19: Quest 3 90Hz/120Hz Frame-Pacing & Zero-GC Profiler
     this.perfProfiler = new PerfProfiler(
@@ -590,6 +593,18 @@ class ChronoLoomApp {
       });
     }
 
+    // Button for Phase 20: 6-Act 60-Second Trailer Cut
+    const trailerCutBtn = document.getElementById('trailer-cut-btn');
+    if (trailerCutBtn) {
+      trailerCutBtn.addEventListener('click', () => {
+        if (this.tutorialGuide.isActive) {
+          this.tutorialGuide.dismissGuide();
+          updateGuideBtnText();
+        }
+        this.demoDirector.startTrailerCut();
+      });
+    }
+
     // Button for Auto-Director Cinematic Showcase
     const demoBtn = document.getElementById('demo-showcase-btn');
     if (demoBtn) {
@@ -693,7 +708,11 @@ class ChronoLoomApp {
         this.accessibilityManager.toggleAccessibilitySuite();
         updateA11yBtnText();
       } else if (e.key === 'd' || e.key === 'D') {
-        this.demoDirector.toggleDemo();
+        if (e.shiftKey) {
+          this.demoDirector.startTrailerCut();
+        } else {
+          this.demoDirector.toggleDemo();
+        }
       } else if (e.key === 'r' || e.key === 'R') {
         this.mrSurfaceManager.toggleRoomScan();
         updateScanBtnText();
@@ -907,11 +926,22 @@ class ChronoLoomApp {
       this.hudA11yBadgeEl.className = a11ySummary.suiteEnabled ? 'badge badge-emerald' : 'badge badge-muted';
     }
 
-    // Update Demo Showcase button state
+    // Update Demo Showcase & Trailer Cut button states
+    const trailerCutBtn = document.getElementById('trailer-cut-btn');
+    if (trailerCutBtn) {
+      if (this.demoDirector.isPlaying) {
+        trailerCutBtn.textContent = `🎬 Stop Trailer (${Math.round(this.demoDirector.elapsedTime)}s / 60s)`;
+        trailerCutBtn.classList.add('active');
+      } else {
+        trailerCutBtn.textContent = '🎥 Trailer Cut [Shift+D]';
+        trailerCutBtn.classList.remove('active');
+      }
+    }
+
     const demoBtn = document.getElementById('demo-showcase-btn');
     if (demoBtn) {
       if (this.demoDirector.isPlaying) {
-        demoBtn.textContent = `🎬 Stop Demo (${Math.round(this.demoDirector.elapsedTime)}s)`;
+        demoBtn.textContent = `🎬 Stop (${Math.round(this.demoDirector.elapsedTime)}s / 60s)`;
         demoBtn.classList.add('active');
       } else {
         demoBtn.textContent = '🎬 Auto-Demo [D]';
@@ -932,7 +962,7 @@ class ChronoLoomApp {
       if (this.demoHandTrackingEl) {
         if (this.demoDirector.isPlaying) {
           const actShort = this.demoDirector.currentAct.split(':')[0] || 'SHOWCASE';
-          this.demoHandTrackingEl.textContent = `🎬 ${actShort} (${this.demoDirector.elapsedTime.toFixed(1)}s / 45s)`;
+          this.demoHandTrackingEl.textContent = `🎬 ${actShort} (${this.demoDirector.elapsedTime.toFixed(1)}s / 60s)`;
         } else {
           if (this.handInputManager.areControllersActive) {
             this.demoHandTrackingEl.textContent = 'TOUCH CONTROLLERS (DUAL-INPUT + HAPTICS ON)';

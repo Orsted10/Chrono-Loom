@@ -271,9 +271,9 @@ export class HarmonicVault {
   }
 
   /**
-   * Stops recording and immediately downloads lossless .wav loop + .json snapshot
+   * Stops recording and optionally downloads lossless .wav loop + .json snapshot
    */
-  public stopAudioRecording(): void {
+  public stopAudioRecording(triggerDownload: boolean = true): void {
     if (!this.isRecording) return;
 
     this.isRecording = false;
@@ -296,25 +296,27 @@ export class HarmonicVault {
       offset += this.pcmChunksLeft[i].length;
     }
 
-    // Encode standard 16-bit stereo PCM WAV
-    const wavBlob = this.encodeWAV(leftFull, rightFull, this.recordSampleRate);
-    const timestamp = Date.now();
+    if (triggerDownload && totalSamples > 0) {
+      // Encode standard 16-bit stereo PCM WAV
+      const wavBlob = this.encodeWAV(leftFull, rightFull, this.recordSampleRate);
+      const timestamp = Date.now();
 
-    // Trigger .wav download
-    const wavUrl = URL.createObjectURL(wavBlob);
-    const dlAnchor = document.createElement('a');
-    dlAnchor.href = wavUrl;
-    dlAnchor.download = `chronoloom-loop-${timestamp}.wav`;
-    document.body.appendChild(dlAnchor);
-    dlAnchor.click();
-    dlAnchor.remove();
-    setTimeout(() => URL.revokeObjectURL(wavUrl), 10000);
+      // Trigger .wav download
+      const wavUrl = URL.createObjectURL(wavBlob);
+      const dlAnchor = document.createElement('a');
+      dlAnchor.href = wavUrl;
+      dlAnchor.download = `chronoloom-loop-${timestamp}.wav`;
+      document.body.appendChild(dlAnchor);
+      dlAnchor.click();
+      dlAnchor.remove();
+      setTimeout(() => URL.revokeObjectURL(wavUrl), 10000);
 
-    // Save sculpture snapshot to vault automatically
-    const saved = this.saveCurrentSculpture(`Loop Recording @ ${new Date().toLocaleTimeString()}`);
+      // Save sculpture snapshot to vault automatically
+      const saved = this.saveCurrentSculpture(`Loop Recording @ ${new Date().toLocaleTimeString()}`);
 
-    // Trigger companion .json download
-    this.exportSculptureJson(saved.id);
+      // Trigger companion .json download
+      this.exportSculptureJson(saved.id);
+    }
 
     this.updateRecordingUI();
   }

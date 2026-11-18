@@ -986,6 +986,23 @@
         border-top: 1px solid rgba(255, 255, 255, 0.08);
         padding-top: 6px;
       }
+
+      /* Phase 20: Trailer Cinematic Mode Choreography */
+      body.trailer-cinematic-mode #hud-overlay .hud-header .brand-box,
+      body.trailer-cinematic-mode #hud-overlay .hud-header .mode-badge-box,
+      body.trailer-cinematic-mode #hud-overlay .cheatsheet-card .cheatsheet-list,
+      body.trailer-cinematic-mode .webxr-toolbar-container {
+        opacity: 0.12;
+        filter: blur(2px);
+        transition: opacity 0.5s ease, filter 0.5s ease;
+        pointer-events: none;
+      }
+      body.trailer-cinematic-mode .demo-telemetry-container,
+      body.trailer-cinematic-mode .perf-profiler-container {
+        opacity: 1;
+        filter: none;
+        pointer-events: auto;
+      }
     </style>
   </head>
   <body>
@@ -1134,7 +1151,7 @@
             <li>• <strong>7. Daily Constellation Challenge:</strong> Guide pulses through all 3 Target Rings within 6 beats to achieve victory supernova &amp; celebratory chord!</li>
             <li>• <strong>8. Spatial Wrist HUD:</strong> 4 tactile 3D buttons float near your Left Wrist: Daily Puzzle, Freeform, A11y Suite, and Reset.</li>
             <li>• <strong>9. Accessibility Suite:</strong> 1-Handed Virtual Anchor Tether &amp; Gaze Snap. Shape-Coded Synesthesia (Cube = Bass, Octahedron = Mid, Tetrahedron = High) + 3D Note Badges &amp; Visual Haptic Ripple Rings for colorblind &amp; Deaf players. Press <kbd>C</kbd> to Pull Workspace Closer (&lt; 0.35m radius). Press <kbd>A</kbd> to toggle A11y Suite.</li>
-            <li>• <strong>10. Showcase &amp; Sharing:</strong> Press <kbd>D</kbd> or click <em>🎬 Auto-Demo</em> for the hands-free 45-second cinematic masterclass walkthrough. Click <em>🔗 Share Loom Link</em> to copy a portable Base64 constellation URL hash!</li>
+            <li>• <strong>10. Multi-Angle Trailer Cut &amp; Showcase:</strong> Press <kbd>Shift+D</kbd> or click <em>🎥 Trailer Cut</em> for the 60-second 6-Act "OMG Director's Cut" featuring multi-angle dolly zooms, macro string close-ups, Euclidean twists, Raga scale morphs, and Accessibility showcases with automatic HUD cinema choreography! Click <em>🔗 Share Loom Link</em> to copy a portable Base64 constellation URL hash!</li>
             <li>• <strong>11. MR Plane Detection &amp; Wall-Bounce Acoustics:</strong> Pinched nodes snap magnetically onto physical desks/tables (&lt; 0.06m) with a holographic base-pedestal. Stray pulses shoot outward as luminous photon darts, bouncing off real walls &amp; triggering early-reflection stereo echoes in <code>SpatialSynth</code>! Press <kbd>R</kbd> or click <em>MR Room Scan</em> to toggle.</li>
             <li>• <strong>12. Neural Gesture Vocabulary:</strong> <em>Time-Dilation Conductor</em> (Palms facing: raise/lower hands to scale 40-180 BPM with tempo ribbon [Key <kbd>T</kbd>]). <em>Harmonic Chord Bloom</em> (Pinch + outward flick splits node into 3-node triad chord [Key <kbd>B</kbd>]). <em>Acoustic Scissors Snip</em> (Index+middle scissor-cut across string severs it cleanly [Key <kbd>X</kbd>]). Press <kbd>G</kbd> to toggle the 3D Wrist Holo-Card!</li>
             <li>• <strong>13. Zero-Backend P2P Jam Rooms:</strong> Co-weave with remote peers via WebRTC DataChannels or instant multi-tab <code>BroadcastChannel</code> at 30Hz! Includes glowing 3D Ghost Hands + Head Crest avatar, shared clock, and Cooperative Constellation Mode (doubled supernova!). Press <kbd>J</kbd> or click <em>Jam Room [J]</em>.</li>
@@ -1148,6 +1165,7 @@
             <li>• <strong>Simulator:</strong> <kbd>Left-Click Drag</kbd> = Left Hand Pinch, <kbd>Right-Click / Space</kbd> = Right Hand Pinch.</li>
           </ul>
           <div class="hud-actions">
+            <button id="trailer-cut-btn" class="action-btn action-btn-gold">🎥 Trailer Cut [Shift+D]</button>
             <button id="profiler-toggle-btn" class="action-btn action-btn-cyan">📊 Profiler [P]</button>
             <button id="harmonic-vault-btn" class="action-btn action-btn-purple">📁 Vault [K]</button>
             <button id="hud-record-btn" class="action-btn action-btn-rose">🔴 Rec Loop [15s]</button>
