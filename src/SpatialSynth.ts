@@ -74,6 +74,7 @@ export class SpatialSynth {
   private droneDuckingGain: GainNode | null = null;
   private isDroneActive = false;
   private currentDroneRoot = 130.81; // C3
+  private activeVoicesCount = 0;
 
   private isInitialized = false;
 
@@ -503,6 +504,12 @@ export class SpatialSynth {
       }
 
       // Start & Stop with automatic garbage cleanup
+      this.activeVoicesCount++;
+      const onVoiceEnd = () => {
+        this.activeVoicesCount = Math.max(0, this.activeVoicesCount - 1);
+      };
+      oscSine.onended = onVoiceEnd;
+
       oscSine.start(now);
       oscTri.start(now);
       oscSine.stop(now + duration + 0.05);
@@ -510,6 +517,13 @@ export class SpatialSynth {
     } catch (e) {
       console.warn('[SpatialSynth] Audio playback note safeguard:', e);
     }
+  }
+
+  /**
+   * Returns current count of active audio voices (oscillators) playing
+   */
+  public getActiveVoiceCount(): number {
+    return this.activeVoicesCount + (this.isDroneActive ? 3 : 0);
   }
 
   /**

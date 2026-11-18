@@ -859,9 +859,177 @@
         font-family: 'Space Grotesk', sans-serif;
         font-size: 14px;
       }
+
+      /* Phase 19: Quest 3 90Hz/120Hz Zero-GC Profiler Badge */
+      .perf-profiler-container {
+        position: fixed;
+        top: 24px;
+        right: 28px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        background: rgba(7, 18, 36, 0.92);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(0, 240, 255, 0.45);
+        border-radius: 12px;
+        padding: 12px 16px;
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65), 0 0 20px rgba(0, 240, 255, 0.15);
+        min-width: 290px;
+        pointer-events: auto;
+        font-family: 'Space Grotesk', sans-serif;
+        animation: fadeIn 0.25s ease-out;
+      }
+
+      .perf-profiler-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 8px;
+      }
+
+      .perf-header-left {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .perf-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 8px #10b981;
+        display: inline-block;
+      }
+
+      .perf-title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        color: #f8fafc;
+        text-transform: uppercase;
+      }
+
+      .perf-tag {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        font-weight: 700;
+        color: #34d399;
+        background: rgba(16, 185, 129, 0.16);
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        border-radius: 4px;
+        padding: 2px 6px;
+      }
+
+      .perf-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin: 4px 0;
+      }
+
+      .perf-cell {
+        background: rgba(15, 23, 42, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+        padding: 6px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .perf-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 9px;
+        color: #94a3b8;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+
+      .perf-val {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        color: #f8fafc;
+        display: flex;
+        align-items: baseline;
+        gap: 3px;
+      }
+
+      .perf-val-fps {
+        color: #10b981;
+        text-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+      }
+
+      .perf-val-gc {
+        color: #34d399;
+      }
+
+      .perf-unit {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 9px;
+        color: #94a3b8;
+        font-weight: 400;
+      }
+
+      .perf-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 9px;
+        color: #94a3b8;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding-top: 6px;
+      }
     </style>
   </head>
   <body>
+    <!-- Phase 19: Real-time 2D Perf Profiler Badge (Toggle via Key P or button) -->
+    <div id="perf-profiler-badge" class="perf-profiler-container" style="display: none;">
+      <div class="perf-profiler-header">
+        <div class="perf-header-left">
+          <span class="perf-dot"></span>
+          <span class="perf-title">Quest 3 Zero-GC Profiler</span>
+        </div>
+        <span id="perf-rate-target" class="perf-tag">90Hz LOCKED</span>
+      </div>
+      <div class="perf-grid">
+        <div class="perf-cell">
+          <div class="perf-label">FPS</div>
+          <div id="perf-fps-val" class="perf-val perf-val-fps">90.0 <span class="perf-unit">FPS</span></div>
+        </div>
+        <div class="perf-cell">
+          <div class="perf-label">FRAME TIME</div>
+          <div id="perf-frametime-val" class="perf-val">11.1 <span class="perf-unit">ms</span></div>
+        </div>
+        <div class="perf-cell">
+          <div class="perf-label">DRAW CALLS</div>
+          <div id="perf-drawcalls-val" class="perf-val">14 <span class="perf-unit">calls</span></div>
+        </div>
+        <div class="perf-cell">
+          <div class="perf-label">TRIANGLES</div>
+          <div id="perf-triangles-val" class="perf-val">4.2k</div>
+        </div>
+        <div class="perf-cell">
+          <div class="perf-label">AUDIO VOICES</div>
+          <div id="perf-voices-val" class="perf-val">5 <span class="perf-unit">voices</span></div>
+        </div>
+        <div class="perf-cell">
+          <div class="perf-label">GC / HEAP</div>
+          <div id="perf-gc-val" class="perf-val perf-val-gc">0 KB <span class="perf-unit">/frame</span></div>
+        </div>
+      </div>
+      <div class="perf-footer">
+        <span>DYNAMIC FOVEATION: <strong>1.0 (MAX)</strong></span>
+        <span>STATUS: <strong style="color: #10b981;">LOCKED PACING</strong></span>
+      </div>
+    </div>
+
     <!-- 2D Heads-Up Display Telemetry Overlay -->
     <div id="hud-overlay">
       <div class="hud-header">
@@ -976,9 +1144,11 @@
             <li>• <strong>17. Controller Haptics &amp; Zero-Fatigue Switch Mode:</strong> Full dual-input parity between optical Hand Tracking and Quest Touch Controllers! Sleek transparent laser styluses render at controller tips with variable haptic feedback scaled to string tension, pluck velocity, and sub-bass frequencies (&lt; 220Hz). Motor-disability Dwell Mode: hold gaze/hand steady on a node for 0.85s to auto-latch anchor tether or complete weave with animated 360° cyan-to-gold fill-ring (or press Single-Switch <kbd>S</kbd>). Low-vision High-Contrast Rim-Lighting (2.5x emissive electric-gold outlines) and Dyslexia-Friendly typography toggle (<kbd>L</kbd> / <em>Contrast &amp; Font</em>).</li>
             <li>• <strong>18. Spatial "First-Pluck" Onboarding Guide:</strong> Runs unobtrusively on first visit (or replay anytime via <em>[? GUIDE]</em> / <kbd>U</kbd>)! Displays translucent holographic ghost-hand animations directly in 3D space demonstrating 3 micro-steps: (1) Pinch &amp; pull the golden Seed Orb, (2) Connect two nodes to weave a string, (3) Pluck the glowing string. Zero modal popups, zero walls of text—advances automatically as you act, celebrating with harmonic sparks and persisting completion in <code>localStorage</code>!</li>
             <li>• <strong>19. 7-Day Constellation Archive &amp; Harmonic Vault:</strong> Revisit past daily challenges (e.g. <em>#319 Orion's Harp, #320 Lyra Spiral, #321 Pleiades Triad, #322 Today's Zenith</em>) via the 7-day Star-Map drawer (<kbd>Y</kbd>) and build your daily harmony streak! Save up to 8 custom sculptures with auto-generated miniature 2D SVG thumbnails in the <strong>Harmonic Vault</strong> (<kbd>K</kbd>), and record pristine 15-second lossless stereo audio loops (<kbd>.WAV</kbd>) + <kbd>.JSON</kbd> with 1 click!</li>
+            <li>• <strong>20. Quest 3 90Hz/120Hz Frame-Pacing &amp; Zero-GC Profiler:</strong> Zero-allocation per-frame update loops with module-scoped scratch vectors across all engine systems. Dynamic Foveated Rendering (<code>renderer.xr.setFoveation(1.0)</code>) and WebXR target frame-rate negotiation (90Hz / 120Hz locked). Real-time telemetry profiler badge in HUD and floating 3D holographic billboard sprite in VR (Press <kbd>P</kbd> or click <em>Profiler [P]</em>).</li>
             <li>• <strong>Simulator:</strong> <kbd>Left-Click Drag</kbd> = Left Hand Pinch, <kbd>Right-Click / Space</kbd> = Right Hand Pinch.</li>
           </ul>
           <div class="hud-actions">
+            <button id="profiler-toggle-btn" class="action-btn action-btn-cyan">📊 Profiler [P]</button>
             <button id="harmonic-vault-btn" class="action-btn action-btn-purple">📁 Vault [K]</button>
             <button id="hud-record-btn" class="action-btn action-btn-rose">🔴 Rec Loop [15s]</button>
             <button id="starmap-drawer-btn" class="action-btn">⭐ Star-Map [Y]</button>
@@ -1056,6 +1226,10 @@
             <div class="telemetry-row">
               <span class="telemetry-key">GPU Shaders:</span>
               <span class="telemetry-val" id="demo-gpu-shaders" style="color: #00f0ff;">QUANTUM STRINGS + RIBBONS (1-DC)</span>
+            </div>
+            <div class="telemetry-row">
+              <span class="telemetry-key">Quest Frame-Pacing:</span>
+              <span class="telemetry-val" id="demo-fps-pacing" style="color: #34d399;">90.0 FPS LOCKED // ZERO-GC</span>
             </div>
             <div class="telemetry-row">
               <span class="telemetry-key">Loom Polyrhythm:</span>

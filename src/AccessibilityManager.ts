@@ -73,6 +73,13 @@ export function getPitchTierInfo(freq: number): PitchTierInfo {
   }
 }
 
+// Cached colors and position constants to guarantee Zero-GC in per-frame loops
+const COLOR_BASS = new THREE.Color(0xf59e0b);
+const COLOR_MID = new THREE.Color(0x00f0ff);
+const COLOR_HIGH = new THREE.Color(0xd946ef);
+const COLOR_GOLD = new THREE.Color(0xffd700);
+const CHIME_DEFAULT_POS = new THREE.Vector3(0, 1.2, -0.4);
+
 export class AccessibilityManager {
   private sceneManager: SceneManager;
   private handInputManager: HandInputManager;
@@ -418,7 +425,7 @@ export class AccessibilityManager {
           intensity: 1.1,
           duration: 0.4
         });
-        this.loomEngine.spawnParticleBurst(targetNode.position, 12, new THREE.Color(0xffd700), 0.04);
+        this.loomEngine.spawnParticleBurst(targetNode.position, 12, COLOR_GOLD, 0.04);
         console.log(`[Accessibility] Latched Virtual Anchor Tether on Node [${targetNode.id}].`);
         return true;
       }
@@ -499,7 +506,7 @@ export class AccessibilityManager {
     this.updateDwellFillRing(0);
     this.spatialSynth.playSpatialNote({
       frequency: this.isDwellModeActive ? 523.25 : 349.23,
-      position: new THREE.Vector3(0, 1.2, -0.4),
+      position: CHIME_DEFAULT_POS,
       intensity: 1.1,
       duration: 0.4
     });
@@ -521,7 +528,7 @@ export class AccessibilityManager {
         intensity: 1.25,
         duration: 0.45
       });
-      this.loomEngine.spawnParticleBurst(targetNode.position, 16, new THREE.Color(0xffd700), 0.05);
+      this.loomEngine.spawnParticleBurst(targetNode.position, 16, COLOR_GOLD, 0.05);
       this.handInputManager.pulseHaptics('right', 0.8, 60, targetNode.noteFrequency);
       console.log(`[Accessibility] Dwell-Selected: Latched Anchor on Node [${targetNode.id}].`);
       return;
@@ -650,7 +657,7 @@ export class AccessibilityManager {
 
     this.spatialSynth.playSpatialNote({
       frequency: this.isHighContrastEnabled ? 523.25 : 392.00,
-      position: new THREE.Vector3(0, 1.2, -0.4),
+      position: CHIME_DEFAULT_POS,
       intensity: 1.1,
       duration: 0.4
     });
@@ -669,7 +676,7 @@ export class AccessibilityManager {
 
     this.spatialSynth.playSpatialNote({
       frequency: this.isDyslexiaTypographyEnabled ? 659.25 : 440.00,
-      position: new THREE.Vector3(0, 1.2, -0.4),
+      position: CHIME_DEFAULT_POS,
       intensity: 1.1,
       duration: 0.4
     });
@@ -731,7 +738,7 @@ export class AccessibilityManager {
     // Audio chime confirmation
     this.spatialSynth.playSpatialNote({
       frequency: compact ? 523.25 : 392.00,
-      position: new THREE.Vector3(0, 1.2, -0.4),
+      position: CHIME_DEFAULT_POS,
       intensity: 1.2,
       duration: 0.6
     });
@@ -901,10 +908,10 @@ export class AccessibilityManager {
     const tierInfo = getPitchTierInfo(frequency);
     const waveColor =
       tierInfo.tier === 'BASS'
-        ? new THREE.Color(0xf59e0b) // Amber Gold for deep bass
+        ? COLOR_BASS
         : tierInfo.tier === 'MID'
-        ? new THREE.Color(0x00f0ff) // Cyan for mids
-        : new THREE.Color(0xd946ef); // Magenta/Violet for highs
+        ? COLOR_MID
+        : COLOR_HIGH;
 
     wave.center.copy(pos);
     wave.mesh.position.copy(pos);

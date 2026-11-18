@@ -101,6 +101,23 @@ interface LoomParticle {
   maxLife: number;
 }
 
+// Module-scoped scratch allocations to ensure Zero-GC in per-frame update loops
+const _scratchVecA = new THREE.Vector3();
+const _scratchVecB = new THREE.Vector3();
+const _scratchVecC = new THREE.Vector3();
+const _scratchVecD = new THREE.Vector3();
+const _scratchQuat = new THREE.Quaternion();
+const _scratchColorA = new THREE.Color();
+const _scratchColorB = new THREE.Color();
+const UP_VECTOR_X = new THREE.Vector3(1, 0, 0);
+const UP_VECTOR_Y = new THREE.Vector3(0, 1, 0);
+const SEATED_USER_POS = new THREE.Vector3(0, 1.2, 0);
+const WORKSPACE_CENTER_POS = new THREE.Vector3(0, 1.2, -0.45);
+const COLOR_CYAN = new THREE.Color(0x00f0ff);
+const COLOR_PURPLE = new THREE.Color(0xa855f7);
+const COLOR_GOLD = new THREE.Color(0xffd700);
+const COLOR_MAGENTA = new THREE.Color(0xd946ef);
+
 export class LoomEngine {
   private sceneManager: SceneManager;
   private handInputManager: HandInputManager;
@@ -856,10 +873,10 @@ export class LoomEngine {
 
     if (t < 0.5) {
       const subT = t / 0.5;
-      color.copy(new THREE.Color(0x00f0ff)).lerp(new THREE.Color(0xd946ef), subT);
+      color.copy(COLOR_CYAN).lerp(COLOR_MAGENTA, subT);
     } else {
       const subT = (t - 0.5) / 0.5;
-      color.copy(new THREE.Color(0xd946ef)).lerp(new THREE.Color(0xf59e0b), subT);
+      color.copy(COLOR_MAGENTA).lerp(COLOR_GOLD, subT);
     }
     return color;
   }
@@ -1167,7 +1184,7 @@ export class LoomEngine {
       if (c2 === 0) continue;
 
       const param = THREE.MathUtils.clamp(c1 / c2, 0, 1);
-      const closestPoint = new THREE.Vector3().copy(pA).addScaledVector(v, param);
+      const closestPoint = _scratchVecA.copy(pA).addScaledVector(v, param);
       const dist = tipPos.distanceTo(closestPoint);
 
       const isTouching = dist < 0.022;
@@ -1182,7 +1199,7 @@ export class LoomEngine {
         str.vibrationPhase = 0;
 
         const dir = this._v1.subVectors(pB, pA).normalize();
-        const up = Math.abs(dir.y) > 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+        const up = Math.abs(dir.y) > 0.9 ? UP_VECTOR_X : UP_VECTOR_Y;
         str.vibrationNormal.crossVectors(dir, up).normalize();
 
         // 2. Emit burst of 15 glowing particles at the contact point & trigger floor cymatic pulse
@@ -1205,7 +1222,7 @@ export class LoomEngine {
 
         // 5. Powerful plucks eject an energetic photon dart outward toward room walls!
         if (fingerVel > 1.1 && this.photonDarts.size < this.MAX_ACTIVE_DARTS) {
-          const dartDir = str.vibrationNormal.clone();
+          const dartDir = _scratchVecB.copy(str.vibrationNormal);
           if (Math.random() < 0.5) dartDir.negate();
           this.spawnPhotonDart(closestPoint, dartDir, str.color, str.frequency);
         }
@@ -1368,7 +1385,7 @@ export class LoomEngine {
    */
   private updatePhotonDarts(deltaTime: number): void {
     const toRemove: string[] = [];
-    const seatedUserPos = new THREE.Vector3(0, 1.2, 0);
+    const seatedUserPos = SEATED_USER_POS;
 
     for (const [id, dart] of this.photonDarts) {
       dart.life += deltaTime;
@@ -1386,8 +1403,7 @@ export class LoomEngine {
         dart.tailPoints[i].copy(dart.tailPoints[i - 1]);
       }
       dart.tailPoints[0].copy(dart.position);
-      dart.tailLine.geometry.dispose();
-      dart.tailLine.geometry = new THREE.BufferGeometry().setFromPoints(dart.tailPoints);
+      dart.tailLine.geometry.setFromPoints(dart.tailPoints);
 
       // 3. Physical Wall/Table bounce check against detected MR Surfaces
       if (this.mrSurfaceManager) {
@@ -1398,10 +1414,10 @@ export class LoomEngine {
 
           // Specular reflection: v' = v - 2(v . n)n
           const dot = dart.velocity.dot(bounce.normal);
-          dart.velocity.sub(bounce.normal.clone().multiplyScalar(2 * dot));
+          dart.velocity.sub(_scratchVecB.copy(bounce.normal).multiplyScalar(2 * dot));
 
           // Soft steering guidance back toward the user seated workspace (0, 1.2, -0.45)
-          const towardWorkspace = new THREE.Vector3(0, 1.2, -0.45).sub(bounce.hitPoint).normalize();
+          const towardWorkspace = _scratchVecC.copy(WORKSPACE_CENTER_POS).sub(bounce.hitPoint).normalize();
           dart.velocity.lerp(towardWorkspace.multiplyScalar(dart.velocity.length()), 0.32);
 
           // Flash real-world wall/table surface with expanding ripple
@@ -1698,7 +1714,7 @@ export class LoomEngine {
 
       if (c2 === 0) continue;
       const param = THREE.MathUtils.clamp(c1 / c2, 0, 1);
-      const closestOnLine = new THREE.Vector3().copy(pA).addScaledVector(v, param);
+      const closestOnLine = _scratchVecA.copy(pA).addScaledVector(v, param);
       const d = cutPoint.distanceTo(closestOnLine);
 
       if (d < minDist) {
@@ -1719,8 +1735,8 @@ export class LoomEngine {
     this.strings.delete(stringId);
 
     // Electric cyan/white spark shower at the cut point
-    this.spawnParticleBurst(cutPoint, 28, new THREE.Color(0x00f0ff), 0.08);
-    this.sceneManager.triggerCymaticPulse(cutPoint, new THREE.Color(0x00f0ff), 1.35);
+    this.spawnParticleBurst(cutPoint, 28, COLOR_CYAN, 0.08);
+    this.sceneManager.triggerCymaticPulse(cutPoint, COLOR_CYAN, 1.35);
 
     // Acoustic snap/twang in SpatialSynth
     this.spatialSynth.playSpatialNote({
@@ -1951,10 +1967,11 @@ export class LoomEngine {
       str.tubeMesh.quaternion.setFromUnitVectors(up, dir);
       str.tubeMesh.scale.set(1, len, 1);
 
-      // Compute local transverse vibration normal in cylinder's object space
+      // Compute local transverse vibration normal in cylinder's object space (Zero-GC)
+      _scratchQuat.copy(str.tubeMesh.quaternion).invert();
       const localNormal = this._v3
         .copy(str.vibrationNormal)
-        .applyQuaternion(str.tubeMesh.quaternion.clone().invert())
+        .applyQuaternion(_scratchQuat)
         .normalize();
 
       const qMat = (str.quantumMaterial || str.tubeMesh.material) as THREE.ShaderMaterial;
@@ -2001,7 +2018,7 @@ export class LoomEngine {
           this.ribbonTrailPool.addSegment(
             this.prevLeftTipPos,
             leftTele.indexTipPosition,
-            new THREE.Color(0x00f0ff),
+            COLOR_CYAN,
             0.012
           );
           this.prevLeftTipPos.copy(leftTele.indexTipPosition);
@@ -2023,7 +2040,7 @@ export class LoomEngine {
           this.ribbonTrailPool.addSegment(
             this.prevRightTipPos,
             rightTele.indexTipPosition,
-            new THREE.Color(0xa855f7),
+            COLOR_PURPLE,
             0.012
           );
           this.prevRightTipPos.copy(rightTele.indexTipPosition);

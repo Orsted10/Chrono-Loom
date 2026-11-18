@@ -38,6 +38,11 @@ export interface CounterMelodyNote {
   targetPoint: THREE.Vector3;
 }
 
+// Module-scoped scratch vectors for Zero-GC frame pacing
+const _ariaScratchVecA = new THREE.Vector3();
+const _ariaScratchVecB = new THREE.Vector3();
+const _ariaScratchVecC = new THREE.Vector3();
+
 export class AgentAria {
   private sceneManager: SceneManager;
   private handInputManager: HandInputManager;
@@ -713,12 +718,12 @@ export class AgentAria {
     }
 
     // 4. Determine Complementary Spatial Sweet-Spot
-    const center = new THREE.Vector3();
+    const center = _ariaScratchVecA.set(0, 0, 0);
     for (const p of recent4) center.add(p.position);
     center.multiplyScalar(0.25);
 
     // Complementary position opposite user's plucks within seated arc (< 0.55m)
-    const targetPos = new THREE.Vector3(
+    const targetPos = _ariaScratchVecB.set(
       -center.x * 0.8,
       Math.min(1.36, Math.max(1.10, center.y + 0.08)),
       Math.min(-0.35, Math.max(-0.52, center.z))
@@ -1173,7 +1178,7 @@ export class AgentAria {
         const dist = ariaWorldPos.distanceTo(beam.target);
 
         if (dist > 0.02) {
-          const midPoint = new THREE.Vector3().addVectors(ariaWorldPos, beam.target).multiplyScalar(0.5);
+          const midPoint = _ariaScratchVecA.addVectors(ariaWorldPos, beam.target).multiplyScalar(0.5);
           beam.mesh.position.copy(midPoint);
           beam.mesh.scale.set(1, 1, dist);
           beam.mesh.lookAt(beam.target);
@@ -1233,8 +1238,8 @@ export class AgentAria {
 
     switch (this.state) {
       case 'OBSERVING': {
-        // Natural lifelike hovering around home position
-        const hoverOffset = new THREE.Vector3(
+        // Natural lifelike hovering around home position (Zero-GC scratch vector)
+        const hoverOffset = _ariaScratchVecB.set(
           Math.sin(time * 1.2) * 0.015,
           Math.sin(time * 2.0) * 0.012,
           Math.cos(time * 1.5) * 0.01
@@ -1268,8 +1273,8 @@ export class AgentAria {
       }
 
       case 'LISTENING_VOICE': {
-        // Hover in place with attentive listening orientation
-        const hoverOffset = new THREE.Vector3(
+        // Hover in place with attentive listening orientation (Zero-GC scratch vector)
+        const hoverOffset = _ariaScratchVecB.set(
           Math.sin(time * 2.5) * 0.008,
           Math.sin(time * 3.5) * 0.008,
           0

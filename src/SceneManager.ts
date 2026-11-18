@@ -28,6 +28,7 @@ export class SceneManager {
   public container: HTMLElement;
 
   public isPassthroughActive = false;
+  public targetRefreshRate = 60; // 60Hz default desktop, 90Hz or 120Hz when locked on Quest 3
 
   private clock: THREE.Clock;
   private particlePositions: Float32Array;
@@ -89,6 +90,7 @@ export class SceneManager {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.2;
     this.renderer.xr.enabled = true;
+    this.renderer.info.autoReset = true;
     this.container.appendChild(this.renderer.domElement);
 
     // Unified WebXR Launch Toolbar (VR Void + Mixed Reality AR Passthrough)
@@ -116,7 +118,7 @@ export class SceneManager {
     launchToolbar.appendChild(arButton);
     document.body.appendChild(launchToolbar);
 
-    // Watch WebXR session transitions to enable/disable Quest Passthrough
+    // Watch WebXR session transitions to enable/disable Quest Passthrough & Frame-Pacing
     this.renderer.xr.addEventListener('sessionstart', () => {
       const session = this.renderer.xr.getSession() as any;
       const isAR =
@@ -124,10 +126,44 @@ export class SceneManager {
         session?.environmentBlendMode === 'additive' ||
         session?.environmentBlendMode === 'alpha-blend';
       this.setPassthroughMode(!!isAR);
+
+      // Phase 19: Dynamic Foveated Rendering (1.0 maximum eye-tracked / fixed foveation for Adreno GPU fill-rate)
+      try {
+        if ('setFoveation' in this.renderer.xr) {
+          (this.renderer.xr as any).setFoveation(1.0);
+          console.log('[SceneManager] Dynamic Foveated Rendering set to 1.0 (Quest Adreno optimization).');
+        }
+      } catch (e) {
+        console.warn('[SceneManager] Failed to set foveation:', e);
+      }
+
+      // Phase 19: Quest 3 90Hz / 120Hz Target Refresh Rate negotiation
+      try {
+        if (session && 'supportedFrameRates' in session && typeof session.updateTargetFrameRate === 'function') {
+          const supported: number[] = Array.from(session.supportedFrameRates || []);
+          if (supported.includes(120)) {
+            session.updateTargetFrameRate(120);
+            this.targetRefreshRate = 120;
+            console.log('[SceneManager] Quest 3 120Hz refresh rate locked.');
+          } else if (supported.includes(90)) {
+            session.updateTargetFrameRate(90);
+            this.targetRefreshRate = 90;
+            console.log('[SceneManager] Quest 3 90Hz refresh rate locked.');
+          } else if (supported.length > 0) {
+            const maxRate = Math.max(...supported);
+            session.updateTargetFrameRate(maxRate);
+            this.targetRefreshRate = maxRate;
+            console.log(`[SceneManager] Quest frame rate set to ${maxRate}Hz.`);
+          }
+        }
+      } catch (e) {
+        console.warn('[SceneManager] Target frame rate negotiation error:', e);
+      }
     });
 
     this.renderer.xr.addEventListener('sessionend', () => {
       this.setPassthroughMode(false);
+      this.targetRefreshRate = 60;
     });
 
     // 4. Lighting: Subtle bioluminescent accents

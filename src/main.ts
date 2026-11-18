@@ -11,6 +11,7 @@ import { MultiplayerSync } from './MultiplayerSync.js';
 import { EuclideanEngine } from './EuclideanEngine.js';
 import { TutorialGuide } from './TutorialGuide.js';
 import { HarmonicVault } from './HarmonicVault.js';
+import { PerfProfiler } from './PerfProfiler.js';
 
 // Interactive Chrono-Loom Temporal Thread representation (Phase 1 visual trails)
 interface TemporalThread {
@@ -34,6 +35,7 @@ class ChronoLoomApp {
   public euclideanEngine: EuclideanEngine;
   public tutorialGuide: TutorialGuide;
   public harmonicVault: HarmonicVault;
+  public perfProfiler: PerfProfiler;
   private clock: THREE.Clock;
 
   // Active Chrono-Threads woven by pinching
@@ -75,6 +77,7 @@ class ChronoLoomApp {
   private demoAriaIntentEl!: HTMLElement | null;
   private demoGpuShadersEl!: HTMLElement | null;
   private demoPolyrhythmEl!: HTMLElement;
+  private demoFpsPacingEl: HTMLElement | null = null;
   private isDemoTelemetryVisible = true;
 
   constructor() {
@@ -185,6 +188,12 @@ class ChronoLoomApp {
       this.loomEngine,
       this.loomEngine.spatialSynth,
       this.euclideanEngine
+    );
+
+    // 6.13. Initialize Phase 19: Quest 3 90Hz/120Hz Frame-Pacing & Zero-GC Profiler
+    this.perfProfiler = new PerfProfiler(
+      this.sceneManager,
+      this.loomEngine.spatialSynth
     );
 
     (window as any).chronoLoomApp = this;
@@ -400,6 +409,7 @@ class ChronoLoomApp {
     this.demoScaleStatusEl = document.getElementById('demo-scale-status');
     this.demoAriaIntentEl = document.getElementById('demo-aria-intent');
     this.demoGpuShadersEl = document.getElementById('demo-gpu-shaders');
+    this.demoFpsPacingEl = document.getElementById('demo-fps-pacing');
     this.demoPolyrhythmEl = document.getElementById('demo-polyrhythm-bpm') || document.createElement('span');
 
     // Toggle demo telemetry panel via button or 'H' hotkey
@@ -1014,6 +1024,12 @@ class ChronoLoomApp {
         this.demoGpuShadersEl.textContent = `Quantum Strings // ${ribbonCount} Ribbons (1-DC)`;
       }
 
+      if (this.demoFpsPacingEl) {
+        const metrics = this.perfProfiler.getMetrics();
+        this.demoFpsPacingEl.textContent = `${metrics.fps.toFixed(1)} FPS (${metrics.frameTimeMs.toFixed(1)}ms | ${metrics.targetRate}Hz) // ZERO-GC`;
+        this.demoFpsPacingEl.style.color = metrics.fps >= 88 ? '#34d399' : '#fbbf24';
+      }
+
       if (this.demoPolyrhythmEl) {
         const bpm = this.loomEngine.globalBPM;
         const mrStatus = this.mrSurfaceManager.isRoomScanEnabled
@@ -1081,6 +1097,9 @@ class ChronoLoomApp {
 
     // 8. Update HUD
     this.updateHUD();
+
+    // 8.5. Update Phase 19: Real-time Zero-GC Performance Profiler
+    this.perfProfiler.update();
 
     // 9. Render Scene
     this.sceneManager.render();
