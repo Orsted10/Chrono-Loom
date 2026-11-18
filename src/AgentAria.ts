@@ -1497,5 +1497,68 @@ export class AgentAria {
       const d = pos.distanceTo(node.position);
       if (d > 0.05 && d < minDist) {
         minDist = d;
+        nearest = node;
+      }
+    }
+    return nearest;
+  }
 
-// [Chrono-Loom Milestone 24/25] feat(aria): implement Push-to-Talk Web Speech API voice director [Key V]
+  /**
+   * Zen Solo Mode: Ambient harmonic triad chord swell
+   */
+  private playZenAmbientChord(): void {
+    const chords = [
+      [261.63, 329.63, 392.0], // C major
+      [220.0, 261.63, 329.63], // A minor
+      [196.0, 246.94, 293.66], // G major
+      [164.81, 196.0, 246.94]  // E minor
+    ];
+    const chord = chords[Math.floor(Math.random() * chords.length)];
+
+    chord.forEach((freq, idx) => {
+      setTimeout(() => {
+        this.spatialSynth.playSpatialNote({
+          frequency: freq,
+          position: this.ariaGroup.position,
+          intensity: 0.7,
+          duration: 2.2,
+          filterCutoff: 1800
+        });
+      }, idx * 120);
+    });
+
+    this.loomEngine.spawnParticleBurst(
+      this.ariaGroup.position,
+      8,
+      new THREE.Color(0xa855f7),
+      0.02
+    );
+  }
+
+  private easeOutCubic(x: number): number {
+    return 1 - Math.pow(1 - x, 3);
+  }
+
+  /**
+   * Triggers victory celebration mode
+   */
+  public triggerCelebrating(): void {
+    this.state = 'CELEBRATING';
+    this.updateSpatialBadge();
+  }
+
+  /**
+   * Resets Aria to initial observing state
+   */
+  public reset(): void {
+    this.state = 'OBSERVING';
+    this.mode = 'CO-CREATE';
+    this.currentAnim = 'NONE';
+    this.ariaGroup.position.copy(this.homePosition);
+    this.flightProgress = 1.0;
+    this.laserBeams.forEach((b) => (b.active = false));
+    this.updateSpatialBadge();
+  }
+}
+
+// [Chrono-Loom Milestone 25/25] feat(aria): recognize natural voice intents ('faster', 'add bass', 'harmonize', 'clear')
