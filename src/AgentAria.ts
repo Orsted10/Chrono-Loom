@@ -1310,5 +1310,67 @@ export class AgentAria {
 
               // 2. Activate Laser Beam to target pluck point
               if (index < this.laserBeams.length) {
+                const beam = this.laserBeams[index];
+                beam.active = true;
+                beam.target.copy(note.targetPoint);
+                setTimeout(() => {
+                  beam.active = false;
+                }, 400);
+              }
 
-// [Chrono-Loom Milestone 21/25] feat(aria): upgrade AgentAria with real-time Call-and-Response musical phrase analyzer
+              // 3. Celebratory spark burst & floor cymatic wave
+              this.loomEngine.spawnParticleBurst(
+                this.ariaGroup.position,
+                16,
+                new THREE.Color(index % 2 === 0 ? 0x00f0ff : 0xa855f7),
+                0.05
+              );
+              this.sceneManager.triggerCymaticPulse(
+                this.ariaGroup.position,
+                new THREE.Color(0x00f0ff),
+                1.2
+              );
+            }
+
+            if (!note.hasTriggered) {
+              allPlayed = false;
+            }
+          });
+
+          // After all notes played, linger briefly then return
+          const lastNote = this.callResponseSequence[this.callResponseSequence.length - 1];
+          if (allPlayed && this.callResponseTimer >= lastNote.delaySec + 0.8) {
+            this.callResponsePhase = 'RETURNING';
+            this.flightProgress = 0.0;
+          }
+        } else if (this.callResponsePhase === 'RETURNING') {
+          this.flightProgress = Math.min(1.0, this.flightProgress + deltaTime * 1.5);
+          this.ariaGroup.position.lerpVectors(
+            this.callResponseTarget,
+            this.homePosition,
+            this.easeOutCubic(this.flightProgress)
+          );
+
+          if (this.flightProgress >= 1.0) {
+            this.state = 'OBSERVING';
+            this.currentAnim = 'NONE';
+            this.laserBeams.forEach((b) => (b.active = false));
+            this.updateSpatialBadge();
+          }
+        }
+        break;
+      }
+
+      case 'HARMONIZING': {
+        // Smooth flight toward the harmonic sweet-spot
+        this.flightProgress = Math.min(1.0, this.flightProgress + deltaTime * this.flightSpeed);
+        this.ariaGroup.position.lerpVectors(
+          this.homePosition,
+          this.targetFlightPosition,
+          this.easeOutCubic(this.flightProgress)
+        );
+
+        if (this.flightProgress >= 1.0) {
+          this.state = 'WEAVING';
+
+// [Chrono-Loom Milestone 22/25] feat(aria): analyze user's last 4 plucked notes for rhythm density and harmonic tension
