@@ -98,6 +98,24 @@ export class HandInputManager {
   public hand1: THREE.XRHandSpace;
   private handModelFactory: XRHandModelFactory;
 
+  // Phase 16: Dual-Input Parity & Quest Touch Controllers
+  public controller0: THREE.XRTargetRaySpace;
+  public controller1: THREE.XRTargetRaySpace;
+  public controllerGrip0: THREE.XRGripSpace;
+  public controllerGrip1: THREE.XRGripSpace;
+  public areControllersActive = false;
+  public controllerInputSources: Map<Handedness, XRInputSource> = new Map();
+  public controllerStylusTipPositions: Map<Handedness, THREE.Vector3> = new Map([
+    ['left', new THREE.Vector3(-0.16, 1.1, -0.45)],
+    ['right', new THREE.Vector3(0.16, 1.1, -0.45)]
+  ]);
+  public isControllerPinching: Map<Handedness, boolean> = new Map([
+    ['left', false],
+    ['right', false]
+  ]);
+  private controllerStylus0!: THREE.Group;
+  private controllerStylus1!: THREE.Group;
+
   // Internal tracked hand states
   private leftHandState: HandInternalState;
   private rightHandState: HandInternalState;
@@ -186,6 +204,25 @@ export class HandInputManager {
     // Attach factory models (creates sphere primitives dynamically when connected)
     this.hand0.add(this.handModelFactory.createHandModel(this.hand0, 'spheres'));
     this.hand1.add(this.handModelFactory.createHandModel(this.hand1, 'spheres'));
+
+    // 2.5 Phase 16: Initialize WebXR Touch Controllers & Sleek Laser Styluses
+    this.controller0 = this.renderer.xr.getController(0);
+    this.controller1 = this.renderer.xr.getController(1);
+    this.cameraRig.add(this.controller0);
+    this.cameraRig.add(this.controller1);
+
+    this.controllerGrip0 = this.renderer.xr.getControllerGrip(0);
+    this.controllerGrip1 = this.renderer.xr.getControllerGrip(1);
+    this.cameraRig.add(this.controllerGrip0);
+    this.cameraRig.add(this.controllerGrip1);
+
+    this.controllerStylus0 = this.createControllerStylus('left');
+    this.controllerStylus1 = this.createControllerStylus('right');
+    this.controller0.add(this.controllerStylus0);
+    this.controller1.add(this.controllerStylus1);
+
+    this.setupControllerEvents(this.controller0, 0);
+    this.setupControllerEvents(this.controller1, 1);
 
     // 3. Create joint visual overlays & telemetry state containers
     this.leftHandState = this.createHandInternalState('left', this.hand0);
@@ -358,6 +395,236 @@ export class HandInputManager {
       state.pinchLine.visible = false;
       console.log(`[HandInputManager] WebXR hand #${index} disconnected (${handedness})`);
     });
+  }
+
+  // ----------------------------------------------------
+  // Phase 16: Dual-Input Parity, Quest Touch Controllers & Haptics
+  // ----------------------------------------------------
+
+  /**
+   * Constructs sleek transparent controller-tip laser styluses with glowing tip focal bead & reticle
+   */
+  private createControllerStylus(handedness: Handedness): THREE.Group {
+    const group = new THREE.Group();
+    group.name = `ControllerStylus_${handedness}`;
+    group.visible = false;
+
+    const beamColor = handedness === 'left' ? 0x00f0ff : 0xffd700;
+
+    // 1. Tapered translucent stylus ray shaft (28cm reach)
+    const shaftGeo = new THREE.CylinderGeometry(0.0012, 0.0035, 0.28, 16);
+    shaftGeo.rotateX(-Math.PI / 2);
+    shaftGeo.translate(0, 0, -0.14);
+
+    const shaftMat = new THREE.MeshBasicMaterial({
+      color: beamColor,
+      transparent: true,
+      opacity: 0.55,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const shaftMesh = new THREE.Mesh(shaftGeo, shaftMat);
+    shaftMesh.name = 'StylusShaft';
+    group.add(shaftMesh);
+
+    // 2. High-brightness core filament
+    const coreGeo = new THREE.CylinderGeometry(0.0004, 0.0004, 0.28, 8);
+    coreGeo.rotateX(-Math.PI / 2);
+    coreGeo.translate(0, 0, -0.14);
+
+    const coreMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    group.add(new THREE.Mesh(coreGeo, coreMat));
+
+    // 3. Glowing focal bead at stylus tip (z = -0.28m)
+    const tipGeo = new THREE.SphereGeometry(0.0055, 12, 12);
+    const tipMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const tipMesh = new THREE.Mesh(tipGeo, tipMat);
+    tipMesh.name = 'StylusTipBead';
+    tipMesh.position.set(0, 0, -0.28);
+    group.add(tipMesh);
+
+    // 4. Stylus tip targeting reticle ring
+    const ringGeo = new THREE.RingGeometry(0.010, 0.014, 24);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: beamColor,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.name = 'StylusTipRing';
+    ringMesh.position.set(0, 0, -0.28);
+    group.add(ringMesh);
+
+    return group;
+  }
+
+  /**
+   * Configures WebXR Controller connection and trigger pinch events
+   */
+  private setupControllerEvents(controller: THREE.XRTargetRaySpace, index: number): void {
+    controller.addEventListener('connected', (event: any) => {
+      const inputSource: XRInputSource = event.data;
+      if (inputSource && inputSource.targetRayMode === 'tracked-pointer') {
+        const handedness: Handedness = inputSource.handedness === 'left' ? 'left' : 'right';
+        this.controllerInputSources.set(handedness, inputSource);
+        this.areControllersActive = true;
+        if (index === 0 && this.controllerStylus0) this.controllerStylus0.visible = true;
+        if (index === 1 && this.controllerStylus1) this.controllerStylus1.visible = true;
+        console.log(`[HandInputManager] Quest Touch Controller connected: ${handedness}`);
+      }
+    });
+
+    controller.addEventListener('disconnected', (event: any) => {
+      const inputSource: XRInputSource = event.data;
+      const handedness: Handedness = inputSource.handedness === 'left' ? 'left' : 'right';
+      this.controllerInputSources.delete(handedness);
+      if (this.controllerInputSources.size === 0) {
+        this.areControllersActive = false;
+      }
+      if (index === 0 && this.controllerStylus0) this.controllerStylus0.visible = false;
+      if (index === 1 && this.controllerStylus1) this.controllerStylus1.visible = false;
+      console.log(`[HandInputManager] Quest Touch Controller disconnected: ${handedness}`);
+    });
+
+    controller.addEventListener('selectstart', (event: any) => {
+      const inputSource: XRInputSource = event.data;
+      const handedness: Handedness = inputSource.handedness === 'left' ? 'left' : 'right';
+      const tipPos = this.controllerStylusTipPositions.get(handedness) || new THREE.Vector3();
+      this.isControllerPinching.set(handedness, true);
+      this.pulseHaptics(handedness, 0.65, 30);
+      this.emitPinchStart(handedness, tipPos.clone(), 0.005);
+    });
+
+    controller.addEventListener('selectend', (event: any) => {
+      const inputSource: XRInputSource = event.data;
+      const handedness: Handedness = inputSource.handedness === 'left' ? 'left' : 'right';
+      const tipPos = this.controllerStylusTipPositions.get(handedness) || new THREE.Vector3();
+      this.isControllerPinching.set(handedness, false);
+      this.emitPinchEnd(handedness, tipPos.clone(), 0.040);
+    });
+  }
+
+  /**
+   * Drives physical haptic pulse on Quest Touch controllers:
+   * Scaled to string tension, pluck velocity, and sub-bass resonance frequency.
+   */
+  public pulseHaptics(
+    hand: Handedness,
+    intensity: number = 0.5,
+    durationMs: number = 40,
+    frequencyHz?: number
+  ): void {
+    let finalIntensity = THREE.MathUtils.clamp(intensity, 0.1, 1.0);
+    let finalDuration = durationMs;
+
+    if (frequencyHz !== undefined) {
+      if (frequencyHz < 220) {
+        // Sub-bass resonance (< 220Hz): deeper, heavier rumble
+        const bassRatio = Math.max(0, (220 - frequencyHz) / 155);
+        finalIntensity = Math.min(1.0, finalIntensity * (1.1 + bassRatio * 0.35));
+        finalDuration = Math.min(120, Math.round(durationMs + bassRatio * 45));
+      } else {
+        // Crystal bell / highs: crisp transient tick
+        finalIntensity = Math.min(0.9, finalIntensity * 0.85);
+        finalDuration = Math.max(15, Math.round(durationMs * 0.7));
+      }
+    }
+
+    const source = this.controllerInputSources.get(hand);
+    if (source && source.gamepad) {
+      const gp: any = source.gamepad;
+      if (gp.hapticActuators && gp.hapticActuators.length > 0) {
+        try {
+          gp.hapticActuators[0].pulse(finalIntensity, finalDuration);
+        } catch (e) {
+          // ignore
+        }
+      } else if (gp.vibrationActuator && typeof gp.vibrationActuator.playEffectWithParameters === 'function') {
+        try {
+          gp.vibrationActuator.playEffectWithParameters('dual-rumble', {
+            startDelay: 0,
+            duration: finalDuration,
+            weakMagnitude: finalIntensity * 0.7,
+            strongMagnitude: finalIntensity
+          });
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+  }
+
+  /**
+   * Updates controller laser stylus transforms and maps stylus tips to hand telemetry
+   */
+  private updateWebXRControllers(deltaTime: number): void {
+    if (!this.areControllersActive) return;
+
+    const time = performance.now() * 0.001;
+
+    const checkController = (controller: THREE.XRTargetRaySpace, stylusGroup: THREE.Group, defaultHand: Handedness) => {
+      let hand = defaultHand;
+      for (const [h, src] of this.controllerInputSources.entries()) {
+        if (src.handedness === defaultHand) hand = h;
+      }
+      if (!this.controllerInputSources.has(hand)) {
+        stylusGroup.visible = false;
+        return;
+      }
+
+      stylusGroup.visible = true;
+
+      // Rotate tip ring gently for dynamic energy visual
+      const ring = stylusGroup.getObjectByName('StylusTipRing');
+      if (ring) {
+        ring.rotation.z = time * 2.5;
+      }
+
+      // Stylus tip local is (0, 0, -0.28)
+      const tipLocal = new THREE.Vector3(0, 0, -0.28);
+      const tipWorld = tipLocal.applyMatrix4(controller.matrixWorld);
+      this.controllerStylusTipPositions.set(hand, tipWorld);
+
+      // Update internal state tip positions so string plucking, node grabbing, and HUD poking work automatically!
+      const state = hand === 'left' ? this.leftHandState : this.rightHandState;
+      state.isConnected = true;
+      state.indexTipPos.copy(tipWorld);
+      state.thumbTipPos.copy(tipWorld);
+      state.wristPos.copy(controller.position);
+
+      const isPinching = this.isControllerPinching.get(hand) || false;
+      state.isPinching = isPinching;
+      state.currentPinchDist = isPinching ? 0.005 : 0.055;
+
+      // Pulse stylus tip opacity when pinching
+      const shaft = stylusGroup.getObjectByName('StylusShaft') as THREE.Mesh;
+      if (shaft) {
+        (shaft.material as THREE.MeshBasicMaterial).opacity = isPinching ? 0.95 : 0.55;
+      }
+
+      // Check trigger drag move
+      if (isPinching) {
+        this.emitPinchMove(hand, tipWorld.clone(), 0.005);
+      }
+    };
+
+    checkController(this.controller0, this.controllerStylus0, 'left');
+    checkController(this.controller1, this.controllerStylus1, 'right');
   }
 
   /**
@@ -614,6 +881,7 @@ export class HandInputManager {
 
       this.updateWebXRHand(this.leftHandState);
       this.updateWebXRHand(this.rightHandState);
+      this.updateWebXRControllers(deltaTime);
     } else {
       // 2. Process Desktop Simulator Fallback
       this.simLeftHandRig.visible = true;
@@ -1027,7 +1295,7 @@ export class HandInputManager {
     const state = handedness === 'left' ? this.leftHandState : this.rightHandState;
     return {
       handedness,
-      isTracked: this.isSimulatorActive || state.isConnected,
+      isTracked: this.isSimulatorActive || state.isConnected || this.controllerInputSources.has(handedness),
       pinchDistance: state.currentPinchDist,
       isPinching: state.isPinching,
       isOpenPalm: state.isOpenPalm,

@@ -481,6 +481,41 @@ class ChronoLoomApp {
       updateCompactBtnText();
     }
 
+    // Phase 16: Dwell-Select & Single-Switch Mode Button
+    const dwellBtn = document.getElementById('dwell-mode-btn');
+    const updateDwellBtnText = () => {
+      if (dwellBtn) {
+        const on = this.accessibilityManager.isDwellModeActive;
+        dwellBtn.textContent = on ? 'Dwell Mode: ON [S]' : 'Dwell Mode: OFF [S]';
+        dwellBtn.classList.toggle('active', on);
+      }
+    };
+    if (dwellBtn) {
+      dwellBtn.addEventListener('click', () => {
+        this.accessibilityManager.toggleDwellMode();
+        updateDwellBtnText();
+      });
+      updateDwellBtnText();
+    }
+
+    // Phase 16: High-Contrast Rim-Lighting & Dyslexia Typography Button
+    const contrastFontBtn = document.getElementById('contrast-font-btn');
+    const updateContrastBtnText = () => {
+      if (contrastFontBtn) {
+        const on = this.accessibilityManager.isHighContrastEnabled || this.accessibilityManager.isDyslexiaTypographyEnabled;
+        contrastFontBtn.textContent = on ? 'Contrast & Font: ON [L]' : 'Contrast & Font: OFF [L]';
+        contrastFontBtn.classList.toggle('active', on);
+      }
+    };
+    if (contrastFontBtn) {
+      contrastFontBtn.addEventListener('click', () => {
+        this.accessibilityManager.toggleHighContrast();
+        this.accessibilityManager.toggleDyslexiaTypography();
+        updateContrastBtnText();
+      });
+      updateContrastBtnText();
+    }
+
     // Button for Auto-Director Cinematic Showcase
     const demoBtn = document.getElementById('demo-showcase-btn');
     if (demoBtn) {
@@ -594,6 +629,17 @@ class ChronoLoomApp {
         this.agentAria.toggleSpeechListening();
       } else if (e.key === 'j' || e.key === 'J') {
         this.multiplayerSync.toggleModal();
+      } else if (e.key === 's' || e.key === 'S') {
+        if (this.accessibilityManager.focusedNode) {
+          this.accessibilityManager.triggerSwitchSelect();
+        } else {
+          this.accessibilityManager.toggleDwellMode();
+          updateDwellBtnText();
+        }
+      } else if (e.key === 'l' || e.key === 'L') {
+        this.accessibilityManager.toggleHighContrast();
+        this.accessibilityManager.toggleDyslexiaTypography();
+        updateContrastBtnText();
       }
     });
   }
@@ -793,10 +839,15 @@ class ChronoLoomApp {
           const actShort = this.demoDirector.currentAct.split(':')[0] || 'SHOWCASE';
           this.demoHandTrackingEl.textContent = `🎬 ${actShort} (${this.demoDirector.elapsedTime.toFixed(1)}s / 45s)`;
         } else {
-          const leftState = left.isPinching ? 'PINCH' : left.isTracked ? 'TRACKED' : 'STANDBY';
-          const rightState = right.isPinching ? 'PINCH' : right.isTracked ? 'TRACKED' : 'STANDBY';
-          const confidence = (left.isTracked || right.isTracked) ? '99.4%' : 'OFFLINE';
-          this.demoHandTrackingEl.textContent = `ACTIVE (L: ${leftState} | R: ${rightState} | Conf: ${confidence})`;
+          if (this.handInputManager.areControllersActive) {
+            this.demoHandTrackingEl.textContent = 'TOUCH CONTROLLERS (DUAL-INPUT + HAPTICS ON)';
+            this.demoHandTrackingEl.style.color = '#38bdf8';
+          } else {
+            const leftState = left.isPinching ? 'PINCH' : left.isTracked ? 'TRACKED' : 'STANDBY';
+            const rightState = right.isPinching ? 'PINCH' : right.isTracked ? 'TRACKED' : 'STANDBY';
+            const confidence = (left.isTracked || right.isTracked) ? '99.4%' : 'OFFLINE';
+            this.demoHandTrackingEl.textContent = `ACTIVE (L: ${leftState} | R: ${rightState} | Conf: ${confidence})`;
+          }
         }
       }
 
@@ -835,16 +886,22 @@ class ChronoLoomApp {
         if (!a11ySummary.suiteEnabled) {
           this.demoA11yStatusEl.textContent = 'OFF';
           this.demoA11yStatusEl.style.color = '#94a3b8';
+        } else if (a11ySummary.isDwellMode && a11ySummary.dwellProgress > 0) {
+          this.demoA11yStatusEl.textContent = `DWELL-SELECTING: ${(a11ySummary.dwellProgress * 100).toFixed(0)}% (0.85s Hold)`;
+          this.demoA11yStatusEl.style.color = '#ffd700';
         } else if (a11ySummary.hasLatchedTether) {
-          this.demoA11yStatusEl.textContent = 'TETHER LATCHED [PINCH TO WEAVE]';
+          this.demoA11yStatusEl.textContent = 'TETHER LATCHED [PINCH/DWELL TO WEAVE]';
           this.demoA11yStatusEl.style.color = '#fbbf24';
         } else if (a11ySummary.focusedNodeId) {
-          this.demoA11yStatusEl.textContent = `MAGNETIC SNAP: Node [${a11ySummary.focusedNodeId}]`;
+          const dwellStr = a11ySummary.isDwellMode ? ' [DWELL HOLD READY]' : '';
+          this.demoA11yStatusEl.textContent = `MAGNETIC SNAP: Node [${a11ySummary.focusedNodeId}]${dwellStr}`;
           this.demoA11yStatusEl.style.color = '#00f0ff';
         } else {
+          const fontStr = a11ySummary.isDyslexia ? ' + DYSLEXIA FONT' : '';
+          const hcStr = a11ySummary.isHighContrast ? ' + AAA CONTRAST' : '';
           this.demoA11yStatusEl.textContent = a11ySummary.isCompact
-            ? 'ON (Compact 0.35m + Gaze Reticle)'
-            : 'ON (1-Hand Tether + Haptic Waves)';
+            ? `ON (Compact 0.35m + Dwell [S]${hcStr}${fontStr})`
+            : `ON (1-Hand Tether + Dwell [S]${hcStr}${fontStr})`;
           this.demoA11yStatusEl.style.color = '#34d399';
         }
       }

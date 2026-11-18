@@ -85,6 +85,20 @@ export class AccessibilityManager {
   public isOneHandedModeActive = true;
   public isShapeSynesthesiaEnabled = true;
 
+  // Phase 16: Dwell-Select & Single-Switch Accessibility
+  public isDwellModeActive = true;
+  public dwellProgress = 0.0;
+  private dwellTimer = 0.0;
+  private readonly DWELL_DURATION = 0.85; // 0.85s steady hold to auto-latch
+  private dwellCooldown = 0.0;
+  private lastDwellNodeId: string | null = null;
+  private dwellFillMesh!: THREE.Mesh;
+  private dwellFillMat!: THREE.MeshBasicMaterial;
+
+  // Phase 16: Low-Vision High-Contrast & Dyslexia-Friendly Typography
+  public isHighContrastEnabled = false;
+  public isDyslexiaTypographyEnabled = false;
+
   // Ergonomic Seated Auto-Bring Workspace State
   public isWorkspaceCompact = false;
   private currentZOffset = 0.0;
@@ -176,6 +190,21 @@ export class AccessibilityManager {
     });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     group.add(ring);
+
+    // Phase 16: Dwell-Select Radial Fill-Ring (0.85s steady hold visualization)
+    const dwellGeo = new THREE.RingGeometry(0.038, 0.048, 48, 1, Math.PI / 2, 0.001);
+    this.dwellFillMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.95,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    this.dwellFillMesh = new THREE.Mesh(dwellGeo, this.dwellFillMat);
+    this.dwellFillMesh.name = 'DwellFillRing';
+    this.dwellFillMesh.visible = false;
+    group.add(this.dwellFillMesh);
 
     // 4 Corner Brackets
     const bracketMat = new THREE.LineBasicMaterial({
@@ -444,6 +473,225 @@ export class AccessibilityManager {
     this.tetherGroup.visible = false;
   }
 
+  // ----------------------------------------------------
+  // Phase 16: Dwell-Select & Single-Switch Accessibility
+  // ----------------------------------------------------
+
+  /**
+   * Universal Single-Switch Trigger:
+   * Clicking switch/spacebar immediately selects the currently focused node without manual pinch.
+   */
+  public triggerSwitchSelect(): boolean {
+    if (this.focusedNode) {
+      this.handleDwellSelection(this.focusedNode);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Toggles Hands-Free Dwell Selection mode (0.85s steady gaze/hand hold)
+   */
+  public toggleDwellMode(): boolean {
+    this.isDwellModeActive = !this.isDwellModeActive;
+    this.dwellTimer = 0.0;
+    this.dwellProgress = 0.0;
+    this.updateDwellFillRing(0);
+    this.spatialSynth.playSpatialNote({
+      frequency: this.isDwellModeActive ? 523.25 : 349.23,
+      position: new THREE.Vector3(0, 1.2, -0.4),
+      intensity: 1.1,
+      duration: 0.4
+    });
+    console.log(`[Accessibility] Dwell-Select Mode: ${this.isDwellModeActive ? 'ON (0.85s hold)' : 'OFF'}`);
+    return this.isDwellModeActive;
+  }
+
+  /**
+   * Executes selection when 0.85s dwell completes on a node
+   */
+  public handleDwellSelection(targetNode: HarmonicNode): void {
+    if (!this.latchedAnchorNode) {
+      // Case A: Latch Virtual Anchor Tether
+      this.latchedAnchorNode = targetNode;
+      this.tetherGroup.visible = true;
+      this.spatialSynth.playSpatialNote({
+        frequency: 587.33,
+        position: targetNode.position,
+        intensity: 1.25,
+        duration: 0.45
+      });
+      this.loomEngine.spawnParticleBurst(targetNode.position, 16, new THREE.Color(0xffd700), 0.05);
+      this.handInputManager.pulseHaptics('right', 0.8, 60, targetNode.noteFrequency);
+      console.log(`[Accessibility] Dwell-Selected: Latched Anchor on Node [${targetNode.id}].`);
+      return;
+    }
+
+    if (targetNode.id === this.latchedAnchorNode.id) {
+      // Case B1: Dwelled on same node -> Unlatch / Cancel
+      this.releaseTether(false);
+      this.handInputManager.pulseHaptics('right', 0.4, 30);
+      console.log('[Accessibility] Dwell-Selected: Tether unlatched.');
+    } else {
+      // Case B2: Dwelled on different node -> WEAVE STRING!
+      this.loomEngine.createChronoString(this.latchedAnchorNode, targetNode);
+      this.triggerVisualHapticWave(targetNode.position, targetNode.noteFrequency, 1.5);
+      this.spatialSynth.playSpatialNote({
+        frequency: 659.25,
+        position: targetNode.position,
+        intensity: 1.3,
+        duration: 0.6
+      });
+      this.handInputManager.pulseHaptics('right', 0.9, 75, targetNode.noteFrequency);
+      this.releaseTether(true);
+      console.log(`[Accessibility] Dwell-Selected: Weave completed to Node [${targetNode.id}].`);
+    }
+  }
+
+  private updateDwellSelect(deltaTime: number): void {
+    if (!this.isAccessibilitySuiteEnabled || !this.isDwellModeActive) {
+      this.dwellTimer = 0.0;
+      this.dwellProgress = 0.0;
+      this.updateDwellFillRing(0);
+      return;
+    }
+
+    if (this.dwellCooldown > 0) {
+      this.dwellCooldown -= deltaTime;
+      this.dwellProgress = 0.0;
+      this.updateDwellFillRing(0);
+      return;
+    }
+
+    if (this.focusedNode) {
+      if (this.lastDwellNodeId !== this.focusedNode.id) {
+        this.lastDwellNodeId = this.focusedNode.id;
+        this.dwellTimer = 0.0;
+      }
+
+      this.dwellTimer += deltaTime;
+      this.dwellProgress = Math.min(1.0, this.dwellTimer / this.DWELL_DURATION);
+      this.updateDwellFillRing(this.dwellProgress);
+
+      if (this.dwellProgress >= 1.0) {
+        this.handleDwellSelection(this.focusedNode);
+        this.dwellTimer = 0.0;
+        this.dwellProgress = 0.0;
+        this.dwellCooldown = 0.6;
+        this.updateDwellFillRing(0);
+      }
+    } else {
+      this.dwellTimer = 0.0;
+      this.dwellProgress = 0.0;
+      this.lastDwellNodeId = null;
+      this.updateDwellFillRing(0);
+    }
+  }
+
+  private updateDwellFillRing(progress: number): void {
+    if (!this.dwellFillMesh) return;
+    if (progress <= 0.005) {
+      this.dwellFillMesh.visible = false;
+      return;
+    }
+
+    this.dwellFillMesh.visible = true;
+    this.dwellFillMesh.geometry.dispose();
+    const sweepAngle = progress * Math.PI * 2;
+    this.dwellFillMesh.geometry = new THREE.RingGeometry(
+      0.038,
+      0.048,
+      48,
+      1,
+      Math.PI / 2,
+      -sweepAngle
+    );
+
+    const r = THREE.MathUtils.lerp(0.0, 1.0, progress);
+    const g = THREE.MathUtils.lerp(0.94, 0.84, progress);
+    const b = THREE.MathUtils.lerp(1.0, 0.0, progress);
+    this.dwellFillMat.color.setRGB(r, g, b);
+    this.dwellFillMat.opacity = 0.75 + progress * 0.25;
+  }
+
+  // ----------------------------------------------------
+  // Phase 16: High-Contrast Rim-Lighting & Dyslexia Typography
+  // ----------------------------------------------------
+
+  public toggleHighContrast(): boolean {
+    this.isHighContrastEnabled = !this.isHighContrastEnabled;
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('high-contrast-mode', this.isHighContrastEnabled);
+    }
+
+    for (const node of this.loomEngine.nodes.values()) {
+      const coreMat = node.coreMesh.material as THREE.MeshPhysicalMaterial;
+      const wireMat = node.wireframeMesh.material as THREE.MeshBasicMaterial;
+      if (this.isHighContrastEnabled) {
+        coreMat.emissiveIntensity = 2.4;
+        coreMat.roughness = 0.05;
+        wireMat.color.setHex(0xffea00);
+        wireMat.opacity = 1.0;
+        node.wireframeMesh.scale.setScalar(1.22);
+      } else {
+        coreMat.emissiveIntensity = 0.6;
+        coreMat.roughness = 0.2;
+        wireMat.color.copy(node.baseColor);
+        wireMat.opacity = 0.75;
+        node.wireframeMesh.scale.setScalar(1.0);
+      }
+    }
+
+    if (this.reticleMaterial) {
+      this.reticleMaterial.color.setHex(this.isHighContrastEnabled ? 0xffea00 : 0x00f0ff);
+    }
+
+    this.refreshAllNodePitchLabels();
+
+    this.spatialSynth.playSpatialNote({
+      frequency: this.isHighContrastEnabled ? 523.25 : 392.00,
+      position: new THREE.Vector3(0, 1.2, -0.4),
+      intensity: 1.1,
+      duration: 0.4
+    });
+
+    console.log(`[Accessibility] High-Contrast Rim-Lighting: ${this.isHighContrastEnabled ? 'ON' : 'OFF'}`);
+    return this.isHighContrastEnabled;
+  }
+
+  public toggleDyslexiaTypography(): boolean {
+    this.isDyslexiaTypographyEnabled = !this.isDyslexiaTypographyEnabled;
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('dyslexia-friendly-mode', this.isDyslexiaTypographyEnabled);
+    }
+
+    this.refreshAllNodePitchLabels();
+
+    this.spatialSynth.playSpatialNote({
+      frequency: this.isDyslexiaTypographyEnabled ? 659.25 : 440.00,
+      position: new THREE.Vector3(0, 1.2, -0.4),
+      intensity: 1.1,
+      duration: 0.4
+    });
+
+    console.log(`[Accessibility] Dyslexia-Friendly Typography: ${this.isDyslexiaTypographyEnabled ? 'ON' : 'OFF'}`);
+    return this.isDyslexiaTypographyEnabled;
+  }
+
+  public refreshAllNodePitchLabels(): void {
+    for (const node of this.loomEngine.nodes.values()) {
+      if (node.pitchLabelSprite) {
+        node.meshGroup.remove(node.pitchLabelSprite);
+        node.pitchLabelSprite.geometry.dispose();
+        (node.pitchLabelSprite.material as THREE.Material).dispose();
+      }
+      const newSprite = this.createPitchLabelSprite(node.noteFrequency);
+      newSprite.visible = this.isAccessibilitySuiteEnabled;
+      node.meshGroup.add(newSprite);
+      node.pitchLabelSprite = newSprite;
+    }
+  }
+
   private isWithinComfortBounds(pos: THREE.Vector3): boolean {
     const origin = this._v1.set(0, 1.2, -0.45);
     return pos.distanceTo(origin) < 0.65 && pos.z <= -0.10 && pos.y >= 0.85 && pos.y <= 1.55;
@@ -536,12 +784,22 @@ export class AccessibilityManager {
     canvas.height = 160;
     const ctx = canvas.getContext('2d')!;
 
-    // Border styling based on tier
-    const borderColor =
+    // Border styling based on tier & accessibility mode
+    const isHighContrast = this.isHighContrastEnabled;
+    const isDyslexia = this.isDyslexiaTypographyEnabled;
+
+    let borderColor =
       tierInfo.tier === 'BASS' ? '#f59e0b' : tierInfo.tier === 'MID' ? '#00f0ff' : '#a855f7';
-    ctx.fillStyle = 'rgba(7, 24, 45, 0.90)';
+    let bgColor = 'rgba(7, 24, 45, 0.90)';
+
+    if (isHighContrast) {
+      borderColor = '#ffea00';
+      bgColor = 'rgba(0, 0, 0, 0.98)';
+    }
+
+    ctx.fillStyle = bgColor;
     ctx.strokeStyle = borderColor;
-    ctx.lineWidth = 5;
+    ctx.lineWidth = isHighContrast ? 8 : 5;
 
     const x = 12, y = 12, w = 488, h = 136, r = 24;
     ctx.beginPath();
@@ -554,15 +812,27 @@ export class AccessibilityManager {
     ctx.fill();
     ctx.stroke();
 
-    // Text: Note Name + Pitch Tier + Frequency
-    ctx.font = 'bold 46px "Space Grotesk", sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${tierInfo.noteName} [${tierInfo.tier}]`, 256, 68);
+    if (isDyslexia) {
+      ctx.font = 'bold 42px "OpenDyslexic", "Atkinson Hyperlegible", "Lexend", sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      const spacedTitle = `${tierInfo.noteName}   [${tierInfo.tier}]`;
+      ctx.fillText(spacedTitle, 256, 68);
 
-    ctx.font = 'bold 24px "JetBrains Mono", monospace';
-    ctx.fillStyle = borderColor;
-    ctx.fillText(`${Math.round(freq)} Hz // ${tierInfo.shapeName}`, 256, 114);
+      ctx.font = 'bold 24px "OpenDyslexic", "Atkinson Hyperlegible", "Lexend", monospace';
+      ctx.fillStyle = borderColor;
+      const spacedSub = `${Math.round(freq)} Hz   //   ${tierInfo.shapeName}`;
+      ctx.fillText(spacedSub, 256, 114);
+    } else {
+      ctx.font = 'bold 46px "Space Grotesk", sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${tierInfo.noteName} [${tierInfo.tier}]`, 256, 68);
+
+      ctx.font = 'bold 24px "JetBrains Mono", monospace';
+      ctx.fillStyle = borderColor;
+      ctx.fillText(`${Math.round(freq)} Hz // ${tierInfo.shapeName}`, 256, 114);
+    }
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.minFilter = THREE.LinearFilter;
@@ -687,8 +957,9 @@ export class AccessibilityManager {
     this.sceneManager.comfortArcGroup.position.z = this.currentZOffset;
     this.sceneManager.comfortArcGroup.scale.setScalar(this.currentScale);
 
-    // 2. Update Magnetic Gaze & Proximity Assist
+    // 2. Update Magnetic Gaze & Proximity Assist + Dwell-Select Radial Ring
     this.updateMagneticFocus();
+    this.updateDwellSelect(deltaTime);
 
     // 3. Update Virtual Anchor Tether (One-Handed Weaving)
     if (this.latchedAnchorNode && this.tetherGroup.visible) {
@@ -756,13 +1027,21 @@ export class AccessibilityManager {
     isCompact: boolean;
     hasLatchedTether: boolean;
     focusedNodeId: string | null;
+    isDwellMode: boolean;
+    dwellProgress: number;
+    isHighContrast: boolean;
+    isDyslexia: boolean;
   } {
     return {
       suiteEnabled: this.isAccessibilitySuiteEnabled,
       isOneHanded: this.isOneHandedModeActive,
       isCompact: this.isWorkspaceCompact,
       hasLatchedTether: this.latchedAnchorNode !== null,
-      focusedNodeId: this.focusedNode ? this.focusedNode.id : null
+      focusedNodeId: this.focusedNode ? this.focusedNode.id : null,
+      isDwellMode: this.isDwellModeActive,
+      dwellProgress: this.dwellProgress,
+      isHighContrast: this.isHighContrastEnabled,
+      isDyslexia: this.isDyslexiaTypographyEnabled
     };
   }
 }

@@ -1158,6 +1158,7 @@ export class LoomEngine {
         this.spawnParticleBurst(closestPoint, 15, str.color, 0.045);
         this.sceneManager.triggerCymaticPulse(closestPoint, str.color, 1.15);
         this.accessibilityManager?.triggerVisualHapticWave(closestPoint, str.frequency, fingerVel * 1.3);
+        this.handInputManager.pulseHaptics(hand, fingerVel, 50, str.frequency);
 
         // 3. Play 3D HRTF Spatialized Pluck Note & Duck Drone Bed
         this.spatialSynth.triggerDroneDucking(fingerVel);
@@ -1474,6 +1475,7 @@ export class LoomEngine {
       if (node) {
         node.isGrabbed = true;
         node.grabbedByHand = hand;
+        this.handInputManager.pulseHaptics(hand, 0.5, 30);
         this.checkTwoHandSimultaneousWeave();
         return;
       }
@@ -2392,6 +2394,7 @@ export class LoomEngine {
     this.spawnParticleBurst(pos, 15, str.color, 0.045);
     this.sceneManager.triggerCymaticPulse(pos, str.color, 1.15);
     this.accessibilityManager?.triggerVisualHapticWave(pos, str.frequency, intensity * 1.3);
+    this.handInputManager.pulseHaptics('right', intensity, 45, str.frequency);
 
     this.spatialSynth.triggerDroneDucking(intensity);
     this.spatialSynth.playSpatialNote({

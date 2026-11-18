@@ -561,6 +561,40 @@
         font-weight: 600;
         text-align: right;
       }
+
+      /* Phase 16: Zero-Fatigue Accessibility & High-Contrast Styles */
+      body.high-contrast-mode {
+        --cyan-neon: #ffea00 !important;
+        --cyan-glow: rgba(255, 234, 0, 0.6) !important;
+        --gold-neon: #ffffff !important;
+        --text-primary: #ffffff !important;
+        --glass-bg: rgba(0, 0, 0, 0.94) !important;
+        --glass-border: #ffea00 !important;
+      }
+
+      body.high-contrast-mode .action-btn {
+        border: 2px solid #ffea00 !important;
+        color: #ffea00 !important;
+        background: #000000 !important;
+        font-weight: 700 !important;
+      }
+
+      body.high-contrast-mode .brand-box,
+      body.high-contrast-mode .cheatsheet-card,
+      body.high-contrast-mode .telemetry-card,
+      body.high-contrast-mode .demo-telemetry-container {
+        border: 2px solid #ffea00 !important;
+        background: #000000 !important;
+        box-shadow: 0 0 24px rgba(255, 234, 0, 0.35) !important;
+      }
+
+      body.dyslexia-friendly-mode,
+      body.dyslexia-friendly-mode * {
+        font-family: 'OpenDyslexic', 'Atkinson Hyperlegible', 'Lexend', 'Comic Sans MS', sans-serif !important;
+        letter-spacing: 0.12em !important;
+        word-spacing: 0.22em !important;
+        line-height: 1.65 !important;
+      }
     </style>
   </head>
   <body>
@@ -675,6 +709,7 @@
             <li>• <strong>14. Euclidean Polyrhythms &amp; Scale Presets:</strong> Bjorklund's algorithm $E(k, n)$ on every Harmonic Node! Twist wrist while pinching (or mouse wheel on desktop) to dial active hits $k$ and step counts $n$ (3, 4, 5, 7, 8, 12, 16) with radial constellation step-rings. Press <kbd>1</kbd>–<kbd>5</kbd> or click <em>Scale [1-5]</em> to smoothly morph between 5 curated scales (<em>Celestial Lydian, Tokyo Midnight Hirajoshi, Raga Yaman Evening, Dorian Cyber-Noir, Deep Sub-Drone</em>) with dynamic chromatic lighting shifts!</li>
             <li>• <strong>15. Agent Aria v2 Call-and-Response &amp; Voice Director:</strong> Aria listens to your last 4 plucked notes, analyzes rhythmic density &amp; interval tension, flies to a complementary sweet-spot, and weaves a 2-bar "Call-and-Response" counter-melody with glowing optical laser filaments! Press <kbd>V</kbd> or click <em>🎤 Talk to Aria [V]</em> to speak natural intents (<em>"make it faster"</em>, <em>"add a bassline"</em>, <em>"switch to raga scale"</em>, <em>"harmonize with me"</em>, <em>"clear the loom"</em>) with 3D expressive emotional animations (curious head-tilt, joyful barrel-roll, focused laser weave) and dual-formant procedural vocalizations!</li>
             <li>• <strong>16. Quantum Strings &amp; Instanced Ribbon Trails:</strong> Custom GLSL <code>QuantumStringMaterial</code> computes physical standing-wave harmonics ($\sin(n \pi u) \cos(\omega t)$) directly in the vertex shader whenever plucked, with spectral chromatic aberration fringes along peak displacement and traveling energy solitons! An <code>InstancedMesh</code> GPU ribbon trail pool (max 256 instances, 1 draw call) trails behind moving fingertips and flying Chrono-Pulses, smoothly tapering opacity and width over 0.45s with 100% Quest 3 Adreno GPU precision guards.</li>
+            <li>• <strong>17. Controller Haptics &amp; Zero-Fatigue Switch Mode:</strong> Full dual-input parity between optical Hand Tracking and Quest Touch Controllers! Sleek transparent laser styluses render at controller tips with variable haptic feedback scaled to string tension, pluck velocity, and sub-bass frequencies (&lt; 220Hz). Motor-disability Dwell Mode: hold gaze/hand steady on a node for 0.85s to auto-latch anchor tether or complete weave with animated 360° cyan-to-gold fill-ring (or press Single-Switch <kbd>S</kbd>). Low-vision High-Contrast Rim-Lighting (2.5x emissive electric-gold outlines) and Dyslexia-Friendly typography toggle (<kbd>L</kbd> / <em>Contrast &amp; Font</em>).</li>
             <li>• <strong>Simulator:</strong> <kbd>Left-Click Drag</kbd> = Left Hand Pinch, <kbd>Right-Click / Space</kbd> = Right Hand Pinch.</li>
           </ul>
           <div class="hud-actions">
@@ -685,6 +720,8 @@
             <button id="gesture-guide-btn" class="action-btn">Gesture Guide [G]</button>
             <button id="conductor-mode-btn" class="action-btn">Conductor BPM [T]</button>
             <button id="room-scan-toggle-btn" class="action-btn active">MR Room Scan: ON [R]</button>
+            <button id="dwell-mode-btn" class="action-btn active">Dwell Mode: ON [S]</button>
+            <button id="contrast-font-btn" class="action-btn">Contrast &amp; Font [L]</button>
             <button id="demo-showcase-btn" class="action-btn action-btn-gold">🎬 Auto-Demo [D]</button>
             <button id="share-loom-btn" class="action-btn">🔗 Share Loom Link</button>
             <button id="aria-cycle-btn" class="action-btn">Cycle Aria Mode</button>
