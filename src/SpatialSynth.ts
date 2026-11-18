@@ -765,5 +765,37 @@ export class SpatialSynth {
         osc.frequency.setValueAtTime(660, now);
         osc.frequency.exponentialRampToValueAtTime(220, now + 0.32);
 
+        f1.frequency.setValueAtTime(800, now);
+        f1.frequency.exponentialRampToValueAtTime(300, now + 0.32);
+        f1.Q.setValueAtTime(4.0, now);
+        f2.frequency.setValueAtTime(2000, now);
+        f2.frequency.exponentialRampToValueAtTime(600, now + 0.32);
+        f2.Q.setValueAtTime(4.0, now);
 
-// [Chrono-Loom Milestone 24/25] test(acoustics): verify acoustic slapback delay timing matches room dimensions
+        masterGain.gain.setValueAtTime(0.0001, now);
+        masterGain.gain.linearRampToValueAtTime(0.18 * intensity, now + 0.02);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+
+        osc.connect(f1);
+        osc.connect(f2);
+        osc.start(now);
+        osc.stop(now + 0.36);
+      }
+    } catch (e) {
+      console.warn('[SpatialSynth] Vocal chirp synthesis error:', e);
+    }
+  }
+
+  /**
+   * Helper: Maps string length L (0.1m to 0.6m) to the Lydian / Pentatonic scale
+   */
+  public mapLengthToScaleFrequency(length: number): number {
+    const freqs = this.activeScaleFrequencies;
+    const t = THREE.MathUtils.clamp((length - 0.1) / (0.6 - 0.1), 0, 1);
+    const inverted = 1 - t; // Shorter strings = higher notes
+    const index = Math.round(inverted * (freqs.length - 1));
+    return freqs[index];
+  }
+}
+
+// [Chrono-Loom Milestone 25/25] feat(audio): implement Procedural Convolution Reverb, Harmonic Drone Bed & Master Limiter
