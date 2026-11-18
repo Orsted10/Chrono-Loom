@@ -592,7 +592,7 @@ export class SceneManager {
 
     // Gentle 3D title header floating bob
     if (this.titleHeaderGroup) {
-      this.titleHeaderGroup.position.y = 1.75 + Math.sin(elapsedTime * 1.4) * 0.008;
+      this.titleHeaderGroup.position.y = 2.35 + Math.sin(elapsedTime * 1.4) * 0.008;
     }
 
     // 4. Animate Audio-Reactive Cymatic Sonar Waves
@@ -702,7 +702,9 @@ export class SceneManager {
   private createFloatingTitleHeader(): THREE.Group {
     const group = new THREE.Group();
     group.name = 'FloatingTitleHeader';
-    group.position.set(0, 1.75, -1.2);
+    // Angled stadium archway high above seated workspace (y = 2.35m, z = -1.85m)
+    group.position.set(0, 2.35, -1.85);
+    group.rotation.x = 0.26;
 
     // Canvas texture for ultra-crisp holographic title banner
     const canvas = document.createElement('canvas');

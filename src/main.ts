@@ -12,6 +12,7 @@ import { EuclideanEngine } from './EuclideanEngine.js';
 import { TutorialGuide } from './TutorialGuide.js';
 import { HarmonicVault } from './HarmonicVault.js';
 import { PerfProfiler } from './PerfProfiler.js';
+import { CompositionsManager } from './CompositionsManager.js';
 
 // Interactive Chrono-Loom Temporal Thread representation (Phase 1 visual trails)
 interface TemporalThread {
@@ -36,6 +37,7 @@ class ChronoLoomApp {
   public tutorialGuide: TutorialGuide;
   public harmonicVault: HarmonicVault;
   public perfProfiler: PerfProfiler;
+  public compositionsManager: CompositionsManager;
   private clock: THREE.Clock;
 
   // Active Chrono-Threads woven by pinching
@@ -197,6 +199,15 @@ class ChronoLoomApp {
     this.perfProfiler = new PerfProfiler(
       this.sceneManager,
       this.loomEngine.spatialSynth
+    );
+
+    // 6.14. Initialize God-Mode Masterpiece Compositions Manager
+    this.compositionsManager = new CompositionsManager(
+      this.loomEngine,
+      this.euclideanEngine,
+      this.sceneManager,
+      this.loomEngine.spatialSynth,
+      this.agentAria
     );
 
     (window as any).chronoLoomApp = this;
@@ -593,6 +604,69 @@ class ChronoLoomApp {
       });
     }
 
+    // Dedicated entry point for 3-Minute "OMG God-Mode Playthrough"
+    const godModeBtn = document.getElementById('god-mode-playthrough-btn');
+    if (godModeBtn) {
+      godModeBtn.addEventListener('click', () => {
+        if (this.tutorialGuide.isActive) {
+          this.tutorialGuide.dismissGuide();
+          updateGuideBtnText();
+        }
+        this.demoDirector.startGodModePlaythrough();
+      });
+    }
+
+    // 1-Click Masterpiece Compositions Modal
+    const compMenuBtn = document.getElementById('compositions-menu-btn');
+    const compModal = document.getElementById('compositions-modal');
+    const compModalClose = document.getElementById('compositions-modal-close');
+
+    if (compMenuBtn && compModal) {
+      compMenuBtn.addEventListener('click', () => {
+        compModal.classList.toggle('modal-open');
+      });
+    }
+    if (compModalClose && compModal) {
+      compModalClose.addEventListener('click', () => {
+        compModal.classList.remove('modal-open');
+      });
+    }
+
+    const compCards = document.querySelectorAll('.comp-item-card');
+    compCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const compId = card.getAttribute('data-comp-id');
+        if (compId) {
+          this.compositionsManager.loadComposition(compId);
+          compModal?.classList.remove('modal-open');
+        }
+      });
+    });
+
+    // Slide-out Guide & Controls Drawer
+    const guideDrawerBtn = document.getElementById('guide-drawer-btn');
+    const guideDrawer = document.getElementById('guide-drawer');
+    const guideDrawerClose = document.getElementById('guide-drawer-close');
+
+    const toggleGuideDrawer = () => {
+      guideDrawer?.classList.toggle('drawer-open');
+    };
+
+    if (guideDrawerBtn) {
+      guideDrawerBtn.addEventListener('click', toggleGuideDrawer);
+    }
+    if (guideDrawerClose) {
+      guideDrawerClose.addEventListener('click', () => {
+        guideDrawer?.classList.remove('drawer-open');
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.key === 'u' || e.key === 'U' || e.key === '?') && (e.target as HTMLElement).tagName !== 'INPUT') {
+        toggleGuideDrawer();
+      }
+    });
+
     // Button for Phase 20: 6-Act 60-Second Trailer Cut
     const trailerCutBtn = document.getElementById('trailer-cut-btn');
     if (trailerCutBtn) {
@@ -803,10 +877,15 @@ class ChronoLoomApp {
     }
   }
 
+  private hudFrameCounter = 0;
+
   /**
-   * Refreshes HTML HUD telemetry readouts
+   * Refreshes HTML HUD telemetry readouts (Throttled to 30Hz to eliminate 120Hz DOM thrashing)
    */
   private updateHUD(): void {
+    this.hudFrameCounter++;
+    if (this.hudFrameCounter % 4 !== 0) return;
+
     const left = this.handInputManager.getTelemetry('left');
     const right = this.handInputManager.getTelemetry('right');
     const isXR = this.sceneManager.renderer.xr.isPresenting;

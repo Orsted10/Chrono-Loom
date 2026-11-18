@@ -68,7 +68,7 @@ export interface ChronoPulse {
   speed: number;
   meshGroup: THREE.Group;
   mesh: THREE.Mesh;
-  glowLight: THREE.PointLight;
+  glowLight?: THREE.PointLight;
   color: THREE.Color;
   auraSprite: THREE.Sprite;
 }
@@ -532,8 +532,8 @@ export class LoomEngine {
     const wireframeMesh = new THREE.Mesh(shellGeo, shellMat);
     group.add(wireframeMesh);
 
-    // Inner glow point light
-    const innerGlow = new THREE.PointLight(0x00f0ff, 1.2, 0.45);
+    // Inner glow point light (tight localized glow to preserve 120 FPS forward rendering)
+    const innerGlow = new THREE.PointLight(0x00f0ff, 0.4, 0.25);
     group.add(innerGlow);
 
     // Soft additive-blended glow aura halo sprite
@@ -669,11 +669,21 @@ export class LoomEngine {
         pedGroup.add(strut);
       }
 
-      // 3. Subtle glow on table surface
-      const floorGlow = new THREE.PointLight(node.baseColor, 1.2, 0.25);
-      floorGlow.position.y = -height + 0.02;
-      floorGlow.name = 'FloorGlow';
-      pedGroup.add(floorGlow);
+      // 3. Subtle holographic glow decal on table surface (Zero-Light Optimization)
+      const decalGeo = new THREE.RingGeometry(0.02, 0.085, 32);
+      const decalMat = new THREE.MeshBasicMaterial({
+        color: node.baseColor,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.65,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const floorDecal = new THREE.Mesh(decalGeo, decalMat);
+      floorDecal.rotation.x = -Math.PI / 2;
+      floorDecal.position.y = -height + 0.003;
+      floorDecal.name = 'FloorDecal';
+      pedGroup.add(floorDecal);
 
       node.pedestalGroup = pedGroup;
       node.meshGroup.add(pedGroup);
@@ -691,8 +701,8 @@ export class LoomEngine {
       const ring = node.pedestalGroup.getObjectByName('BaseRing') as THREE.Mesh;
       if (ring) ring.position.y = -height + 0.002;
 
-      const floorGlow = node.pedestalGroup.getObjectByName('FloorGlow') as THREE.PointLight;
-      if (floorGlow) floorGlow.position.y = -height + 0.02;
+      const floorDecal = node.pedestalGroup.getObjectByName('FloorDecal') as THREE.Mesh;
+      if (floorDecal) floorDecal.position.y = -height + 0.003;
 
       for (let i = 0; i < 3; i++) {
         const strut = node.pedestalGroup.getObjectByName(`Strut_${i}`) as THREE.Mesh;
@@ -945,21 +955,17 @@ export class LoomEngine {
     const aura = new THREE.Mesh(auraGeo, auraMat);
     group.add(aura);
 
-    // Radial light
-    const glowLight = new THREE.PointLight(string.color, 1.4, 0.28);
-    group.add(glowLight);
-
-    // Soft additive-blended glow aura halo sprite
+    // Soft additive-blended glow aura halo sprite (Super-Optimized Zero-Light Rendering)
     const pulseAuraMat = new THREE.SpriteMaterial({
       map: this.getAuraTexture(),
       color: string.color,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.92,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
     const pulseAuraSprite = new THREE.Sprite(pulseAuraMat);
-    pulseAuraSprite.scale.set(0.065, 0.065, 1);
+    pulseAuraSprite.scale.set(0.08, 0.08, 1);
     group.add(pulseAuraSprite);
 
     this.loomGroup.add(group);
@@ -976,7 +982,6 @@ export class LoomEngine {
       speed,
       meshGroup: group,
       mesh,
-      glowLight,
       color: string.color.clone(),
       auraSprite: pulseAuraSprite
     };
@@ -1032,7 +1037,9 @@ export class LoomEngine {
       // Pulse micro-spin & light breathing & aura halo pulse
       pulse.mesh.rotation.x += 0.05;
       pulse.mesh.rotation.y += 0.08;
-      pulse.glowLight.intensity = 1.2 + Math.sin(performance.now() * 0.01) * 0.4;
+      if (pulse.glowLight) {
+        pulse.glowLight.intensity = 1.2 + Math.sin(performance.now() * 0.01) * 0.4;
+      }
       pulse.auraSprite.scale.setScalar(0.065 + Math.sin(performance.now() * 0.012) * 0.012);
 
       // Check arrival at target node
@@ -1051,6 +1058,9 @@ export class LoomEngine {
         (pulse.mesh.material as THREE.Material).dispose();
         pulse.auraSprite.geometry.dispose();
         (pulse.auraSprite.material as THREE.Material).dispose();
+        if (pulse.glowLight) {
+          pulse.glowLight.dispose();
+        }
         this.pulses.delete(id);
         this.prevPulsePositions.delete(id);
       }

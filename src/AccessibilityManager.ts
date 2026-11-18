@@ -850,8 +850,9 @@ export class AccessibilityManager {
       depthTest: false
     });
     const sprite = new THREE.Sprite(spriteMat);
-    sprite.scale.set(0.18, 0.056, 1);
-    sprite.position.set(0, 0.075, 0);
+    sprite.scale.set(0.12, 0.038, 1);
+    // Position neatly beneath node (-0.065m), preventing any collision with Euclidean ring (+0.082m)
+    sprite.position.set(0, -0.065, 0);
     return sprite;
   }
 

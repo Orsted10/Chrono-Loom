@@ -340,11 +340,7 @@ export class EuclideanEngine {
     playheadMesh.position.set(0, ringRadius, 0);
     ringGroup.add(playheadMesh);
 
-    // Playhead point light
-    const playheadLight = new THREE.PointLight(this.activeScale.palette.accentColor, 1.2, 0.25);
-    playheadMesh.add(playheadLight);
-
-    // D. 3D Billboard Label Sprite above node
+    // D. 3D Billboard Label Sprite above node (Sleek micro-pill, hidden until hovered/grabbed)
     const labelCanvas = document.createElement('canvas');
     labelCanvas.width = 512;
     labelCanvas.height = 128;
@@ -358,8 +354,9 @@ export class EuclideanEngine {
       depthTest: false
     });
     const labelSprite = new THREE.Sprite(spriteMat);
-    labelSprite.scale.set(0.24, 0.06, 1);
-    labelSprite.position.set(0, 0.088, 0);
+    labelSprite.scale.set(0.13, 0.034, 1);
+    labelSprite.position.set(0, 0.082, 0);
+    labelSprite.visible = false;
     ringGroup.add(labelSprite);
 
     node.meshGroup.add(ringGroup);
@@ -666,8 +663,13 @@ export class EuclideanEngine {
         }
       }
 
-      // Orient label billboard toward user camera
-      cfg.labelSprite.lookAt(this.sceneManager.camera.position);
+      // Clean, un-cluttered 3D space: Only display Euclidean rhythm label on hover/grab
+      const isInteracting = node.isGrabbed || (this.hoveredNode?.id === node.id);
+      cfg.labelSprite.visible = isInteracting;
+
+      if (isInteracting) {
+        cfg.labelSprite.lookAt(this.sceneManager.camera.position);
+      }
 
       // Ring always faces user eye level
       cfg.ringGroup.lookAt(this.sceneManager.camera.position);

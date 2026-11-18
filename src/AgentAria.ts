@@ -217,12 +217,12 @@ export class AgentAria {
     this.outerHaloSprite.scale.set(0.28, 0.28, 1);
     this.ariaGroup.add(this.outerHaloSprite);
 
-    // 5. Floating Spatial HUD Badge above Aria
+    // 5. Floating Spatial HUD Badge above Aria (Compact sleek companion pill)
     const { sprite, canvas, ctx } = this.createSpatialBadge();
     this.badgeSprite = sprite;
     this.badgeCanvas = canvas;
     this.badgeCtx = ctx;
-    this.badgeSprite.position.set(0, 0.125, 0);
+    this.badgeSprite.position.set(0, 0.095, 0);
     this.ariaGroup.add(this.badgeSprite);
 
     // 6. Laser Beam Filaments Group (Optical harmonic weaving)
@@ -839,7 +839,7 @@ export class AgentAria {
     });
 
     const sprite = new THREE.Sprite(spriteMat);
-    sprite.scale.set(0.24, 0.12, 1);
+    sprite.scale.set(0.14, 0.07, 1);
     return { sprite, canvas, ctx };
   }
 
@@ -955,6 +955,17 @@ export class AgentAria {
     ctx.arcTo(x, y + h, x, y, r);
     ctx.arcTo(x, y + w, x, y, r);
     ctx.closePath();
+  }
+
+  /**
+   * Sets Aria's AI Mode explicitly
+   */
+  public setAIMode(mode: AriaAIMode): void {
+    this.mode = mode;
+    if (mode === 'RHYTHM_BOOST') {
+      this.applyRhythmBoostMode();
+    }
+    this.updateSpatialBadge();
   }
 
   /**

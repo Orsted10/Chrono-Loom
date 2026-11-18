@@ -47,8 +47,9 @@ export class DemoDirector {
   // Showcase state
   public isPlaying = false;
   public isTrailerCut = true;
+  public isGodModePlaythrough = false;
   public elapsedTime = 0;
-  public readonly TOTAL_DURATION = 60.0; // 60 seconds 6-Act Director's Cut
+  public TOTAL_DURATION = 60.0; // 60s trailer or 180s god-mode walkthrough
 
   // 3D Cinematic Title Banner
   private bannerGroup: THREE.Group;
@@ -146,11 +147,22 @@ export class DemoDirector {
    * Dedicated entry point for Shift+D or [TRAILER CUT] button
    */
   public startTrailerCut(): void {
+    this.isGodModePlaythrough = false;
+    this.TOTAL_DURATION = 60.0;
     this.startDemo(true);
   }
 
   /**
-   * Starts the choreographed 60-second 6-Act cinematic masterclass
+   * Dedicated entry point for 3-Minute "OMG God-Mode Playthrough"
+   */
+  public startGodModePlaythrough(): void {
+    this.isGodModePlaythrough = true;
+    this.TOTAL_DURATION = 180.0;
+    this.startDemo(true);
+  }
+
+  /**
+   * Starts the choreographed cinematic masterclass
    */
   public startDemo(isTrailer: boolean = true): void {
     this.isPlaying = true;
@@ -217,6 +229,7 @@ export class DemoDirector {
   public stopDemo(): void {
     if (!this.isPlaying) return;
     this.isPlaying = false;
+    this.isGodModePlaythrough = false;
     this.elapsedTime = 0;
 
     // Release any held virtual pinches
@@ -289,7 +302,8 @@ export class DemoDirector {
     ctx.font = 'bold 44px "Space Grotesk", sans-serif';
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
-    ctx.fillText(`🎬 TRAILER CUT // ${actTitle}`, 512, 95);
+    const headerPrefix = this.isGodModePlaythrough ? '⚡ GOD-MODE PLAYTHROUGH' : '🎬 TRAILER CUT';
+    ctx.fillText(`${headerPrefix} // ${actTitle}`, 512, 95);
 
     // Subtitle
     ctx.font = 'bold 24px "JetBrains Mono", monospace';
@@ -322,7 +336,8 @@ export class DemoDirector {
     if (!this.isPlaying) return;
 
     this.elapsedTime += deltaTime;
-    const t = this.elapsedTime;
+    // Map time to 60s normalized acts (so 180s God-Mode smoothly stretches across the full 3 minutes)
+    const t = this.isGodModePlaythrough ? (this.elapsedTime / 180.0) * 60.0 : this.elapsedTime;
 
     // Always orient 3D banner towards camera
     this.bannerGroup.lookAt(this.sceneManager.camera.position);
