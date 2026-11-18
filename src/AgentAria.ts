@@ -1372,5 +1372,68 @@ export class AgentAria {
 
         if (this.flightProgress >= 1.0) {
           this.state = 'WEAVING';
+          this.updateSpatialBadge();
+        }
+        break;
+      }
 
-// [Chrono-Loom Milestone 22/25] feat(aria): analyze user's last 4 plucked notes for rhythm density and harmonic tension
+      case 'WEAVING': {
+        // Perform the autonomous weave at target sweet spot!
+        this.executeWeaveAction();
+        this.state = 'OBSERVING';
+        this.flightProgress = 0.0;
+        this.updateSpatialBadge();
+        break;
+      }
+
+      case 'CELEBRATING': {
+        // Triumphant orbital loop dance around constellation center
+        this.celebrateAngle += deltaTime * 2.5;
+        const radius = 0.28;
+        this.ariaGroup.position.set(
+          Math.cos(this.celebrateAngle) * radius,
+          1.25 + Math.sin(this.celebrateAngle * 2) * 0.08,
+          -0.45 + Math.sin(this.celebrateAngle) * radius
+        );
+
+        // Continuous sparkling trail
+        if (Math.random() < 0.4) {
+          this.loomEngine.spawnParticleBurst(
+            this.ariaGroup.position,
+            2,
+            new THREE.Color(0xffd700),
+            0.04
+          );
+        }
+        break;
+      }
+    }
+  }
+
+  /**
+   * Plans and begins autonomous flight to an empty harmonic sweet-spot
+   */
+  private beginHarmonizingSequence(): void {
+    const sweetSpot = this.findHarmonicSweetSpot();
+    if (!sweetSpot) return;
+
+    this.targetFlightPosition.copy(sweetSpot);
+    this.flightProgress = 0.0;
+    this.state = 'HARMONIZING';
+    this.updateSpatialBadge();
+
+    // Flight takeoff chime
+    this.spatialSynth.playSpatialNote({
+      frequency: 523.25,
+      position: this.ariaGroup.position,
+      intensity: 1.1,
+      duration: 0.8
+    });
+  }
+
+  /**
+   * Finds an empty harmonic position within the 2-foot seated comfort zone
+   * that is at least 0.18m away from existing nodes.
+   */
+
+// [Chrono-Loom Milestone 23/25] feat(aria): fly Aria to complementary position to weave 2-bar counter-melody response
