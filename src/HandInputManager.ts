@@ -170,6 +170,7 @@ export class HandInputManager {
   private simRightPinchHeld = false;
   private simOpenPalmActive = false;
   private simActiveHand: Handedness = 'right';
+  private _scratchIntersection = new THREE.Vector3();
 
   // Auto-Director Demo Mode Override
   public isDemoModeActive = false;
@@ -703,14 +704,14 @@ export class HandInputManager {
       pinky_tip: new THREE.Vector3(sign * 0.032, 0.074, -0.018)
     };
 
-    // Store joint meshes on userData
+    // Store joint meshes on userData (Minimal precision micro-dots, zero grape-cluster clutter)
     group.userData.nodes = {};
     for (const [name, pos] of Object.entries(jointPositions)) {
       const isTip = name.endsWith('_tip');
       const isWrist = name === 'wrist';
-      const radius = isWrist ? 0.012 : isTip ? 0.009 : 0.006;
+      const radius = isWrist ? 0.004 : isTip ? 0.0035 : 0.0022;
       const sphere = new THREE.Mesh(
-        new THREE.SphereGeometry(radius, 8, 8),
+        new THREE.SphereGeometry(radius, 6, 6),
         isTip ? tipMat.clone() : jointMat
       );
       sphere.position.copy(pos);
@@ -779,7 +780,7 @@ export class HandInputManager {
     dom.addEventListener('contextmenu', (e) => e.preventDefault());
 
     // Mouse movement: project onto the z = -0.45m desk zone plane
-    dom.addEventListener('pointermove', (e: MouseEvent) => {
+    dom.addEventListener('pointermove', (e: PointerEvent) => {
       if (this.isDemoModeActive && (Math.abs(e.movementX) > 4 || Math.abs(e.movementY) > 4)) {
         this.onUserInput?.();
       }
@@ -788,24 +789,27 @@ export class HandInputManager {
       this.mouseNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
       this.raycaster.setFromCamera(this.mouseNDC, this.camera);
-      const intersection = new THREE.Vector3();
-      const hit = this.raycaster.ray.intersectPlane(this.deskTargetPlane, intersection);
+      const hit = this.raycaster.ray.intersectPlane(this.deskTargetPlane, this._scratchIntersection);
 
       if (hit) {
-        // Clamp to comfortable seated desk envelope (radius ~0.45m)
-        intersection.x = THREE.MathUtils.clamp(intersection.x, -0.45, 0.45);
-        intersection.y = THREE.MathUtils.clamp(intersection.y, 0.80, 1.35);
-        this.simTargetPos.copy(intersection);
+        // Clamp to comfortable seated desk envelope (radius ~0.55m)
+        this._scratchIntersection.x = THREE.MathUtils.clamp(this._scratchIntersection.x, -0.55, 0.55);
+        this._scratchIntersection.y = THREE.MathUtils.clamp(this._scratchIntersection.y, 0.75, 1.45);
+        this.simTargetPos.copy(this._scratchIntersection);
 
         // Dynamically assign active hand based on mouse horizontal side
         if (!this.simLeftPinchHeld && !this.simRightPinchHeld) {
-          this.simActiveHand = intersection.x < 0 ? 'left' : 'right';
+          this.simActiveHand = this._scratchIntersection.x < 0 ? 'left' : 'right';
         }
       }
     });
 
     // Pointer down: Left Click = Left Pinch, Right Click = Right Pinch
-    dom.addEventListener('pointerdown', (e: MouseEvent) => {
+    dom.addEventListener('pointerdown', (e: PointerEvent) => {
+      try {
+        dom.setPointerCapture(e.pointerId);
+      } catch (err) {}
+
       if (this.isDemoModeActive) {
         this.onUserInput?.();
       }
@@ -823,7 +827,11 @@ export class HandInputManager {
     });
 
     // Pointer up
-    dom.addEventListener('pointerup', (e: MouseEvent) => {
+    dom.addEventListener('pointerup', (e: PointerEvent) => {
+      try {
+        dom.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+
       if (!this.isSimulatorActive) return;
 
       if (e.button === 0) {
@@ -1048,22 +1056,31 @@ export class HandInputManager {
     }
     this.simCursorReticle.visible = true;
 
-    // Smooth cursor reticle motion
-    this.simCursorReticle.position.lerp(this.simTargetPos, 0.25);
-
-    // Active hand moves to target position
+    // Responsive cursor reticle tracking
+    const isPinching = this.simLeftPinchHeld || this.simRightPinchHeld;
     const activeRig = this.simActiveHand === 'left' ? this.simLeftHandRig : this.simRightHandRig;
     const idleRig = this.simActiveHand === 'left' ? this.simRightHandRig : this.simLeftHandRig;
 
-    // Follow mouse cursor
-    activeRig.position.lerp(this.simTargetPos, 0.22);
+    if (isPinching) {
+      // 1:1 Instant Synchronous Dragging (Zero Interaction Lag)
+      this.simCursorReticle.position.copy(this.simTargetPos);
+      activeRig.position.copy(this.simTargetPos);
+    } else {
+      // Natural responsive hovering
+      this.simCursorReticle.position.lerp(this.simTargetPos, 0.85);
+      activeRig.position.lerp(this.simTargetPos, 0.75);
+    }
+
+    // Only display simulated hand rig when actively pinching/interacting; hide idle hand to eliminate visual clutter
+    activeRig.visible = isPinching;
+    idleRig.visible = false;
 
     // Idle hand returns to gentle resting zone on comfort arc
     const idleTarget =
       this.simActiveHand === 'left'
         ? new THREE.Vector3(0.18, 1.03, -0.44)
         : new THREE.Vector3(-0.18, 1.03, -0.44);
-    idleRig.position.lerp(idleTarget, 0.08);
+    idleRig.position.copy(idleTarget);
 
     // Animate Left Hand simulation
     this.animateSimRig('left', this.simLeftHandRig, this.simLeftPinchHeld, this.leftHandState);

@@ -139,90 +139,80 @@ export class AgentAria {
     this.ariaGroup.name = 'AgentAria';
     this.ariaGroup.position.copy(this.homePosition);
 
-    // 1. Core Pulsing Orb
-    const coreGeo = new THREE.IcosahedronGeometry(0.032, 2);
+    // 1. Faceted Architectural Obsidian Crystal Core
+    const coreGeo = new THREE.OctahedronGeometry(0.026, 0);
     const coreMat = new THREE.MeshPhysicalMaterial({
-      color: 0xa855f7, // Royal Purple
-      emissive: 0x7c3aed,
-      emissiveIntensity: 0.7,
-      roughness: 0.2,
-      metalness: 0.8,
-      transmission: 0.5,
-      ior: 1.45,
+      color: 0x0f172a,
+      emissive: 0x00f0ff,
+      emissiveIntensity: 0.45,
+      roughness: 0.08,
+      metalness: 0.2,
+      transmission: 0.85,
+      ior: 1.55,
+      thickness: 0.06,
       transparent: true,
       opacity: 0.95
     });
     this.coreMesh = new THREE.Mesh(coreGeo, coreMat);
     this.ariaGroup.add(this.coreMesh);
 
-    // 2. Three Counter-Rotating Glowing Rings
-    const ringMat1 = new THREE.MeshBasicMaterial({
-      color: 0x00f0ff, // Electric Cyan
-      wireframe: false,
+    // Fine beveled crystal edges
+    const edgeGeo = new THREE.EdgesGeometry(coreGeo);
+    const edgeMat = new THREE.LineBasicMaterial({
+      color: 0x00f0ff,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.6,
       blending: THREE.AdditiveBlending
     });
-    const ringMat2 = new THREE.MeshBasicMaterial({
-      color: 0xa855f7, // Neon Magenta
-      wireframe: false,
-      transparent: true,
-      opacity: 0.85,
-      blending: THREE.AdditiveBlending
-    });
-    const ringMat3 = new THREE.MeshBasicMaterial({
-      color: 0xffd700, // Warm Gold
-      wireframe: false,
-      transparent: true,
-      opacity: 0.85,
-      blending: THREE.AdditiveBlending
-    });
+    const edgeLines = new THREE.LineSegments(edgeGeo, edgeMat);
+    this.coreMesh.add(edgeLines);
 
-    this.ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.0022, 16, 48), ringMat1);
-    this.ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.058, 0.0022, 16, 48), ringMat2);
-    this.ring3 = new THREE.Mesh(new THREE.TorusGeometry(0.070, 0.0022, 16, 48), ringMat3);
+    // 2. Refined Platinum Satin Stabilizer Gimbal Rings
+    const ringMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0x00f0ff,
+      emissiveIntensity: 0.25,
+      roughness: 0.2,
+      metalness: 0.85
+    });
+    this.ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.038, 0.0010, 16, 64), ringMat);
+    this.ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.0008, 16, 64), ringMat);
+    this.ring3 = new THREE.Mesh(new THREE.TorusGeometry(0.054, 0.0006, 16, 64), ringMat);
 
     this.ariaGroup.add(this.ring1);
     this.ariaGroup.add(this.ring2);
     this.ariaGroup.add(this.ring3);
 
-    // 3. Aria Inner Glow Light
-    this.coreGlowLight = new THREE.PointLight(0xa855f7, 1.8, 1.4);
+    // 3. Subtle Localized Companion Light
+    this.coreGlowLight = new THREE.PointLight(0x00f0ff, 0.35, 0.30);
     this.ariaGroup.add(this.coreGlowLight);
 
-    // 4. High-Dynamic Neon Glow Halos (Dual-layer additive blended sprites)
+    // 4. Delicate Micro-Halo
     const auraTex = this.createAuraTexture();
-
     const innerAuraMat = new THREE.SpriteMaterial({
       map: auraTex,
       color: 0x00f0ff,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.25,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
     this.innerAuraSprite = new THREE.Sprite(innerAuraMat);
-    this.innerAuraSprite.scale.set(0.16, 0.16, 1);
+    this.innerAuraSprite.scale.set(0.08, 0.08, 1);
     this.ariaGroup.add(this.innerAuraSprite);
 
-    const outerHaloMat = new THREE.SpriteMaterial({
-      map: auraTex,
-      color: 0xa855f7,
-      transparent: true,
-      opacity: 0.38,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
-    this.outerHaloSprite = new THREE.Sprite(outerHaloMat);
-    this.outerHaloSprite.scale.set(0.28, 0.28, 1);
+    this.outerHaloSprite = new THREE.Sprite(innerAuraMat);
+    this.outerHaloSprite.scale.set(0.12, 0.12, 1);
+    this.outerHaloSprite.visible = false;
     this.ariaGroup.add(this.outerHaloSprite);
 
-    // 5. Floating Spatial HUD Badge above Aria (Compact sleek companion pill)
+    // 5. Floating Spatial HUD Badge (Hidden by default; reveals during voice push-to-talk)
     const { sprite, canvas, ctx } = this.createSpatialBadge();
     this.badgeSprite = sprite;
     this.badgeCanvas = canvas;
     this.badgeCtx = ctx;
-    this.badgeSprite.position.set(0, 0.095, 0);
+    this.badgeSprite.position.set(0, 0.08, 0);
+    this.badgeSprite.visible = false;
     this.ariaGroup.add(this.badgeSprite);
 
     // 6. Laser Beam Filaments Group (Optical harmonic weaving)

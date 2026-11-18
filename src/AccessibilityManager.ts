@@ -390,6 +390,7 @@ export class AccessibilityManager {
     });
     const prompt = new THREE.Sprite(promptMat);
     prompt.scale.set(0.38, 0.095, 1);
+    prompt.visible = false; // Clean scene: Golden laser filament visually communicates tether without text billboard!
     group.add(prompt);
 
     return { group, line, prompt };
@@ -693,7 +694,7 @@ export class AccessibilityManager {
         (node.pitchLabelSprite.material as THREE.Material).dispose();
       }
       const newSprite = this.createPitchLabelSprite(node.noteFrequency);
-      newSprite.visible = this.isAccessibilitySuiteEnabled;
+      newSprite.visible = false; // Hidden by default, shown on hover/grab to prevent visual clutter
       node.meshGroup.add(newSprite);
       node.pitchLabelSprite = newSprite;
     }
@@ -768,9 +769,9 @@ export class AccessibilityManager {
       coreGeo = new THREE.BoxGeometry(0.046, 0.046, 0.046);
       shellGeo = new THREE.BoxGeometry(0.056, 0.056, 0.056);
     } else if (tierInfo.tier === 'MID') {
-      // Mid Tier: Crystalline Octahedron
-      coreGeo = new THREE.OctahedronGeometry(0.035, 1);
-      shellGeo = new THREE.OctahedronGeometry(0.043, 1);
+      // Mid Tier: Pure Faceted Gemstone Octahedron (Zero wireframe subdivision clutter)
+      coreGeo = new THREE.OctahedronGeometry(0.035, 0);
+      shellGeo = new THREE.OctahedronGeometry(0.043, 0);
     } else {
       // High Tier: Sharp Stellated Tetrahedron
       coreGeo = new THREE.TetrahedronGeometry(0.040, 0);
@@ -935,10 +936,10 @@ export class AccessibilityManager {
     this.magneticReticle.visible = false;
     this.releaseTether(false);
 
-    // Toggle note badges visibility
+    // Note badges remain sleek and context-aware (visible on hover/grab)
     for (const node of this.loomEngine.nodes.values()) {
       if ((node as any).pitchLabelSprite) {
-        (node as any).pitchLabelSprite.visible = this.isAccessibilitySuiteEnabled;
+        (node as any).pitchLabelSprite.visible = false;
       }
     }
 

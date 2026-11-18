@@ -210,6 +210,7 @@ export class TutorialGuide {
     });
     this.badgeSprite = new THREE.Sprite(spriteMat);
     this.badgeSprite.scale.set(0.38, 0.118, 1);
+    this.badgeSprite.visible = false; // Hide 3D billboard to prevent playfield occlusion; guidance is routed to spatial HUD
     this.badgeGroup.add(this.badgeSprite);
 
     this.guideGroup.add(this.badgeGroup);
@@ -217,6 +218,12 @@ export class TutorialGuide {
   }
 
   private renderBadgeContent(pill: string, title: string, subtitle: string, isDone = false): void {
+    const sessionModeEl = document.getElementById('session-mode');
+    if (sessionModeEl) {
+      sessionModeEl.className = `badge ${isDone ? 'badge-green' : 'badge-cyan'}`;
+      sessionModeEl.innerHTML = `<span>${pill}:</span> <strong style="color: #ffffff;">${title}</strong>`;
+    }
+
     const ctx = this.badgeCanvas.getContext('2d')!;
     ctx.clearRect(0, 0, 512, 160);
 
@@ -475,6 +482,11 @@ export class TutorialGuide {
     this.isActive = false;
     this.isDismissed = true;
     this.guideGroup.visible = false;
+    const sessionModeEl = document.getElementById('session-mode');
+    if (sessionModeEl) {
+      sessionModeEl.className = 'badge badge-cyan';
+      sessionModeEl.textContent = 'Desktop 3D Simulator Active';
+    }
     console.log('[TutorialGuide] Tutorial Guide dismissed.');
   }
 

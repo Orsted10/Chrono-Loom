@@ -648,10 +648,16 @@ export class ConstellationMode {
   /**
    * Builds the tactile floating Wrist HUD with 6 big interactive buttons & 7-Day Archive Drawer
    */
+  public toggleWristHUD(): boolean {
+    this.hudGroup.visible = !this.hudGroup.visible;
+    return this.hudGroup.visible;
+  }
+
   private createSpatialWristHUD(): THREE.Group {
     const group = new THREE.Group();
     group.name = 'SpatialWristHUD';
     group.position.copy(this.defaultHudPos);
+    group.visible = false; // Hidden by default to keep 3D spatial field clean and uncluttered!
 
     // Background glass plate (extended to 0.42m height)
     const plateGeo = new THREE.PlaneGeometry(0.32, 0.42);
@@ -1028,17 +1034,19 @@ export class ConstellationMode {
   public update(deltaTime: number): void {
     const time = performance.now() * 0.001;
 
-    // 1. Position Wrist HUD: attach near Left Wrist if tracked, or float top-left
-    const leftTele = this.handInputManager.getTelemetry('left');
-    if (leftTele.isTracked && !this.handInputManager.isSimulatorActive) {
-      // Anchored to Left Wrist in VR
-      const wristPos = leftTele.wristPosition;
-      this.hudGroup.position.set(wristPos.x - 0.08, wristPos.y + 0.06, wristPos.z + 0.04);
-      this.hudGroup.lookAt(this.sceneManager.camera.position);
-    } else {
-      // Smoothly float at top-left ergonomic position
-      this.hudGroup.position.lerp(this.defaultHudPos, 0.1);
-      this.hudGroup.lookAt(this.sceneManager.camera.position);
+    // 1. Position Wrist HUD: only update if visible
+    if (this.hudGroup.visible) {
+      const leftTele = this.handInputManager.getTelemetry('left');
+      if (leftTele.isTracked && !this.handInputManager.isSimulatorActive) {
+        // Anchored to Left Wrist in VR
+        const wristPos = leftTele.wristPosition;
+        this.hudGroup.position.set(wristPos.x - 0.08, wristPos.y + 0.06, wristPos.z + 0.04);
+        this.hudGroup.lookAt(this.sceneManager.camera.position);
+      } else {
+        // Smoothly float at top-left ergonomic position
+        this.hudGroup.position.lerp(this.defaultHudPos, 0.1);
+        this.hudGroup.lookAt(this.sceneManager.camera.position);
+      }
     }
 
     // 2. Animate Target Resonance Rings

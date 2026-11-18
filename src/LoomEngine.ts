@@ -327,39 +327,60 @@ export class LoomEngine {
     this.seedOrbGroup.name = 'SeedOrbGroup';
     this.seedOrbGroup.position.copy(this.seedOrbInitialPos);
 
-    // Core pulsing golden icosahedron
-    const coreGeo = new THREE.IcosahedronGeometry(0.038, 1);
-    const coreMat = new THREE.MeshStandardMaterial({
-      color: 0xffd700,
-      roughness: 0.25,
-      metalness: 0.85,
-      emissive: 0xff9900,
-      emissiveIntensity: 0.6
+    // 1. Pristine Faceted Glass Chrono-Prism (Next-Gen Architectural Object)
+    const coreGeo = new THREE.DodecahedronGeometry(0.038, 0);
+    const coreMat = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      emissive: 0xffb700,
+      emissiveIntensity: 0.4,
+      roughness: 0.08,
+      metalness: 0.15,
+      transmission: 0.88,
+      ior: 1.58,
+      thickness: 0.08,
+      transparent: true,
+      opacity: 0.95
     });
     this.seedOrbMesh = new THREE.Mesh(coreGeo, coreMat);
     this.seedOrbGroup.add(this.seedOrbMesh);
 
-    // Emissive outer wireframe shell
-    const shellGeo = new THREE.IcosahedronGeometry(0.052, 1);
-    const shellMat = new THREE.MeshBasicMaterial({
-      color: 0xfff089,
-      wireframe: true,
+    // 2. Fine Beveled Edge Lines (Architectural Precision, Zero Wireframe Clutter)
+    const edgeGeo = new THREE.EdgesGeometry(coreGeo);
+    const edgeMat = new THREE.LineBasicMaterial({
+      color: 0xffea00,
       transparent: true,
-      opacity: 0.75
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending
     });
-    this.seedOrbShell = new THREE.Mesh(shellGeo, shellMat);
+    const edgeLines = new THREE.LineSegments(edgeGeo, edgeMat);
+    this.seedOrbMesh.add(edgeLines);
+
+    // 3. Inner Photonic Resonator Core
+    const innerGeo = new THREE.OctahedronGeometry(0.016, 0);
+    const innerMat = new THREE.MeshBasicMaterial({
+      color: 0xfff089,
+      transparent: true,
+      opacity: 0.85
+    });
+    this.seedOrbShell = new THREE.Mesh(innerGeo, innerMat);
     this.seedOrbGroup.add(this.seedOrbShell);
 
-    // Warm golden point light
-    const orbLight = new THREE.PointLight(0xffb700, 1.6, 0.6);
-    this.seedOrbGroup.add(orbLight);
+    // 4. Fine Satin Golden Gimbal Equator Ring
+    const gimbalGeo = new THREE.TorusGeometry(0.052, 0.0012, 16, 64);
+    const gimbalMat = new THREE.MeshStandardMaterial({
+      color: 0xffd700,
+      emissive: 0xffb700,
+      emissiveIntensity: 0.4,
+      roughness: 0.2,
+      metalness: 0.8
+    });
+    const gimbalRing = new THREE.Mesh(gimbalGeo, gimbalMat);
+    gimbalRing.name = 'SeedGimbalRing';
+    this.seedOrbGroup.add(gimbalRing);
 
-    // Floating 3D canvas text prompt above Seed Orb
-    this.seedOrbPrompt = this.createFloatingPromptSprite(
-      'PINCH & PULL ME WITH YOUR HAND TO WEAVE'
-    );
-    this.seedOrbPrompt.position.set(0, 0.12, 0);
-    this.seedOrbGroup.add(this.seedOrbPrompt);
+    // Localized warm radiant point light
+    const orbLight = new THREE.PointLight(0xffb700, 0.7, 0.35);
+    this.seedOrbGroup.add(orbLight);
 
     this.loomGroup.add(this.seedOrbGroup);
   }
@@ -501,59 +522,62 @@ export class LoomEngine {
       shellGeo = syn.shellGeo;
       tierInfo = syn.tierInfo;
     } else {
-      coreGeo = new THREE.OctahedronGeometry(0.035, 1);
-      shellGeo = new THREE.OctahedronGeometry(0.043, 1);
+      coreGeo = new THREE.OctahedronGeometry(0.034, 0);
+      shellGeo = new THREE.OctahedronGeometry(0.038, 0);
     }
 
     const baseColor = new THREE.Color(0x00f0ff);
     const muteColor = new THREE.Color(0x38bdf8);
 
+    // Luxury Architectural Refractive Crystal Glass Material
     const coreMat = new THREE.MeshPhysicalMaterial({
       color: baseColor,
-      roughness: 0.15,
-      metalness: 0.2,
-      transmission: 0.65,
-      ior: 1.45,
-      emissive: 0x0088aa,
-      emissiveIntensity: 0.5,
+      roughness: 0.08,
+      metalness: 0.1,
+      transmission: 0.85,
+      ior: 1.55,
+      thickness: 0.06,
+      emissive: baseColor,
+      emissiveIntensity: 0.45,
       transparent: true,
-      opacity: 0.85
+      opacity: 0.95
     });
     const coreMesh = new THREE.Mesh(coreGeo, coreMat);
     group.add(coreMesh);
 
-    // Outer emissive wireframe shell
-    const shellMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
-      wireframe: true,
+    // Fine Beveled Crystal Edge Lines (Architectural Luxury, Zero Wireframe Clutter)
+    const edgeGeo = new THREE.EdgesGeometry(coreGeo);
+    const edgeMat = new THREE.LineBasicMaterial({
+      color: 0xffffff,
       transparent: true,
-      opacity: 0.85
+      opacity: 0.45,
+      blending: THREE.AdditiveBlending
     });
-    const wireframeMesh = new THREE.Mesh(shellGeo, shellMat);
+    const wireframeMesh = new THREE.LineSegments(edgeGeo, edgeMat) as any;
     group.add(wireframeMesh);
 
     // Inner glow point light (tight localized glow to preserve 120 FPS forward rendering)
     const innerGlow = new THREE.PointLight(0x00f0ff, 0.4, 0.25);
     group.add(innerGlow);
 
-    // Soft additive-blended glow aura halo sprite
+    // Subtle localized luminous halo sprite
     const auraMat = new THREE.SpriteMaterial({
       map: this.getAuraTexture(),
       color: baseColor,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.35,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
     const auraSprite = new THREE.Sprite(auraMat);
-    auraSprite.scale.set(0.16, 0.16, 1);
+    auraSprite.scale.set(0.10, 0.10, 1);
     group.add(auraSprite);
 
-    // 3D Billboard Pitch/Note Label for Deaf & Colorblind players
+    // 3D Billboard Pitch/Note Label (Hidden by default to prevent screen clutter; reveals on hover/grab)
     let pitchLabelSprite: THREE.Sprite | undefined;
     if (this.accessibilityManager) {
       const sprite: THREE.Sprite = this.accessibilityManager.createPitchLabelSprite(noteFrequency);
-      sprite.visible = !!this.accessibilityManager.isAccessibilitySuiteEnabled;
+      sprite.visible = false;
       group.add(sprite);
       pitchLabelSprite = sprite;
     }
@@ -1949,9 +1973,13 @@ export class LoomEngine {
         auraMat.opacity = 0.62 + Math.sin(time * 3.5 + node.id.charCodeAt(5)) * 0.15;
       }
 
-      // Orient pitch label sprite towards camera
-      if (node.pitchLabelSprite && node.pitchLabelSprite.visible) {
-        node.pitchLabelSprite.lookAt(this.sceneManager.camera.position);
+      // Orient pitch label sprite towards camera and only show on hover/grab
+      const isInteracting = node.isGrabbed || (node.currentScale > 1.04);
+      if (node.pitchLabelSprite) {
+        node.pitchLabelSprite.visible = isInteracting;
+        if (isInteracting) {
+          node.pitchLabelSprite.lookAt(this.sceneManager.camera.position);
+        }
       }
     }
 
@@ -2216,66 +2244,22 @@ export class LoomEngine {
   // ----------------------------------------------------
 
   /**
-   * Spawns radiant 3D holographic toast notification floating in front of user
+   * Dispatches clean non-intrusive toast notification to the top spatial island (Zero 3D Screen Obstruction)
    */
-  public showHolographicToast(message: string, submessage: string = '', duration: number = 3.2): void {
-    if (this.toastSprite) {
-      this.loomGroup.remove(this.toastSprite);
-      (this.toastSprite.material as THREE.Material).dispose();
-      this.toastSprite = null;
+  public showHolographicToast(message: string, submessage: string = '', duration: number = 2.8): void {
+    if (typeof document !== 'undefined') {
+      const modeBadge = document.getElementById('session-mode');
+      if (modeBadge) {
+        modeBadge.textContent = `${message}${submessage ? ' // ' + submessage : ''}`;
+        modeBadge.className = 'badge badge-gold';
+        setTimeout(() => {
+          if (modeBadge) {
+            modeBadge.textContent = 'Desktop 3D Simulator Active';
+            modeBadge.className = 'badge badge-cyan';
+          }
+        }, duration * 1000);
+      }
     }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 256;
-    const ctx = canvas.getContext('2d')!;
-
-    // Dark cyan glass background with gold border
-    ctx.fillStyle = 'rgba(7, 24, 45, 0.92)';
-    ctx.strokeStyle = '#ffd700';
-    ctx.lineWidth = 8;
-
-    const x = 20, y = 20, w = 984, h = 216, r = 36;
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y + w, x, y, r);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.shadowColor = '#00f0ff';
-    ctx.shadowBlur = 24;
-
-    ctx.font = 'bold 44px "Space Grotesk", sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.fillText(message, 512, 105);
-
-    if (submessage) {
-      ctx.font = 'bold 24px "JetBrains Mono", monospace';
-      ctx.fillStyle = '#38bdf8';
-      ctx.fillText(submessage, 512, 165);
-    }
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.minFilter = THREE.LinearFilter;
-    const mat = new THREE.SpriteMaterial({
-      map: texture,
-      transparent: true,
-      opacity: 0.98,
-      depthTest: false
-    });
-
-    this.toastSprite = new THREE.Sprite(mat);
-    this.toastSprite.scale.set(0.48, 0.12, 1);
-    this.toastSprite.position.set(0, 1.45, -0.45);
-    this.loomGroup.add(this.toastSprite);
-
-    this.toastTimer = 0;
-    this.toastDuration = duration;
   }
 
   /**
