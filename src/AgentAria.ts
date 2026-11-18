@@ -1435,5 +1435,67 @@ export class AgentAria {
    * Finds an empty harmonic position within the 2-foot seated comfort zone
    * that is at least 0.18m away from existing nodes.
    */
+  private findHarmonicSweetSpot(): THREE.Vector3 | null {
+    const candidateSpots = [
+      new THREE.Vector3(-0.20, 1.18, -0.42),
+      new THREE.Vector3(0.20, 1.18, -0.42),
+      new THREE.Vector3(0.0, 1.30, -0.45),
+      new THREE.Vector3(-0.15, 1.02, -0.44),
+      new THREE.Vector3(0.15, 1.02, -0.44),
+      new THREE.Vector3(-0.28, 1.10, -0.40),
+      new THREE.Vector3(0.28, 1.10, -0.40)
+    ];
 
-// [Chrono-Loom Milestone 23/25] feat(aria): fly Aria to complementary position to weave 2-bar counter-melody response
+    for (const spot of candidateSpots) {
+      let tooClose = false;
+      for (const node of this.loomEngine.nodes.values()) {
+        if (spot.distanceTo(node.position) < 0.16) {
+          tooClose = true;
+          break;
+        }
+      }
+      if (!tooClose) return spot;
+    }
+
+    return null;
+  }
+
+  /**
+   * Spawns Complementary AI Node & weaves counter-melody string
+   */
+  private executeWeaveAction(): void {
+    const spawnPos = this.targetFlightPosition.clone();
+
+    // 1. Spawn Complementary AI Node (Purple/Gold)
+    const aiNode = this.loomEngine.spawnHarmonicNode(spawnPos);
+    aiNode.baseColor = new THREE.Color(0xa855f7); // Neon Purple
+    (aiNode.coreMesh.material as THREE.MeshPhysicalMaterial).color.setHex(0xa855f7);
+    (aiNode.wireframeMesh.material as THREE.MeshBasicMaterial).color.setHex(0xffd700); // Gold shell
+
+    // 2. Weave counter-melody string connected to nearest user node
+    const nearestUserNode = this.findNearestUserNode(spawnPos);
+    if (nearestUserNode) {
+      this.loomEngine.createChronoString(aiNode, nearestUserNode);
+    }
+
+    // 3. Celebratory energy burst & spatial counter-melody chord
+    this.loomEngine.spawnParticleBurst(spawnPos, 22, new THREE.Color(0xa855f7), 0.06);
+    this.spatialSynth.playSpatialNote({
+      frequency: 369.99, // F#4 Lydian #4
+      position: spawnPos,
+      intensity: 1.4,
+      duration: 1.5
+    });
+
+    console.log(`[AgentAria] Autonomously wove complementary AI node [${aiNode.id}]!`);
+  }
+
+  private findNearestUserNode(pos: THREE.Vector3): HarmonicNode | null {
+    let nearest: HarmonicNode | null = null;
+    let minDist = 999;
+    for (const node of this.loomEngine.nodes.values()) {
+      const d = pos.distanceTo(node.position);
+      if (d > 0.05 && d < minDist) {
+        minDist = d;
+
+// [Chrono-Loom Milestone 24/25] feat(aria): implement Push-to-Talk Web Speech API voice director [Key V]
