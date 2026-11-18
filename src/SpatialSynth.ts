@@ -796,4 +796,38 @@ export class SpatialSynth {
     const index = Math.round(inverted * (freqs.length - 1));
     return freqs[index];
   }
+
+  /**
+   * Phase 18: MediaStream destination node for audio loop recording
+   */
+  public createMediaStreamDestination(): MediaStreamAudioDestinationNode | null {
+    this.ensureContext();
+    if (!this.audioCtx || !this.masterLimiter) return null;
+    const dest = this.audioCtx.createMediaStreamDestination();
+    this.masterLimiter.connect(dest);
+    return dest;
+  }
+
+  /**
+   * Phase 18: Taps direct raw stereo PCM samples from the master output bus for lossless WAV encoding
+   */
+  public createAudioProcessorTap(bufferSize = 4096): { processor: ScriptProcessorNode; disconnect: () => void } | null {
+    this.ensureContext();
+    if (!this.audioCtx || !this.masterLimiter) return null;
+    const proc = this.audioCtx.createScriptProcessor(bufferSize, 2, 2);
+    this.masterLimiter.connect(proc);
+    // Connect to destination to keep processor stream ticking in Web Audio graph
+    proc.connect(this.audioCtx.destination);
+    return {
+      processor: proc,
+      disconnect: () => {
+        try {
+          proc.disconnect();
+          this.masterLimiter?.disconnect(proc);
+        } catch (e) {
+          // ignore disconnect errors
+        }
+      }
+    };
+  }
 }

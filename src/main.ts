@@ -10,6 +10,7 @@ import { MRSurfaceManager } from './MRSurfaceManager.js';
 import { MultiplayerSync } from './MultiplayerSync.js';
 import { EuclideanEngine } from './EuclideanEngine.js';
 import { TutorialGuide } from './TutorialGuide.js';
+import { HarmonicVault } from './HarmonicVault.js';
 
 // Interactive Chrono-Loom Temporal Thread representation (Phase 1 visual trails)
 interface TemporalThread {
@@ -32,6 +33,7 @@ class ChronoLoomApp {
   public multiplayerSync: MultiplayerSync;
   public euclideanEngine: EuclideanEngine;
   public tutorialGuide: TutorialGuide;
+  public harmonicVault: HarmonicVault;
   private clock: THREE.Clock;
 
   // Active Chrono-Threads woven by pinching
@@ -177,6 +179,15 @@ class ChronoLoomApp {
       this.loomEngine,
       this.demoDirector
     );
+
+    // 6.12. Initialize Phase 18: Harmonic Vault & Lossless Audio Loop Recorder
+    this.harmonicVault = new HarmonicVault(
+      this.loomEngine,
+      this.loomEngine.spatialSynth,
+      this.euclideanEngine
+    );
+
+    (window as any).chronoLoomApp = this;
 
     // 7. Setup Temporal Thread Weave container (Phase 1 trails)
     this.threadsGroup = new THREE.Group();
@@ -543,6 +554,32 @@ class ChronoLoomApp {
       updateGuideBtnText();
     }
 
+    // Phase 18: Harmonic Vault & Lossless Audio Loop Recorder Buttons
+    const vaultBtn = document.getElementById('harmonic-vault-btn');
+    if (vaultBtn) {
+      vaultBtn.addEventListener('click', () => {
+        this.harmonicVault.toggleModal();
+      });
+    }
+
+    const hudRecBtn = document.getElementById('hud-record-btn');
+    if (hudRecBtn) {
+      hudRecBtn.addEventListener('click', () => {
+        if (this.harmonicVault.isRecording) {
+          this.harmonicVault.stopAudioRecording();
+        } else {
+          this.harmonicVault.startAudioRecording();
+        }
+      });
+    }
+
+    const starmapBtn = document.getElementById('starmap-drawer-btn');
+    if (starmapBtn) {
+      starmapBtn.addEventListener('click', () => {
+        this.constellationMode.toggleArchiveDrawer();
+      });
+    }
+
     // Button for Auto-Director Cinematic Showcase
     const demoBtn = document.getElementById('demo-showcase-btn');
     if (demoBtn) {
@@ -674,6 +711,10 @@ class ChronoLoomApp {
       } else if (e.key === 'u' || e.key === 'U' || e.key === '?') {
         this.tutorialGuide.toggleGuide();
         updateGuideBtnText();
+      } else if (e.key === 'k' || e.key === 'K') {
+        this.harmonicVault.toggleModal();
+      } else if (e.key === 'y' || e.key === 'Y') {
+        this.constellationMode.toggleArchiveDrawer();
       }
     });
   }
@@ -833,11 +874,13 @@ class ChronoLoomApp {
     }
 
     if (this.hudConstellationEl) {
+      const streakStr = puzzleStatus.harmonyStreak > 0 ? ` [${puzzleStatus.harmonyStreak}🔥]` : '';
       if (puzzleStatus.isHarmonized) {
-        this.hudConstellationEl.textContent = 'CONSTELLATION HARMONIZED!';
+        this.hudConstellationEl.textContent = `#${puzzleStatus.dayNumber} HARMONIZED!${streakStr}`;
         this.hudConstellationEl.className = 'badge badge-emerald';
       } else if (puzzleStatus.currentMode === 'DAILY_CONSTELLATION') {
-        this.hudConstellationEl.textContent = `PUZZLE #322: ${puzzleStatus.ringsEnergized} / ${puzzleStatus.totalRings} RINGS`;
+        const shortName = puzzleStatus.constellationName.split(' ')[1] || `#${puzzleStatus.dayNumber}`;
+        this.hudConstellationEl.textContent = `${shortName}: ${puzzleStatus.ringsEnergized} / ${puzzleStatus.totalRings} RINGS${streakStr}`;
         this.hudConstellationEl.className = 'badge badge-gold';
       } else {
         this.hudConstellationEl.textContent = 'FREEFORM LOOM';
@@ -1029,6 +1072,9 @@ class ChronoLoomApp {
 
     // 6.10. Update Phase 17: Spatial "First-Pluck" Onboarding Guide
     this.tutorialGuide.update(deltaTime);
+
+    // 6.11. Update Phase 18: Harmonic Vault & Lossless Audio Loop Recorder
+    this.harmonicVault.update(deltaTime);
 
     // 7. Update visual spark particles
     this.updateTemporalEffects(deltaTime, elapsedTime);
